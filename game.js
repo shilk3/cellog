@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.70.0";
+const APP_VERSION = "4.70.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4080,11 +4080,14 @@ function leagueTableHtml(tier) {
   // Each dot and its label are one unit, so a wrap never strands a dot.
   const legendItem = (cls, text) => `<span class="legend-item"><span class="legend-dot ${cls}"></span>${text}</span>`;
   const legendParts = [legendItem("legend-playoff", `Playoffs (top ${BAL.playoffSize})`)];
-  if (showPromo) legendParts.push(legendItem("legend-promo", `Promoted (top ${BAL.promotionTablePlaces} + 🏆 playoff champion)`));
-  if (showReleg) legendParts.push(legendItem("legend-releg", "Relegation zone"));
+  if (showPromo) legendParts.push(legendItem("legend-promo", `Promoted (top ${BAL.promotionTablePlaces} + 🏆 champion)`));
+  if (showReleg) legendParts.push(legendItem("legend-releg", `Relegated (bottom ${BAL.relegationCount})`));
+  // Above the table (which scrolls on its own), so it's never cut off.
   const legend = legendParts.length ? `<p class="modal-sub league-legend">${legendParts.join("")}</p>` : "";
   return `
     <p class="modal-sub">${noteText}</p>
+    ${legend}
+    <p class="modal-sub league-sort">Sorted by points; level on points → head-to-head wins between them, then rating.</p>
     <div class="league-table-header">
       <span class="league-pos">#</span>
       <span class="league-name">Name</span>
@@ -4093,8 +4096,7 @@ function leagueTableHtml(tier) {
       <span class="league-wl">L</span>
       <span class="league-points">Pts</span>
     </div>
-    <div class="league-table">${rows}</div>
-    ${legend}`;
+    <div class="league-table">${rows}</div>`;
 }
 
 function openLeagues(startTier) {
