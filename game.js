@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.68.1";
+const APP_VERSION = "4.69.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4506,6 +4506,9 @@ function phaseSnapshot() {
     rank: state.rank,
     cash: state.cash,
     phys: state.stats.phys,
+    rest: state.stats.rest,
+    composure: state.stats.composure,
+    nutrition: state.stats.nutrition,
     skills: { ...state.stats.skills },
   };
 }
@@ -4520,15 +4523,9 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   const next = [];
   const notes = [];
   const money = [];
-  let skills = null;
-  const sgn = (n) => (n === 0 ? "±0" : n > 0 ? `+${fmt(n)}` : `−${fmt(-n)}`);
   // A new year straight after the Final has no offseason to sum up.
-  if (start && start.day !== state.day) {
-    if (state.rank !== start.rank) how.push(["🏆 Rating", `${fmt(start.rank)} → ${fmt(state.rank)} (${sgn(state.rank - start.rank)})`]);
-    if (!yearSummary) how.push(["💰 Cash", `${fmtMoney(start.cash)} → ${fmtMoney(state.cash)}`]);
-    // Every skill, start → now, in its own table (not just the top gains).
-    skills = SKILL_KEYS.map((k) => [`${skillMeta(k).icon} ${skillMeta(k).name}`, start.skills[k] || 0, state.stats.skills[k]]);
-  }
+  let progress = null;
+  if (start && start.day !== state.day) progress = progressRows(start);
   const season = state.seasonResults || [];
   const w = season.filter((r) => r.win).length;
   const moveText = (from2, to2) => (to2 < from2 ? `⬆️ Promoted to League ${to2}` : to2 > from2 ? `⬇️ Relegated to League ${to2}` : `Staying in League ${to2}`);
@@ -4538,64 +4535,63 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   if (from === "preseason" && to === "regular") {
     icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · League ${state.leagueTier}`;
     const info = getNextMatchInfo();
-    next.push(["Format", `${BAL.seasonRounds} rounds, one match a week`]);
-    next.push(["This week's focus", state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join(", ")]);
-    if (info.opponentName) next.push(["First match", `${info.opponentName} (${info.opponentRating}) · ${info.winPct}% to win`]);
-    const zones = [`top ${BAL.playoffSize} reach the playoffs`];
-    if (state.leagueTier > 1) zones.push(`playoff champion + next ${BAL.promotionTablePlaces} in the table promoted`);
-    if (state.leagueTier < BAL.leagueCount) zones.push(`bottom ${BAL.relegationCount} relegated`);
-    next.push(["The table", zones.join(" · ")]);
-    if (state.employment.status !== "unemployed") next.push(["💼 Back to work", `annual leave is over — ${state.employment.status === "pro" ? "Pro Duties" : "Work"} ${requiredWorkHours()}h/day from today`]);
+    next.push(["📅 Season", `${BAL.seasonRounds} rounds, one match a week`]);
+    if (info.opponentName) next.push(["⚔️ First match", `${info.opponentName} (${info.opponentRating})`]);
+    if (info.opponentName) next.push(["🎲 Win chance", `${info.winPct}%`]);
+    next.push(["🎯 This week's focus", state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join("<br>")]);
+    next.push(["🏆 Playoffs", `top ${BAL.playoffSize}`]);
+    if (state.leagueTier > 1) next.push(["⬆️ Promoted", `champion + next ${BAL.promotionTablePlaces} in table`]);
+    if (state.leagueTier < BAL.leagueCount) next.push(["⬇️ Relegated", `bottom ${BAL.relegationCount}`]);
+    if (state.employment.status !== "unemployed") next.push([`💼 ${state.employment.status === "pro" ? "Pro Duties" : "Work"}`, `back to ${requiredWorkHours()}h/day`]);
     notes.push("Only the week's focus skills can be trained now — hire their coaches in 🧑‍🏫 Staff. Contracts end after each match.");
   } else if (from === "regular" && to === "playoffs") {
     icon = "🏆"; title = "Through to the playoffs!"; sub = `Year ${state.year} · League ${playedTier}`;
-    how.unshift(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize} · ${w}–${season.length - w}`]);
-    if (playedTier > 1 && state.lastPlayerPosition <= BAL.promotionTablePlaces) how.unshift(["⬆️ Promotion", "secured — top " + BAL.promotionTablePlaces + " finish"]);
+    how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize}`]);
+    how.push(["📋 Record", `${w}–${season.length - w}`]);
+    if (playedTier > 1 && state.lastPlayerPosition <= BAL.promotionTablePlaces) how.push(["⬆️ Promotion", `secured (top ${BAL.promotionTablePlaces})`]);
     const info = getNextMatchInfo();
-    next.push(["Your seed", `#${state.playoff.playerSeed} of ${BAL.playoffSize}`]);
-    if (info.opponentName) next.push([PLAYOFF_ROUND_NAMES[playoffStages()[0]], `${info.opponentName} (${info.opponentRating}) · ${info.winPct}% to win`]);
-    next.push(["Format", `single elimination, one match a week: ${playoffFormatText()}`]);
-    next.push(["Win it all", `champion: +$${BAL.championCash.toLocaleString()}, +${BAL.championRating} rating${playedTier > 1 ? ", promoted" : ""}`]);
-    next.push(["Knocked out", "training camp until the day of the Final"]);
+    next.push(["🌱 Your seed", `#${state.playoff.playerSeed} of ${BAL.playoffSize}`]);
+    if (info.opponentName) next.push([`⚔️ ${PLAYOFF_ROUND_NAMES[playoffStages()[0]]}`, `${info.opponentName} (${info.opponentRating})`]);
+    if (info.opponentName) next.push(["🎲 Win chance", `${info.winPct}%`]);
+    next.push(["📅 Rounds", playoffFormatText()]);
+    next.push(["👑 Champion", `+$${BAL.championCash.toLocaleString()} · +${BAL.championRating} rating${playedTier > 1 ? " · promoted" : ""}`]);
+    next.push(["💔 Knocked out", "training camp to the Final"]);
   } else if (from === "regular" && to === "offseason") {
     icon = "📋"; title = "Regular season over"; sub = `Year ${state.year} · League ${playedTier}`;
-    how.unshift(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize} · ${w}–${season.length - w} — missed the top ${BAL.playoffSize}`]);
-    how.push(["Next season", moveText(playedTier, state.leagueTier)]);
-    next.push(["Training camp", `${state.offseasonDays} days, to the day of the Final — all 7 skills trainable, no matches`]);
-    next.push(["Then", `Year ${state.year + 1}: ${nextYearText()}`]);
+    how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize}`]);
+    how.push(["📋 Record", `${w}–${season.length - w}`]);
+    how.push(["🏆 Playoffs", `missed (top ${BAL.playoffSize} only)`]);
+    how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
+    next.push(...campAndNextYearRows());
   } else if (from === "playoffs" && to === "offseason") {
     const p = state.playoff || {};
     const champ = !!p.champion;
     icon = champ ? "👑" : "💔"; title = champ ? "Champions!" : "Knocked out"; sub = `Year ${state.year} · League ${playedTier} playoffs`;
-    how.unshift(["Playoff run", champ ? "won the Final 🏆" : `out in the ${PLAYOFF_ROUND_NAMES[p.stage] || "playoffs"}`]);
+    how.push(["🏆 Playoff run", champ ? "won the Final" : `out in the ${PLAYOFF_ROUND_NAMES[p.stage] || "playoffs"}`]);
     const c = state.playoffChampions && state.playoffChampions[playedTier];
-    if (c && !c.isPlayer) how.push(["League champion", c.name]);
-    how.push(["Next season", moveText(playedTier, state.leagueTier)]);
-    if (state.offseasonDays > 0) {
-      next.push(["Training camp", `${state.offseasonDays} days, to the day of the Final — all 7 skills trainable, no matches`]);
-      next.push(["Then", `Year ${state.year + 1}: ${nextYearText()}`]);
-    } else {
-      next.push([`Year ${state.year + 1}`, `starts now — the Final was the year's last day`]);
-      next.push(["Preseason", nextYearText()]);
-    }
+    if (c && !c.isPlayer) how.push(["👑 League champion", c.name]);
+    how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
+    next.push(...campAndNextYearRows());
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `League ${state.leagueTier}`;
     if (yearSummary) {
       money.push(["💼 Pay earned", `+${fmtMoney(yearSummary.workPay)}`]);
       money.push(["🏆 Match winnings", `+${fmtMoney(yearSummary.matchCash)}`]);
       money.push(["💸 Living & staff", `−${fmtMoney(yearSummary.expenses)}`]);
-      money.push(["Net", `${yearSummary.net < 0 ? "−" : "+"}${fmtMoney(Math.abs(yearSummary.net))} · cash now ${fmtMoney(state.cash)}`]);
-      if (yearSummary.newPayRate != null) money.push(["📈 Annual raise", `pay is now $${fmt(yearSummary.newPayRate)}/day`]);
+      money.push(["🧾 Net", `${yearSummary.net < 0 ? "−" : "+"}${fmtMoney(Math.abs(yearSummary.net))}`]);
+      money.push(["💰 Cash now", fmtMoney(state.cash)]);
+      if (yearSummary.newPayRate != null) money.push(["📈 Annual raise", `now $${fmt(yearSummary.newPayRate)}/day`]);
     }
     if (yearSummary && yearSummary.proEnded) {
       notes.push(`📉 <b>No longer pro.</b> Your sponsorship wasn't renewed: your skills needed to average ${yearSummary.proEnded.bar}+ when the year ended, and they averaged ${yearSummary.proEnded.avg}. You'll have to find a job: the Work slider is now a <b>Job Search</b> (${yearSummary.proEnded.searchHours}h in total). Get the average back to ${yearSummary.proEnded.bar}+ and you'll go pro again.`);
     } else if (yearSummary && yearSummary.proRenewed) {
-      next.push(["🏆 Sponsorship", `renewed for Year ${state.year} — skill average ${skillAverage()}`]);
+      next.push(["🏆 Sponsorship", `renewed (average ${skillAverage()})`]);
     }
-    next.push(["Preseason", `${BAL.preseasonDays} days — all 7 skills trainable, no matches`]);
-    next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", `all preseason — no ${state.employment.status === "pro" ? "Pro Duties" : "Work"}, paid as normal`]);
-    next.push(["🧑‍🏫 Skill coaches", "half price all preseason"]);
-    next.push(["League cap", `⭐ specialisations can reach ${leagueSkillCap()}, other skills ${leagueSkillCap() - BAL.otherSkillCapGap} (League ${state.peakLeagueTier} best)`]);
+    next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
+    next.push(["🎯 Skills", "all 7 trainable"]);
+    next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", "all preseason, paid"]);
+    next.push(["🧑‍🏫 Skill coaches", "half price"]);
+    next.push(["📈 Skill cap", `${leagueSkillCap()} ⭐ · ${leagueSkillCap() - BAL.otherSkillCapGap} others`]);
     const unlockable = [];
     if (SKILL_COACH_LEVELS.some((l, i) => l.unlock === state.peakLeagueTier && i > 0)) unlockable.push(`Coach Lv${SKILL_COACH_LEVELS.findIndex((l) => l.unlock === state.peakLeagueTier) + 1}`);
     const supIdx = SUPPORT_LEVEL_UNLOCK.indexOf(state.peakLeagueTier);
@@ -4606,28 +4602,54 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     title = `${PHASE_NAMES[to] || to}`;
   }
   const moneyTitle = yearSummary ? `Year ${yearSummary.year} money` : "";
-  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, skills, money, moneyTitle, next, notes };
+  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, notes };
 }
 
-// What follows the season: next year's preseason, which is annual leave.
-function nextYearText() {
-  const leave = state.employment.status === "unemployed" ? "" : ", all 🏖️ annual leave";
-  return `${BAL.preseasonDays}-day preseason in League ${state.leagueTier}${leave}`;
+// What's next once your season is over: training camp to the Final (if any
+// days are left), then next year's preseason — annual leave if you work.
+function campAndNextYearRows() {
+  const rows = [];
+  if (state.offseasonDays > 0) {
+    rows.push(["🏋️ Training camp", `${state.offseasonDays} days, to the Final`]);
+    rows.push(["🎯 Skills", "all 7 trainable, no matches"]);
+  }
+  rows.push([`📅 Year ${state.year + 1}`, state.offseasonDays > 0 ? `${BAL.preseasonDays}-day preseason` : "starts now"]);
+  if (state.offseasonDays <= 0) rows.push(["🏋️ Preseason", `${BAL.preseasonDays} days`]);
+  rows.push(["🏅 League", `League ${state.leagueTier}`]);
+  if (state.employment.status !== "unemployed") rows.push(["🏖️ Annual leave", "all preseason"]);
+  return rows;
 }
 
-// Same look and rounding as the week summary's table.
-function splashSkillsTable(skills) {
+// Start / Now rows for the progress table: every skill (rust counts too),
+// the four condition stats, cash and rating. Older snapshots may lack some.
+function progressRows(start) {
+  const s = state.stats;
+  const rows = SKILL_KEYS.map((k) => [`${skillMeta(k).icon} ${skillMeta(k).name}`, start.skills[k] || 0, s.skills[k]]);
+  [["phys", "🏃 Health"], ["rest", "🌙 Rest"], ["composure", "🎮 Calm"], ["nutrition", "🥗 Nutrition"]].forEach(([k, label]) => {
+    if (start[k] != null) rows.push([label, start[k], s[k]]);
+  });
+  rows.push(["💰 Cash", start.cash, state.cash, "money"]);
+  rows.push(["🏆 Rating", start.rank, state.rank]);
+  return rows;
+}
+
+// Start / Now / Change — the week summary and every phase splash. Rows are
+// [label, start, now] (a 4th "money" entry formats as cash). Small moves (a
+// couple of days' rust is ~0.3) get one decimal, on the values too, so they
+// never read as "45 → 45 ±0".
+function progressTableHtml(rows, firstHead = "Stat") {
   const small = (d) => Math.abs(d) >= 0.05 && Math.abs(d) < 1;
-  const num = (v, d) => (small(d) ? fmt1(v) : fmt(v));
-  const rowsHtml = skills
-    .map(([label, a, b]) => {
+  const rowsHtml = rows
+    .map(([label, a, b, kind]) => {
       const d = b - a;
+      const money = kind === "money";
+      const num = (v) => (money ? fmtMoney(v) : small(d) ? fmt1(v) : fmt(v));
       const cls = Math.abs(d) < 0.05 ? "" : d > 0 ? "wk-up" : "wk-down";
-      const ch = Math.abs(d) < 0.05 ? "±0" : `${d > 0 ? "+" : "−"}${num(Math.abs(d), d)}`;
-      return `<tr><td>${label}</td><td>${num(a, d)}</td><td>${num(b, d)}</td><td class="${cls}">${ch}</td></tr>`;
+      const ch = Math.abs(d) < 0.05 ? (money ? "+$0" : "±0") : `${d > 0 ? "+" : "−"}${num(Math.abs(d))}`;
+      return `<tr><td>${label}</td><td>${num(a)}</td><td>${num(b)}</td><td class="${cls}">${ch}</td></tr>`;
     })
     .join("");
-  return `<table class="perf-table week-table"><thead><tr><th>Skill</th><th>Start</th><th>Now</th><th>Change</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  return `<table class="perf-table week-table"><thead><tr><th>${firstHead}</th><th>Start</th><th>Now</th><th>Change</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 
 function showPhaseSplash(sp, extraHtml = "", onDone = null) {
@@ -4638,7 +4660,8 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       <div class="splash-title">${sp.title}</div>
       ${sp.sub ? `<div class="splash-sub">${sp.sub}</div>` : ""}
       ${sp.how.length ? `<div class="modal-section splash-section"><h3>How the ${sp.fromName.toLowerCase()} went</h3>${rows(sp.how)}</div>` : ""}
-      ${sp.skills ? `<div class="modal-section splash-section"><h3>Skills this ${sp.fromName.toLowerCase()}</h3>${splashSkillsTable(sp.skills)}</div>` : ""}
+      ${sp.progress ? `<div class="modal-section splash-section"><h3>Progress over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.progress)}</div>` : ""}
+      ${sp.skills ? `<div class="modal-section splash-section"><h3>Skills over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.skills, "Skill")}</div>` : ""}
       ${sp.money && sp.money.length ? `<div class="modal-section splash-section"><h3>${sp.moneyTitle}</h3>${rows(sp.money)}</div>` : ""}
       ${sp.next.length ? `<div class="modal-section splash-section"><h3>What's next</h3>${rows(sp.next)}</div>` : ""}
       ${sp.notes.map((n) => `<div class="callout splash-note">${n}</div>`).join("")}
@@ -5520,54 +5543,30 @@ function endWeek() {
   if (!matchResult && !splashes.length && !cards.length) return showWeekSummaryModal(summaryHtml, daysRun);
   showSequence([
     matchResult && ((next) => showMatchModal(matchResult, summaryHtml, { onDone: next, showNext: true })),
-    ...splashSteps(splashes, matchResult ? "" : summaryHtml),
+    // A phase splash with its own progress table doesn't need the week's too.
+    ...splashSteps(splashes, matchResult || (splashes[0] && splashes[0].progress) ? "" : summaryHtml),
     cards.length && ((next) => showEventSplash(cards, matchResult || splashes.length ? "" : summaryHtml, next)),
   ]);
 }
 
 function weekSummaryHtml({ start, daysRun, planned, stopReason }) {
-  const s = state.stats;
-  // Small moves (a couple of days' rust is ~0.3) get one decimal, on the
-  // values too, so they never read as "45 → 45 ±0".
-  const small = (d) => Math.abs(d) >= 0.05 && Math.abs(d) < 1;
-  const num = (v, d) => (small(d) ? fmt1(v) : fmt(v));
-  const signed = (d) => (Math.abs(d) < 0.05 ? "±0" : `${d > 0 ? "+" : "−"}${num(Math.abs(d), d)}`);
-  const cls = (d) => (Math.abs(d) < 0.05 ? "" : d > 0 ? "wk-up" : "wk-down");
-  const row = (label, a, b) => `<tr><td>${label}</td><td>${num(a, b - a)}</td><td>${num(b, b - a)}</td><td class="${cls(b - a)}">${signed(b - a)}</td></tr>`;
-  // Every skill, every time — rust on the ones you didn't train counts too.
-  const skillRows = SKILL_KEYS
-    .map((k) => {
-      const m = skillMeta(k);
-      return row(`${m.icon} ${m.name}`, start.skills[k], s.skills[k]);
-    })
-    .join("");
-  const cashDelta = state.cash - start.cash;
   return `
-    <div class="week-summary">
-      <h3 class="week-summary-title">${daysRun} day skip summary for this week</h3>
+    <div class="modal-section splash-section week-summary">
+      <h3 class="week-summary-title">${daysRun === 1 ? "Progress today" : `Progress over ${daysRun} days`}</h3>
       ${stopReason ? `<div class="week-stop">⏸️ Stopped after ${daysRun} of ${planned} days — ${stopReason}</div>` : ""}
-      <table class="perf-table week-table">
-        <thead><tr><th>Stat</th><th>Start</th><th>Now</th><th>Change</th></tr></thead>
-        <tbody>
-          ${skillRows}
-          ${row("🏃 Health", start.phys, s.phys)}
-          ${row("🌙 Rest", start.rest, s.rest)}
-          ${row("🎮 Calm", start.composure, s.composure)}
-          ${row("🥗 Nutrition", start.nutrition, s.nutrition)}
-          <tr><td>💰 Cash</td><td>${fmtMoney(start.cash)}</td><td>${fmtMoney(state.cash)}</td><td class="${cls(cashDelta)}">${cashDelta < 0 ? "−" : "+"}${fmtMoney(Math.abs(cashDelta))}</td></tr>
-          ${row("🏆 Rating", start.rank, state.rank)}
-        </tbody>
-      </table>
+      ${progressTableHtml(progressRows(start))}
       <div class="match-sub perf-note">Day-by-day detail is in the log.</div>
     </div>`;
 }
 
 function showWeekSummaryModal(summaryHtml, daysRun) {
   const html = `
-    <div class="match-card">
-      <div class="match-result neutral">${daysRun === 1 ? "DAY COMPLETE" : "WEEK COMPLETE"}</div>
+    <div class="splash">
+      <div class="splash-icon">📅</div>
+      <div class="splash-title">${daysRun === 1 ? "Day complete" : "Week complete"}</div>
+      <div class="splash-sub">Year ${state.year} · ${phaseLabelText()}</div>
       ${summaryHtml}
-      <button class="primary-btn" id="weekOk">Continue</button>
+      <button class="primary-btn" id="weekOk">Continue ▶</button>
     </div>`;
   openModal(html);
   $("weekOk").addEventListener("click", closeModal);

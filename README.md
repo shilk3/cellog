@@ -123,7 +123,10 @@ then shows the result plus a week summary of how every stat moved. It stops
 early so you can re-plan on an injury, losing/finding a job or going pro,
 burnout, a new technique to master, or Nutrition shrinking the day below what
 your plan needs. Each of those events also gets its own screen whenever it happens —
-after End Day too — saying what changed and what to do about it.
+after End Day too — saying what changed and what to do about it. Summary
+screens share one layout: icon, title, then sections — how it went (key
+facts), a Start / Now / Change table for every skill, Health, Rest, Calm,
+Nutrition, cash and rating, and a short "What's next" list.
 
 **Specialisations**: pick 3 ⭐ skills. They can reach your best league's
 skill cap and the other 4 stop 20 lower — League 5: 60/40, League 4: 70/50,
