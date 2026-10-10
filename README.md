@@ -137,6 +137,14 @@ what each change costs first). Every rival has 3 specialisations too, fixed
 for good, under the same caps, with levels that follow their rating — so
 they rise and fall with their results.
 
+**🧪 Match model (beta, ☰ menu, per game)**: *Classic* is described below.
+*Skills* takes rating out of the match: match-day rating = performance × 8 +
+focus-skill edge (10 per point ahead) + luck (scale 250, so smaller swings).
+Rivals' skills are anchored to their league — a mid-table rival's ⭐ skills
+sit 10 under the league cap, ±0.06 per rating point from the league's middle
+— so the week's focus skills decide most matches. Rating still moves with
+results, on rating-vs-rating maths, as a record. Switch back any time.
+
 **Match day**: both sides get a match-day rating = rating + performance +
 focus-skill edge + luck, and the higher one wins. Your performance comes
 from your stats (each point above 70 adds 3, below 70 costs 3); a rival's

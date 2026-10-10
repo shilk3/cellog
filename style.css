@@ -719,6 +719,8 @@ input[type="range"]::-webkit-slider-thumb {
 .h2h-table { margin-top: 8px; }
 /* Table place sits above the rows that add up to the match-day rating. */
 .h2h-table tr.h2h-context td { border-bottom: 1px dashed var(--border); }
+/* Two context rows (table place, then rating): the dashed line goes under the last. */
+.h2h-table tr.h2h-context:has(+ tr.h2h-context) td { border-bottom: 1px solid var(--border); }
 .h2h-table th.h2h-opp { max-width: 120px; overflow: hidden; text-overflow: ellipsis; text-transform: none; letter-spacing: 0; }
 .h2h-table thead th:nth-child(2) { text-transform: none; letter-spacing: 0; }
 .h2h-table tfoot td { font-size: 15px; }
@@ -882,6 +884,9 @@ details.match-more[open] { padding-bottom: 8px; }
 
 /* Games screen / menu: the game length beside a label */
 .menu-note { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-left: 4px; }
+.model-opt { cursor: pointer; align-items: flex-start; }
+.model-opt .model-desc { display: block; font-weight: 400; font-size: 12.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
+.model-opt.on { border-color: var(--accent); }
 
 /* Specialisation picker */
 .spec-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
