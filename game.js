@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.69.0";
+const APP_VERSION = "4.69.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4531,14 +4531,13 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   const moveText = (from2, to2) => (to2 < from2 ? `⬆️ Promoted to League ${to2}` : to2 > from2 ? `⬇️ Relegated to League ${to2}` : `Staying in League ${to2}`);
   const playedTier = state.lastStandingsTier || tierBefore;
   let icon = "📅", title = "", sub = "";
+  let nextMatch = false; // show the next-match preview (drawn live when shown)
 
   if (from === "preseason" && to === "regular") {
     icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · League ${state.leagueTier}`;
     const info = getNextMatchInfo();
     next.push(["📅 Season", `${BAL.seasonRounds} rounds, one match a week`]);
-    if (info.opponentName) next.push(["⚔️ First match", `${info.opponentName} (${info.opponentRating})`]);
-    if (info.opponentName) next.push(["🎲 Win chance", `${info.winPct}%`]);
-    next.push(["🎯 This week's focus", state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join("<br>")]);
+    nextMatch = !!info.opponentName;
     next.push(["🏆 Playoffs", `top ${BAL.playoffSize}`]);
     if (state.leagueTier > 1) next.push(["⬆️ Promoted", `champion + next ${BAL.promotionTablePlaces} in table`]);
     if (state.leagueTier < BAL.leagueCount) next.push(["⬇️ Relegated", `bottom ${BAL.relegationCount}`]);
@@ -4551,8 +4550,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     if (playedTier > 1 && state.lastPlayerPosition <= BAL.promotionTablePlaces) how.push(["⬆️ Promotion", `secured (top ${BAL.promotionTablePlaces})`]);
     const info = getNextMatchInfo();
     next.push(["🌱 Your seed", `#${state.playoff.playerSeed} of ${BAL.playoffSize}`]);
-    if (info.opponentName) next.push([`⚔️ ${PLAYOFF_ROUND_NAMES[playoffStages()[0]]}`, `${info.opponentName} (${info.opponentRating})`]);
-    if (info.opponentName) next.push(["🎲 Win chance", `${info.winPct}%`]);
+    nextMatch = !!info.opponentName;
     next.push(["📅 Rounds", playoffFormatText()]);
     next.push(["👑 Champion", `+$${BAL.championCash.toLocaleString()} · +${BAL.championRating} rating${playedTier > 1 ? " · promoted" : ""}`]);
     next.push(["💔 Knocked out", "training camp to the Final"]);
@@ -4602,7 +4600,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     title = `${PHASE_NAMES[to] || to}`;
   }
   const moneyTitle = yearSummary ? `Year ${yearSummary.year} money` : "";
-  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, notes };
+  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes };
 }
 
 // What's next once your season is over: training camp to the Final (if any
@@ -4664,6 +4662,7 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       ${sp.skills ? `<div class="modal-section splash-section"><h3>Skills over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.skills, "Skill")}</div>` : ""}
       ${sp.money && sp.money.length ? `<div class="modal-section splash-section"><h3>${sp.moneyTitle}</h3>${rows(sp.money)}</div>` : ""}
       ${sp.next.length ? `<div class="modal-section splash-section"><h3>What's next</h3>${rows(sp.next)}</div>` : ""}
+      ${sp.nextMatch ? `<div class="splash-section">${nextMatchPreviewHtml()}</div>` : ""}
       ${sp.notes.map((n) => `<div class="callout splash-note">${n}</div>`).join("")}
       ${extraHtml}
       <button class="primary-btn" id="splashGo">Let's go ▶</button>
