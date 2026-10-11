@@ -19,19 +19,23 @@ BACK_CSS = """
   padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;background:#0b1220;border-bottom:1px solid #263149;
   font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 .cellog-back a{color:#34d0a0;text-decoration:none}
+.cellog-back a.cellog-brand{color:#e7edf7;font-weight:800;font-size:18px;letter-spacing:.2px;margin-right:6px}
+.cellog-back a.cellog-brand small{color:#34d0a0;font-size:13px;font-weight:600;margin-right:4px}
 .cellog-back span{color:#93a1bd;font-weight:500;font-size:12.5px;margin-left:auto}
 """
 
 
 def back_bar(other_href, other_label):
-    return (f'<nav class="cellog-back"><a href="../index.html">← Back to CELLOG</a>'
+    return (f'<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a>'
             f'<a href="{other_href}">{other_label}</a><span>v{VERSION}</span></nav>')
 
 
 def head(title, extra=""):
     return ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-            f'<title>{title}</title>\n<style>{BACK_CSS}</style>\n{extra}</head>\n')
+            f'<title>{title}</title>\n<meta name="theme-color" content="#0b1220">\n'
+            '<link rel="icon" href="../icons/icon-192.png">\n<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">\n'
+            f'<style>{BACK_CSS}</style>\n{extra}</head>\n')
 
 
 def build_infographic(src):

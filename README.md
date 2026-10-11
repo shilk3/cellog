@@ -145,7 +145,10 @@ for good, under the same caps, with levels that follow their rating — so
 they rise and fall with their results.
 
 **Match day**: both sides get a match-day rating = performance × 8 +
-focus-skill edge + luck, and the higher one wins. Rating isn't part of it:
+focus-skill edge + luck, and the higher one wins — unless the two finish
+within 30 of each other: a 🤝 draw (about 1 even game in 7, fewer when one
+side is clearly better; 1 point each and half the win prize). Playoff games
+can't be drawn — a dead heat goes to the better focus skills. Rating isn't part of it:
 it rises and falls with results (on rating-vs-rating Elo maths, a 300 gap =
 10-to-1) as a record of how you've done, and sets prize money. Your
 performance comes from your stats — all 7 skills averaged (55%), Health
@@ -164,8 +167,9 @@ screen leads with VICTORY / DEFEAT by the margin and the round, then your
 win chance, both sides' numbers side by side (Head to Head), what changed
 (rating, table position, cash, record), a preview of the next match
 (opponent, ratings, table places, win chance and the week's focus) and
-Continue — with the collapsible explanations below it. League tables rank by points, then
-head-to-head between tied players, then rating; they show W and L too.
+Continue — with the collapsible explanations below it. League tables (win 3 points, draw 1) rank
+by points, then head-to-head between tied players (a draw counts half), then
+rating; they show W–D–L, points and form (the last 5 results).
 
 **Game length**: chosen when a game starts, and each length keeps its own
 save — so up to three games on one device (☰ → 🎮 Games to switch, start or

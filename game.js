@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.73.0";
+const APP_VERSION = "4.74.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -128,6 +128,12 @@ const BAL = {
   skillEdgeWeight: 10,
   // Match-day luck: the match-day gap that makes one side a 10-to-1 favourite.
   matchLuckScale: 250,
+  // A dead heat — the two match-day totals within this much after luck — is
+  // a draw (league games only; a knockout game goes to the better focus
+  // skills). About 14% of even games, fewer the more one-sided.
+  drawBand: 30,
+  winPoints: 3, // league table: a win, and a draw (each side)
+  drawPoints: 1,
   rivalBelowCap: 10, // a mid-league rival's ⭐ skills this far under the league cap
   rivalSkillSpread: 0.06, // + this per rating point above the league's mid rating
   // How many focus skills an in-season week has: chance of 1, 2 or 3.
@@ -850,7 +856,7 @@ function generateRivalRoster(playerTier) {
     const [lo, hi] = LEAGUE_RATING_BANDS[tier];
     for (let i = 0; i < countsByTier[tier]; i++) {
       const name = names[id % names.length];
-      rivals.push(ensureRivalProfile({ id: id++, name, rating: randInt(lo, hi), league: tier, wins: 0, losses: 0, promotions: 0, relegations: 0 }));
+      rivals.push(ensureRivalProfile({ id: id++, name, rating: randInt(lo, hi), league: tier, wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0 }));
     }
   }
   return rivals;
@@ -957,6 +963,7 @@ function freshState() {
     rank: 480,
     peakRank: 480,
     wins: 0,
+    draws: 0,
     losses: 0,
     yearCashFlow: { workPay: 0, matchCash: 0, expenses: 0 }, // resets every year; summarized at year-end
     stats: {
@@ -1674,6 +1681,30 @@ function matchWeights() {
 function matchBase(perf) {
   return perf * BAL.perfWeight;
 }
+// Win / draw / loss odds for a match-day gap (yours − theirs) before luck.
+// The luck difference is logistic, so each is a closed form. Knockout games
+// can't be drawn: a dead heat goes to the better focus skills (focusLead =
+// your focus average − theirs).
+function outcomeOdds(gap, { knockout = false, focusLead = 0 } = {}) {
+  const s = matchWeights().luck / Math.LN10, b = BAL.drawBand;
+  const sig = (x) => 1 / (1 + Math.exp(-x));
+  const win = sig((gap - b) / s), loss = 1 - sig((gap + b) / s), draw = Math.max(0, 1 - win - loss);
+  if (!knockout) return { win, draw, loss };
+  const share = focusLead > 0 ? 1 : focusLead < 0 ? 0 : 0.5;
+  return { win: win + draw * share, draw: 0, loss: loss + draw * (1 - share) };
+}
+// The outcome of a final gap after luck: "W", "D" or "L" (knockout dead
+// heats decided on focus skills, then the gap itself).
+function decideOutcome(diff, focusLead, knockout) {
+  if (Math.abs(diff) >= BAL.drawBand) return diff > 0 ? "W" : "L";
+  if (!knockout) return "D";
+  if (focusLead !== 0) return focusLead > 0 ? "W" : "L";
+  return diff >= 0 ? "W" : "L";
+}
+// Your matches are knockout games during the playoffs.
+function playerKnockout() {
+  return state.seasonPhase === "playoffs";
+}
 // Rating (Elo) maths: the chance the rating gap alone gives you.
 function ratingExpectation(rating, oppRating) {
   return 1 / (1 + Math.pow(10, (oppRating - rating) / BAL.luckScale));
@@ -1695,8 +1726,10 @@ function matchup(entry, keys = state.activeSkills) {
   const edge = oppFocus == null ? 0 : (youFocus - oppFocus) * matchWeights().edge;
   const yourEdge = Math.max(0, edge), oppEdge = Math.max(0, -edge);
   const yourMatch = yourBase + yourEdge, oppMatch = oppBase + oppEdge;
-  const winProb = 1 / (1 + Math.pow(10, (oppMatch - yourMatch) / matchWeights().luck));
-  return { rival, oppRating, yourPerf, oppPerf, youFocus, oppFocus, yourEdge, oppEdge, yourMatch, oppMatch, winProb };
+  const knockout = playerKnockout();
+  const odds = outcomeOdds(yourMatch - oppMatch, { knockout, focusLead: oppFocus == null ? 0 : youFocus - oppFocus });
+  const winProb = odds.win, drawProb = odds.draw;
+  return { rival, oppRating, yourPerf, oppPerf, youFocus, oppFocus, yourEdge, oppEdge, yourMatch, oppMatch, winProb, drawProb, knockout };
 }
 
 // Resolves one real match for the player against a specific opponent rating.
@@ -1719,12 +1752,15 @@ function liveOpponentRating(entry) {
 
 // The player's opponent is a real rival too: their rating and lifetime
 // record move with this result, same as any rival-vs-rival match.
-function recordRivalResultVsPlayer(rivalId, playerWon, playerRating) {
+// outcome: yours — "W", "D" or "L" (a boolean is a win/loss).
+function recordRivalResultVsPlayer(rivalId, outcome, playerRating) {
   const rival = findRival(rivalId);
   if (!rival) return;
-  const change = eloChange(rival.rating, playerRating, !playerWon);
+  const o = outcome === true ? "W" : outcome === false ? "L" : outcome;
+  const change = eloChange(rival.rating, playerRating, o === "W" ? 0 : o === "D" ? 0.5 : 1);
   rival.rating = clamp(rival.rating + change, BAL.ratingMin, BAL.ratingMax);
-  if (playerWon) rival.losses += 1;
+  if (o === "W") rival.losses += 1;
+  else if (o === "D") rival.draws = (rival.draws || 0) + 1;
   else rival.wins += 1;
 }
 
@@ -1749,10 +1785,14 @@ function resolveMatch(opponent) {
   const oppLuck = matchLuckDraw();
   const yourFinal = matchRating + yourLuck;
   const oppFinal = opponentMatchRating + oppLuck;
-  const win = yourFinal > oppFinal || (yourFinal === oppFinal && matchRating >= opponentMatchRating);
+  const focusLead = mu.oppFocus == null ? 0 : mu.youFocus - mu.oppFocus;
+  const outcome = decideOutcome(yourFinal - oppFinal, focusLead, mu.knockout);
+  const win = outcome === "W", draw = outcome === "D";
+  // A knockout dead heat that went to the better focus skills.
+  const decidedOnFocus = mu.knockout && Math.abs(yourFinal - oppFinal) < BAL.drawBand;
   const oppPerf = Math.round(mu.oppPerf * 10) / 10;
   const K = BAL.ratingK;
-  const actual = win ? 1 : 0;
+  const actual = win ? 1 : draw ? 0.5 : 0;
   // Rating moves on the rating gap alone (not the match odds), so it stays
   // a record of results.
   const ratingProb = ratingExpectation(rankBefore, opponentRating);
@@ -1764,10 +1804,14 @@ function resolveMatch(opponent) {
   const cashBefore = state.cash;
   const recordBefore = seasonRecord();
   const prizeFormula = { base: BAL.prizeWinBase, div: BAL.prizeRatingDiv, loss: BAL.prizeLoss };
-  const cashReward = Math.round((win ? prizeFormula.base + state.rank / prizeFormula.div : prizeFormula.loss) * cashBonusMult);
+  // The same prize is on offer every match: the winner takes it all, a
+  // draw splits it.
+  const fullPrize = prizeFormula.base + state.rank / prizeFormula.div;
+  const cashReward = Math.round((win ? fullPrize : draw ? fullPrize / 2 : prizeFormula.loss) * cashBonusMult);
   state.cash += cashReward;
   state.yearCashFlow.matchCash += cashReward;
   if (win) state.wins += 1;
+  else if (draw) state.draws = (state.draws || 0) + 1;
   else state.losses += 1;
 
   // Display figures for the result screen — cosmetic only; the result was
@@ -1789,8 +1833,12 @@ function resolveMatch(opponent) {
   let yourLuckShown = Math.round(yourLuck * LUCK_SHOWN);
   let oppLuckShown = Math.round(oppLuck * LUCK_SHOWN);
   const shownGap = baseGap + yourLuckShown - oppLuckShown; // your total − theirs
-  if (win ? shownGap < 1 : shownGap > -1) {
-    const fix = (win ? 1 : -1) * randInt(1, 12) - shownGap; // your luck − theirs must rise by this
+  // Draw: equal totals. Win / loss: the right side ahead (a knockout dead
+  // heat by just a point or two).
+  const wantOk = draw ? shownGap === 0 : win ? shownGap >= 1 : shownGap <= -1;
+  if (!wantOk) {
+    const target = draw ? 0 : (win ? 1 : -1) * (decidedOnFocus ? randInt(1, 3) : randInt(1, 12));
+    const fix = target - shownGap; // your luck − theirs must rise by this
     const yourPart = Math.round(fix * (0.3 + Math.random() * 0.4));
     yourLuckShown += yourPart;
     oppLuckShown -= fix - yourPart;
@@ -1800,6 +1848,8 @@ function resolveMatch(opponent) {
 
   return {
     win,
+    draw, // win and draw both false = a loss
+    decidedOnFocus, // a knockout dead heat that went to the better focus skills
     perf,
     breakdown,
     matchRating: Math.round(matchRating),
@@ -1820,6 +1870,7 @@ function resolveMatch(opponent) {
       })),
     },
     winProb: Math.round(winProb * 100),
+    drawProb: Math.round(mu.drawProb * 100),
     model: "skills", // older results (no model) were rating + performance
     perfWeight: w.perf, // what each point of performance was worth
     luckScale: w.luck,
@@ -1858,16 +1909,18 @@ function matchLuckDraw() {
   return (matchWeights().luck / Math.LN10) * (-Math.log(-Math.log(u)) - EULER_GAMMA);
 }
 
-// Cheap win/lose roll for matches that don't involve the player (other
-// league members' simulated season records, and NPC-vs-NPC bracket games).
+// Cheap win/lose roll from ratings alone — only a fallback for a bracket
+// slot without a rival record.
 function simulateNpcMatch(ratingA, ratingB, scale = BAL.luckScale) {
   const winProbA = 1 / (1 + Math.pow(10, (ratingB - ratingA) / scale));
   return Math.random() < winProbA;
 }
 
-function eloChange(ratingA, ratingB, aWon, K = BAL.ratingK) {
+// aScore: 1 win, 0.5 draw, 0 loss (true / false accepted).
+function eloChange(ratingA, ratingB, aScore, K = BAL.ratingK) {
   const winProbA = 1 / (1 + Math.pow(10, (ratingB - ratingA) / BAL.luckScale));
-  return Math.round(K * ((aWon ? 1 : 0) - winProbA));
+  const a = aScore === true ? 1 : aScore === false ? 0 : aScore;
+  return Math.round(K * (a - winProbA));
 }
 
 // ---- Match history ----
@@ -1875,7 +1928,8 @@ function eloChange(ratingA, ratingB, aWon, K = BAL.ratingK) {
 //   screen can be reopened later). Kept for the whole career.
 // league: compact results for every match in all 5 leagues —
 //   league[year][tier][roundKey] = [[winnerId, loserId, winnerRating,
-//   loserRating], …], roundKey "1".."39" or a playoff stage; you are id -1.
+//   loserRating(, 1 if a draw)], …], roundKey "1".."39" or a playoff stage;
+//   you are id -1. For a draw the order of the two ids means nothing.
 //   Only this season and last are kept.
 const HISTORY_PLAYER_ID = -1;
 // Every round key a season can have, in order: its rounds, then its
@@ -1890,7 +1944,7 @@ function ensureHistory() {
   return state.matchHistory;
 }
 
-function recordLeagueResult(tier, roundKey, winnerId, loserId, winnerRating, loserRating) {
+function recordLeagueResult(tier, roundKey, winnerId, loserId, winnerRating, loserRating, draw = false) {
   if (!tier || !roundKey) return;
   const h = ensureHistory();
   const year = state.year;
@@ -1899,7 +1953,9 @@ function recordLeagueResult(tier, roundKey, winnerId, loserId, winnerRating, los
   });
   const byTier = (h.league[year] = h.league[year] || {});
   const rounds = (byTier[tier] = byTier[tier] || {});
-  (rounds[roundKey] = rounds[roundKey] || []).push([winnerId, loserId, Math.round(winnerRating), Math.round(loserRating)]);
+  const entry = [winnerId, loserId, Math.round(winnerRating), Math.round(loserRating)];
+  if (draw) entry.push(1);
+  (rounds[roundKey] = rounds[roundKey] || []).push(entry);
 }
 
 // This year's record — regular season and playoffs — from your match
@@ -1908,7 +1964,13 @@ function seasonRecord() {
   const mine = (state.matchHistory && state.matchHistory.mine) || [];
   const thisYear = mine.filter((m) => m.year === state.year);
   const wins = thisYear.filter((m) => m.win).length;
-  return { wins, losses: thisYear.length - wins };
+  const draws = thisYear.filter((m) => m.draw).length;
+  return { wins, draws, losses: thisYear.length - wins - draws };
+}
+
+// "W–D–L" for a record.
+function wdl(w, d, l) {
+  return `${w}–${d || 0}–${l}`;
 }
 
 function recordMyMatch(result) {
@@ -1920,25 +1982,32 @@ function recordMyMatch(result) {
 // Resolves one rival-vs-rival match and updates both rivals' persistent
 // ratings and lifetime records — this is what makes the other 199 rivals a
 // real, evolving world rather than static names.
-function resolveNpcMatch(rivalA, rivalB) {
+// Returns A's outcome: "W", "D" or "L" (never "D" in a knockout game).
+function resolveNpcMatch(rivalA, rivalB, knockout = false) {
   // Same match-day maths as yours: performance, + the focus-skill
   // edge for whoever has the better focus skills this week.
   const keys = state.activeSkills;
-  const edge = (rivalFocusAverage(rivalA, keys) - rivalFocusAverage(rivalB, keys)) * matchWeights().edge;
+  const focusLead = rivalFocusAverage(rivalA, keys) - rivalFocusAverage(rivalB, keys);
+  const edge = focusLead * matchWeights().edge;
   const mA = matchBase(rivalPerformance(rivalA)) + Math.max(0, edge);
   const mB = matchBase(rivalPerformance(rivalB)) + Math.max(0, -edge);
-  const aWon = simulateNpcMatch(mA, mB, matchWeights().luck);
-  const change = eloChange(rivalA.rating, rivalB.rating, aWon);
+  const u = clamp(Math.random(), 1e-9, 1 - 1e-9);
+  const luckDiff = (matchWeights().luck / Math.LN10) * Math.log(u / (1 - u)); // logistic, like yours
+  const out = decideOutcome(mA - mB + luckDiff, focusLead, knockout);
+  const change = eloChange(rivalA.rating, rivalB.rating, out === "W" ? 1 : out === "D" ? 0.5 : 0);
   rivalA.rating = clamp(rivalA.rating + change, BAL.ratingMin, BAL.ratingMax);
   rivalB.rating = clamp(rivalB.rating - change, BAL.ratingMin, BAL.ratingMax);
-  if (aWon) {
+  if (out === "W") {
     rivalA.wins += 1;
     rivalB.losses += 1;
-  } else {
+  } else if (out === "L") {
     rivalB.wins += 1;
     rivalA.losses += 1;
+  } else {
+    rivalA.draws = (rivalA.draws || 0) + 1;
+    rivalB.draws = (rivalB.draws || 0) + 1;
   }
-  return aWon;
+  return out;
 }
 
 // Resolves every NPC-vs-NPC pair in this tier's round-robin round (the
@@ -1955,10 +2024,18 @@ function resolveLeagueRoundForTier(tier, roundIndex) {
     const rivalB = findRival(b);
     if (!rivalA || !rivalB) return;
     const ra = rivalA.rating, rb = rivalB.rating;
-    const aWon = resolveNpcMatch(rivalA, rivalB);
+    const out = resolveNpcMatch(rivalA, rivalB);
+    const pts = state.leaguePoints[tier];
+    if (out === "D") {
+      recordLeagueResult(tier, String(roundIndex + 1), a, b, ra, rb, true);
+      pts[a] = (pts[a] || 0) + BAL.drawPoints;
+      pts[b] = (pts[b] || 0) + BAL.drawPoints;
+      return;
+    }
+    const aWon = out === "W";
     const winnerId = aWon ? a : b;
     recordLeagueResult(tier, String(roundIndex + 1), aWon ? a : b, aWon ? b : a, aWon ? ra : rb, aWon ? rb : ra);
-    state.leaguePoints[tier][winnerId] = (state.leaguePoints[tier][winnerId] || 0) + 3;
+    pts[winnerId] = (pts[winnerId] || 0) + BAL.winPoints;
   });
 }
 
@@ -1968,26 +2045,50 @@ function resolveLeagueRoundForTier(tier, roundIndex) {
 // season's round-robin is built.
 function buildStandingsFromPoints(tier) {
   const points = state.leaguePoints[tier] || {};
+  const rec = leagueRecords(tier);
+  const recOf = (id) => rec.get(id) || { w: 0, d: 0, l: 0, form: [] };
   const standings = state.rivals
     .filter((r) => r.league === tier)
-    .map((r) => ({ name: r.name, rating: r.rating, points: points[r.id] || 0, isPlayer: false, rivalId: r.id }));
+    .map((r) => ({ name: r.name, rating: r.rating, points: points[r.id] || 0, isPlayer: false, rivalId: r.id, rec: recOf(r.id) }));
   if (tier === state.leagueTier) {
-    standings.push({ name: escapeHtml(state.playerName || "You"), rating: state.rank, points: points.player || 0, isPlayer: true, rivalId: null });
+    standings.push({ name: escapeHtml(state.playerName || "You"), rating: state.rank, points: points.player || 0, isPlayer: true, rivalId: null, rec: recOf(HISTORY_PLAYER_ID) });
   }
   return sortStandingsWithHeadToHead(standings, tier);
 }
 
+// This season's regular-season record per id in a tier, from the stored
+// results: wins, draws, losses and the last 5 as "W" / "D" / "L" (oldest
+// first).
+function leagueRecords(tier) {
+  const h = state.matchHistory && state.matchHistory.league && state.matchHistory.league[state.year];
+  const rounds = (h && h[tier]) || {};
+  const out = new Map();
+  const get = (id) => { if (!out.has(id)) out.set(id, { w: 0, d: 0, l: 0, form: [] }); return out.get(id); };
+  const keys = Object.keys(rounds).filter((k) => /^\d+$/.test(k)).sort((a, b) => a - b);
+  keys.forEach((k) => rounds[k].forEach(([w, l, , , d]) => {
+    const a = get(w), b = get(l);
+    if (d) { a.d++; b.d++; a.form.push("D"); b.form.push("D"); }
+    else { a.w++; b.l++; a.form.push("W"); b.form.push("L"); }
+  }));
+  out.forEach((r) => (r.form = r.form.slice(-5)));
+  return out;
+}
+
 // Points first. Players level on points are ranked by a mini-table of
-// their games against each other this season (head-to-head wins), and only
-// then by current rating — so beating someone you're tied with always puts
-// you above them, and a tied rival's rating swing can't drop you after a win.
+// their games against each other this season (head-to-head: a win 1, a draw
+// ½), and only then by current rating — so beating someone you're tied with
+// always puts you above them, and a tied rival's rating swing can't drop you
+// after a win.
 function sortStandingsWithHeadToHead(standings, tier) {
   const h = state.matchHistory && state.matchHistory.league && state.matchHistory.league[state.year];
   const rounds = (h && h[tier]) || {};
-  const beat = new Set(); // "winnerId>loserId" for regular-season games
+  const score = new Map(); // "a>b" → a's head-to-head score against b
+  const add = (k, v) => score.set(k, (score.get(k) || 0) + v);
   Object.keys(rounds).forEach((key) => {
     if (!/^\d+$/.test(key)) return; // playoff stages don't count
-    rounds[key].forEach(([w, l]) => beat.add(`${w}>${l}`));
+    rounds[key].forEach(([w, l, , , d]) => {
+      if (d) { add(`${w}>${l}`, 0.5); add(`${l}>${w}`, 0.5); } else add(`${w}>${l}`, 1);
+    });
   });
   const idOf = (e) => (e.isPlayer ? HISTORY_PLAYER_ID : e.rivalId);
   const byPoints = {};
@@ -1996,7 +2097,7 @@ function sortStandingsWithHeadToHead(standings, tier) {
   Object.values(byPoints).forEach((group) => {
     group.forEach((e) => {
       const me = idOf(e);
-      h2h.set(e, group.filter((o) => o !== e && beat.has(`${me}>${idOf(o)}`)).length);
+      h2h.set(e, group.filter((o) => o !== e).reduce((sum, o) => sum + (score.get(`${me}>${idOf(o)}`) || 0), 0));
     });
   });
   // A fixed last resort (id) so an exact tie always sorts the same way —
@@ -2131,7 +2232,7 @@ function finishNpcBracket(teams, tier) {
       const ra = findRival(a.rivalId);
       const rb = findRival(b.rivalId);
       const ratingA = ra ? ra.rating : a.rating, ratingB = rb ? rb.rating : b.rating;
-      const aWins = ra && rb ? resolveNpcMatch(ra, rb) : simulateNpcMatch(a.rating, b.rating);
+      const aWins = ra && rb ? resolveNpcMatch(ra, rb, true) === "W" : simulateNpcMatch(a.rating, b.rating);
       if (tier && stage) {
         const w = aWins ? a : b, l = aWins ? b : a;
         recordLeagueResult(tier, stage, w.isPlayer ? HISTORY_PLAYER_ID : w.rivalId, l.isPlayer ? HISTORY_PLAYER_ID : l.rivalId, aWins ? ratingA : ratingB, aWins ? ratingB : ratingA);
@@ -2215,7 +2316,7 @@ function resolvePlayoffRound() {
       const win = matchResult.win;
       matchResult.tier = p.tier;
       recordLeagueResult(p.tier, p.stage, win ? HISTORY_PLAYER_ID : opp.rivalId, win ? opp.rivalId : HISTORY_PLAYER_ID, win ? matchResult.rankBefore : matchResult.opponentRating, win ? matchResult.opponentRating : matchResult.rankBefore);
-      recordRivalResultVsPlayer(opp.rivalId, win, matchResult.matchRating);
+      recordRivalResultVsPlayer(opp.rivalId, win, matchResult.rankBefore);
       winners.push(win ? player : opp);
       summary = win ? `🏆 ${roundName} WIN vs ${opp.name}!` : `💔 Eliminated in the ${roundName} by ${opp.name}.`;
       if (!win) p.eliminated = true;
@@ -2226,7 +2327,7 @@ function resolvePlayoffRound() {
       const rivalA = findRival(teamA.rivalId);
       const rivalB = findRival(teamB.rivalId);
       const ratingA = rivalA ? rivalA.rating : teamA.rating, ratingB = rivalB ? rivalB.rating : teamB.rating;
-      const aWins = rivalA && rivalB ? resolveNpcMatch(rivalA, rivalB) : simulateNpcMatch(teamA.rating, teamB.rating);
+      const aWins = rivalA && rivalB ? resolveNpcMatch(rivalA, rivalB, true) === "W" : simulateNpcMatch(teamA.rating, teamB.rating);
       recordLeagueResult(p.tier, p.stage, (aWins ? teamA : teamB).rivalId, (aWins ? teamB : teamA).rivalId, aWins ? ratingA : ratingB, aWins ? ratingB : ratingA);
       winners.push(aWins ? teamA : teamB);
     }
@@ -2367,18 +2468,22 @@ function processDayEnd() {
       matchResult.opponentRivalId = fixture.rivalId;
       matchResult.roundLabel = `Round ${state.roundIndex + 1}/${BAL.seasonRounds}`;
       matchResult.tier = state.leagueTier;
-      recordLeagueResult(state.leagueTier, String(state.roundIndex + 1), matchResult.win ? HISTORY_PLAYER_ID : fixture.rivalId, matchResult.win ? fixture.rivalId : HISTORY_PLAYER_ID, matchResult.win ? matchResult.rankBefore : matchResult.opponentRating, matchResult.win ? matchResult.opponentRating : matchResult.rankBefore);
-      const win = matchResult.win;
-      recordRivalResultVsPlayer(fixture.rivalId, win, matchResult.matchRating);
+      const youFirst = matchResult.win || matchResult.draw;
+      recordLeagueResult(state.leagueTier, String(state.roundIndex + 1), youFirst ? HISTORY_PLAYER_ID : fixture.rivalId, youFirst ? fixture.rivalId : HISTORY_PLAYER_ID, youFirst ? matchResult.rankBefore : matchResult.opponentRating, youFirst ? matchResult.opponentRating : matchResult.rankBefore, !!matchResult.draw);
+      const win = matchResult.win, draw = !!matchResult.draw;
+      recordRivalResultVsPlayer(fixture.rivalId, win ? "W" : draw ? "D" : "L", matchResult.rankBefore);
       fixture.played = true;
       fixture.win = win;
-      state.seasonResults.push({ opponent: fixture.name, win });
-      // Credit the winner of the player's own match too — the rival still
-      // earns their 3 points when they beat the player, same as any other
-      // pairing, so their spot in the table reflects every result.
+      fixture.draw = draw;
+      state.seasonResults.push({ opponent: fixture.name, win, draw });
+      // Credit the player's own match too — the rival earns their points
+      // from it like any other pairing, so the table reflects every result.
       const pointsTier = state.leaguePoints[state.leagueTier];
-      if (win) pointsTier.player = (pointsTier.player || 0) + 3;
-      else pointsTier[fixture.rivalId] = (pointsTier[fixture.rivalId] || 0) + 3;
+      if (win) pointsTier.player = (pointsTier.player || 0) + BAL.winPoints;
+      else if (draw) {
+        pointsTier.player = (pointsTier.player || 0) + BAL.drawPoints;
+        pointsTier[fixture.rivalId] = (pointsTier[fixture.rivalId] || 0) + BAL.drawPoints;
+      } else pointsTier[fixture.rivalId] = (pointsTier[fixture.rivalId] || 0) + BAL.winPoints;
       for (let tier = 1; tier <= BAL.leagueCount; tier++) {
         resolveLeagueRoundForTier(tier, state.roundIndex);
       }
@@ -3144,7 +3249,10 @@ function matchResultTableHtml(result) {
   const ratingAfter = result.ratingAfter != null ? result.ratingAfter : state.rank;
   const cashAfter = result.cashBefore + result.cashReward + bonus.cash;
   const rec = result.recordBefore;
-  const recAfter = { wins: rec.wins + (result.win ? 1 : 0), losses: rec.losses + (result.win ? 0 : 1) };
+  const d0 = rec.draws || 0;
+  const recAfter = { wins: rec.wins + (result.win ? 1 : 0), draws: d0 + (result.draw ? 1 : 0), losses: rec.losses + (result.win || result.draw ? 0 : 1) };
+  // W–L for older results (no draws then); W–D–L from now on.
+  const recText = (r) => (result.draw != null ? `${r.wins}–${r.draws || 0}–${r.losses}` : `${r.wins}–${r.losses}`);
   const row = (label, before, after, change, cls) =>
     `<tr><td>${label}</td><td>${before}</td><td>${after}</td><td class="${cls}">${change}</td></tr>`;
   const rows = [row("🏆 Rating", fmt(result.rankBefore), fmt(ratingAfter), signedNum(ratingAfter - result.rankBefore), deltaClass(ratingAfter - result.rankBefore))];
@@ -3155,7 +3263,7 @@ function matchResultTableHtml(result) {
   const cashDelta = cashAfter - result.cashBefore;
   rows.push(row("💰 Cash", fmtMoney(result.cashBefore), fmtMoney(cashAfter), `+${fmtMoney(cashDelta)}`, "wk-up"));
   // Results saved before v4.48.2 carried the all-time record.
-  rows.push(row(result.recordScope === "season" ? "📋 Season record" : "📋 Record", `${rec.wins}–${rec.losses}`, `${recAfter.wins}–${recAfter.losses}`, result.win ? "W" : "L", result.win ? "wk-up" : "wk-down"));
+  rows.push(row(result.recordScope === "season" ? "📋 Season record" : "📋 Record", recText(rec), recText(recAfter), result.win ? "W" : result.draw ? "D" : "L", result.win ? "wk-up" : result.draw ? "" : "wk-down"));
 
   return `
     <table class="perf-table result-table">
@@ -3177,6 +3285,8 @@ function ratingCashExplainerHtml(result) {
   const ratingRows = [
     result.win
       ? row(`Win: ${BAL.ratingK} × your ${100 - p}% chance to lose${byRating}`, signedNum(raw))
+      : result.draw
+      ? row(`Draw: ${BAL.ratingK} × (50% − your ${p}% chance to win${byRating})`, signedNum(raw))
       : row(`Loss: ${BAL.ratingK} × your ${p}% chance to win${byRating}`, signedNum(raw)),
   ];
   if (result.ratingChange !== raw) {
@@ -3187,10 +3297,13 @@ function ratingCashExplainerHtml(result) {
 
   // Results saved before v4.46.0 were paid on the old formula.
   const pf = result.prizeFormula || { base: 150, div: 10, loss: 40 };
-  const basePrize = result.win ? pf.base + result.rankAfterMatch / pf.div : pf.loss;
+  const fullPrize = pf.base + result.rankAfterMatch / pf.div;
+  const basePrize = result.win ? fullPrize : result.draw ? fullPrize / 2 : pf.loss;
   const cashRows = [
     result.win
       ? row(`Win: $${pf.base} + your new rating (${fmt(result.rankAfterMatch)}) ÷ ${pf.div}`, `+${fmtMoney(Math.round(basePrize))}`)
+      : result.draw
+      ? row(`Draw: half of $${pf.base} + your new rating (${fmt(result.rankAfterMatch)}) ÷ ${pf.div}`, `+${fmtMoney(Math.round(basePrize))}`)
       : row(pf.loss ? "Loss: flat prize" : "Loss: no prize money", `+${fmtMoney(pf.loss)}`),
   ];
   if (result.cashBonusMult > 1) {
@@ -3255,19 +3368,24 @@ function luckExplainerHtml(result) {
   const theirs = result.opponentMatchRating != null ? result.opponentMatchRating : result.opponentRating;
   const gap = result.matchRating - theirs; // + = you're ahead, before luck
   const scale = result.luckScale || BAL.luckScale;
-  const chanceFor = (g) => Math.round(100 / (1 + Math.pow(10, -g / scale)));
+  // Results with draws (league games) get a draw column.
+  const withDraws = result.drawProb != null && result.drawProb > 0;
+  const chanceFor = (g) =>
+    result.drawProb != null
+      ? (({ win, draw }) => ({ w: Math.round(win * 100), d: Math.round(draw * 100) }))(outcomeOdds(g, { knockout: !withDraws }))
+      : { w: Math.round(100 / (1 + Math.pow(10, -g / scale))), d: 0 };
   const ladderGaps = result.model === "skills" ? [-200, -100, -50, 0, 50, 100, 200] : [-300, -200, -100, 0, 100, 200, 300];
-  const rows = ladderGaps.filter((g) => g !== gap).map((g) => ({ gap: g, chance: chanceFor(g), you: false }));
-  rows.push({ gap, chance: result.winProb, you: true });
+  const rows = ladderGaps.filter((g) => g !== gap).map((g) => ({ gap: g, ...chanceFor(g), you: false }));
+  rows.push({ gap, w: result.winProb, d: result.drawProb || 0, you: true });
   rows.sort((x, y) => x.gap - y.gap || (x.you ? 1 : -1));
   const ladder = rows
-    .map((r) => `<tr class="${r.you ? "ladder-you" : "perf-sub"}"><td>${r.you ? `👉 You: ${gapLabel(r.gap)}` : gapLabel(r.gap)}</td><td>${r.chance}%</td></tr>`)
+    .map((r) => `<tr class="${r.you ? "ladder-you" : "perf-sub"}"><td>${r.you ? `👉 You: ${gapLabel(r.gap)}` : gapLabel(r.gap)}</td><td>${r.w}%</td>${withDraws ? `<td>${r.d}%</td>` : ""}</tr>`)
     .join("");
   return `
     <div class="match-sub perf-note">Both sides get random luck every match, and the highest match-day rating wins. Luck is usually a small nudge; now and then the underdog has an inspired day and sneaks it.</div>
-    <div class="match-sub perf-note">So your win chance comes down to the gap before luck: ${result.model === "skills" ? `your performance + edge (${result.matchRating}) against theirs (${theirs}) — rating isn't part of it` : result.opponentMatchRating != null ? `your rating + performance + edge (${result.matchRating}) against theirs (${theirs})` : `your rating + performance (${result.matchRating}) against their rating (${result.opponentRating})`} — <b>${gapLabel(gap)}</b> this time. The bigger the gap, the more luck the underdog needs, but upsets always stay possible:</div>
+    <div class="match-sub perf-note">So your win chance comes down to the gap before luck: ${result.model === "skills" ? `your performance + edge (${result.matchRating}) against theirs (${theirs}) — rating isn't part of it` : result.opponentMatchRating != null ? `your rating + performance + edge (${result.matchRating}) against theirs (${theirs})` : `your rating + performance (${result.matchRating}) against their rating (${result.opponentRating})`} — <b>${gapLabel(gap)}</b> this time. The bigger the gap, the more luck the underdog needs, but upsets always stay possible.${result.drawProb != null ? ` Finishing within ${BAL.drawBand} of each other is a draw in the league; in the playoffs it goes to the better focus skills.` : ""}</div>
     <table class="perf-table win-ladder">
-      <thead><tr><th>${result.model === "skills" ? "Match-day gap" : "Rating gap"}</th><th>Win chance</th></tr></thead>
+      <thead><tr><th>${result.model === "skills" ? "Match-day gap" : "Rating gap"}</th><th>Win</th>${withDraws ? "<th>Draw</th>" : ""}</tr></thead>
       <tbody>${ladder}</tbody>
     </table>`;
 }
@@ -3306,7 +3424,7 @@ function nextMatchPreviewHtml() {
         <thead><tr><th>This week's focus</th><th>You</th><th class="h2h-opp">${info.opponentName}</th></tr></thead>
         <tbody>${focusRows}${edgeRow}</tbody>
       </table>
-      <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance.</div>
+      <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance${mu.drawProb >= 0.005 ? ` · <b>${Math.round(mu.drawProb * 100)}%</b> draw` : ""}.</div>
     </div>`;
 }
 
@@ -3318,15 +3436,15 @@ function nextMatchPreviewHtml() {
 // scrolls on.
 function showMatchModal(result, extraHtml = "", { onContinue = null, continueLabel = "Continue", onDone = null, page = null, showNext = false } = {}) {
   const context = result.roundLabel ? `${result.roundLabel}${result.opponentName ? " vs " + result.opponentName : ""}` : "";
-  const margin = result.margin == null ? "" : result.margin === 0 ? "by &lt;1" : `by ${result.margin}`;
-  const title = `<span class="match-title"><span class="match-head ${result.win ? "win" : "loss"}">${result.win ? "VICTORY" : "DEFEAT"}${
+  const margin = result.draw || result.margin == null ? "" : result.margin === 0 ? "by &lt;1" : `by ${result.margin}`;
+  const title = `<span class="match-title"><span class="match-head ${result.win ? "win" : result.draw ? "draw" : "loss"}">${result.win ? "VICTORY" : result.draw ? "DRAW" : "DEFEAT"}${
     margin ? ` <span class="match-margin">${margin}</span>` : ""
   }</span>${context ? `<span class="match-head-sub">${context}</span>` : ""}</span>`;
   const html = `
       ${stickyHeadHtml(title)}
       <div class="match-card">
         ${result.championBonus ? `<div class="match-sub champion-line">👑 Champion! +$${fmt(result.championBonus.cash)} · ${signedNum(result.championBonus.rating)} rating</div>` : ""}
-        <div class="match-sub perf-note match-chance">Before the match you had a <b>${result.winProb}%</b> win chance.</div>
+        <div class="match-sub perf-note match-chance">Before the match you had a <b>${result.winProb}%</b> win chance${result.drawProb ? ` · <b>${result.drawProb}%</b> draw` : ""}.${result.decidedOnFocus ? ` A dead heat — it went to whoever had the better focus skills.` : ""}</div>
         ${headToHeadHtml(result)}
         ${matchResultTableHtml(result)}
         ${showNext ? nextMatchPreviewHtml() : ""}
@@ -3866,7 +3984,7 @@ function openCareer() {
     // Their league is only worth saying if it isn't yours (it always is,
     // outside of edge cases) — the record is what tells you something.
     const opponentExtra = rival
-      ? `${rival.league !== state.leagueTier ? ` · League ${rival.league}` : ""} · ${rival.wins}–${rival.losses}`
+      ? `${rival.league !== state.leagueTier ? ` · League ${rival.league}` : ""} · ${wdl(rival.wins, rival.draws, rival.losses)}`
       : "";
     const skillsForMatch = state.activeSkills
       .map((k) => {
@@ -3889,6 +4007,7 @@ function openCareer() {
   }
 
   const seasonWins = state.seasonResults.filter((r) => r.win).length;
+  const seasonDraws = state.seasonResults.filter((r) => r.draw).length;
   const seasonPlayed = state.seasonResults.length;
   const tablePos = playerTablePosition();
 
@@ -3924,7 +4043,7 @@ function openCareer() {
     <div class="modal-section">
       <h3>This Season</h3>
       <div class="kv-row"><span>Year ${state.year} · League ${state.leagueTier}</span><span>Played ${seasonPlayed}/${BAL.seasonRounds}</span></div>
-      <div class="kv-row"><span>Record</span><span>${seasonWins}–${seasonPlayed - seasonWins}${tablePos ? ` · #${tablePos.pos} of ${tablePos.size}` : ""}</span></div>
+      <div class="kv-row"><span>Record</span><span>${wdl(seasonWins, seasonDraws, seasonPlayed - seasonWins - seasonDraws)}${tablePos ? ` · #${tablePos.pos} of ${tablePos.size}` : ""}</span></div>
       ${state.peakLeagueTier !== state.leagueTier ? `<div class="kv-row"><span>Highest league reached</span><span>League ${state.peakLeagueTier}</span></div>` : ""}
       <div class="menu-row" id="viewLeaguesLink"><span>📊 View League Standings</span><span class="arrow">›</span></div>
       <div class="menu-row" id="viewHistoryLink"><span>📜 Match History</span><span class="arrow">›</span></div>
@@ -3934,7 +4053,7 @@ function openCareer() {
     <div class="modal-section">
       <h3>Career — ${escapeHtml(state.playerName || "Player")}</h3>
       <div class="kv-row"><span>Rating</span><span>${fmt(state.rank)} · peak ${fmt(state.peakRank)}</span></div>
-      ${state.wins !== seasonWins || state.losses !== seasonPlayed - seasonWins ? `<div class="kv-row"><span>All-time record</span><span>${state.wins}–${state.losses}</span></div>` : ""}
+      ${state.wins !== seasonWins || state.losses !== seasonPlayed - seasonWins - seasonDraws ? `<div class="kv-row"><span>All-time record</span><span>${wdl(state.wins, state.draws, state.losses)}</span></div>` : ""}
     </div>
     <div class="modal-section">
       <h3>Employment</h3>
@@ -3997,9 +4116,11 @@ function leagueTableHtml(tier) {
   const showPromo = tier > 1;
   const showReleg = tier < BAL.leagueCount;
   const champ = isSnapshot && state.playoffChampions ? state.playoffChampions[tier] : null;
-  // Everyone plays every round (40 players, no byes) and a win is the only
-  // way to score, so W = points ÷ 3 and L = rounds played − W.
+  // Each row's W–D–L and form come from the stored results; an older
+  // snapshot without them falls back to W = points ÷ 3 (no draws then).
   const played = isSnapshot ? BAL.seasonRounds : state.roundIndex;
+  const recFor = (t) => t.rec || { w: Math.floor(t.points / BAL.winPoints), d: 0, l: played - Math.floor(t.points / BAL.winPoints), form: [] };
+  const formHtml = (f) => f.map((x) => `<i class="f-${x.toLowerCase()}" title="${x === "W" ? "Win" : x === "D" ? "Draw" : "Loss"}"></i>`).join("");
   const rows = standings
     .map((t, i) => {
       const pos = i + 1;
@@ -4017,10 +4138,9 @@ function leagueTableHtml(tier) {
       <div class="league-row ${zone} ${playoff} ${t.isPlayer ? "league-row-you" : ""}" ${!t.isPlayer && t.rivalId != null ? `data-rival="${t.rivalId}"` : ""}>
         <span class="league-pos">${pos}</span>
         <span class="league-name">${isChamp ? "🏆 " : ""}${t.name}${t.isPlayer ? " (You)" : ""}</span>
-        <span class="league-rating">${fmt(t.rating)}</span>
-        <span class="league-wl">${t.points / 3}</span>
-        <span class="league-wl">${played - t.points / 3}</span>
+        <span class="league-wl">${recFor(t).w}–${recFor(t).d}–${recFor(t).l}</span>
         <span class="league-points">${t.points}</span>
+        <span class="league-form">${formHtml(recFor(t).form)}</span>
       </div>${cutLine}`;
     })
     .join("");
@@ -4034,14 +4154,13 @@ function leagueTableHtml(tier) {
   return `
     <p class="modal-sub">${noteText}</p>
     ${legend}
-    <p class="modal-sub league-sort">Sorted by points; level on points → head-to-head wins between them, then rating.</p>
+    <p class="modal-sub league-sort">Win ${BAL.winPoints} pts · draw ${BAL.drawPoints}. Level on points → head-to-head between them, then rating. Form: last 5, newest right.</p>
     <div class="league-table-header">
       <span class="league-pos">#</span>
       <span class="league-name">Name</span>
-      <span class="league-rating">Rating</span>
-      <span class="league-wl">W</span>
-      <span class="league-wl">L</span>
+      <span class="league-wl">W–D–L</span>
       <span class="league-points">Pts</span>
+      <span class="league-form">Form</span>
     </div>
     <div class="league-table">${rows}</div>`;
 }
@@ -4115,7 +4234,7 @@ function resultsListHtml(rows) {
   const body = rows
     .map((r) => `<div class="hist-row res2-row ${r.cls || ""}" ${r.attrs || ""}>
         <span class="hist-round">${r.round}</span>
-        <span class="hist-wl ${r.win ? "win" : "loss"}">${r.win ? "W" : "L"}</span>
+        <span class="hist-wl ${r.win ? "win" : r.draw ? "draw" : "loss"}">${r.win ? "W" : r.draw ? "D" : "L"}</span>
         <span class="hist-opp">${r.oppPos ? `<span class="hist-pos">#${r.oppPos}</span> ` : ""}${r.oppName}</span>
         <span class="hist-score">${r.oppRating != null ? fmt(r.oppRating) : ""}</span>
         <span class="hist-delta ${deltaClass(r.delta || 0)}">${r.delta != null ? signedNum(r.delta) : ""}</span>
@@ -4156,9 +4275,9 @@ function myMatchesHtml() {
   const summary = resultsSummaryHtml({
     league: state.leagueTier,
     rating: state.rank,
-    season: `${rec.wins}–${rec.losses}`,
+    season: wdl(rec.wins, rec.draws, rec.losses),
     pos: currentTablePositions(state.leagueTier).get(HISTORY_PLAYER_ID),
-    allTime: `${state.wins}–${state.losses}`,
+    allTime: wdl(state.wins, state.draws, state.losses),
   });
   if (!mine.length) return `${summary}<p class="modal-sub">No matches played yet. Every match you play from now on is kept here — tap one to see its full result again.</p>`;
   const posAt = tableLookup();
@@ -4172,13 +4291,14 @@ function myMatchesHtml() {
   const sections = years
     .map((y) => {
       const list = mine.map((m, i) => ({ m, i })).filter((x) => x.m.year === y).reverse();
-      const w = list.filter((x) => x.m.win).length;
+      const w = list.filter((x) => x.m.win).length, d = list.filter((x) => x.m.draw).length;
       const tiers = [...new Set(list.map((x) => x.m.tier).filter(Boolean))];
       const rows = list.map(({ m, i }) => {
         const key = roundKeyFromLabel(m.roundLabel);
         return {
           round: roundShort(m.roundLabel),
           win: m.win,
+          draw: m.draw,
           oppName: m.opponentName || "?",
           oppPos: posAt(y, m.tier, key, oppId(m)),
           oppRating: m.opponentRating,
@@ -4190,7 +4310,7 @@ function myMatchesHtml() {
       });
       const legacyNote = list.some((x) => x.m.legacy) ? `<p class="modal-sub">Matches without details were played before full results were saved.</p>` : "";
       return `<div class="modal-section">
-        <h3>Year ${y}${tiers.length ? ` · League ${tiers.join(" → ")}` : ""} · ${w}–${list.length - w}</h3>
+        <h3>Year ${y}${tiers.length ? ` · League ${tiers.join(" → ")}` : ""} · ${wdl(w, d, list.length - w - d)}</h3>
         ${resultsListHtml(rows)}${legacyNote}
       </div>`;
     })
@@ -4447,19 +4567,26 @@ function tablePositionsBefore(year, tier, key) {
   const rounds = (((ensureHistory().league[year] || {})[tier]) || {});
   const upTo = /^\d+$/.test(key) ? Number(key) : BAL.seasonRounds + 1;
   if (upTo <= 1) return null;
-  const points = new Map(), rating = new Map(), beat = new Set();
+  const points = new Map(), rating = new Map(), beat = new Set(), h2hScore = new Map();
   const note = (id, r) => { if (!points.has(id)) points.set(id, 0); if (r != null) rating.set(id, r); };
   for (let k = 1; k < upTo; k++) {
-    (rounds[String(k)] || []).forEach(([w, l, wr, lr]) => {
+    (rounds[String(k)] || []).forEach(([w, l, wr, lr, d]) => {
       note(w, wr); note(l, lr);
-      points.set(w, points.get(w) + 3);
-      beat.add(`${w}>${l}`);
+      if (d) {
+        points.set(w, points.get(w) + BAL.drawPoints);
+        points.set(l, points.get(l) + BAL.drawPoints);
+      } else {
+        points.set(w, points.get(w) + BAL.winPoints);
+        beat.add(`${w}>${l}`);
+      }
+      h2hScore.set(`${w}>${l}`, (h2hScore.get(`${w}>${l}`) || 0) + (d ? 0.5 : 1));
+      if (d) h2hScore.set(`${l}>${w}`, (h2hScore.get(`${l}>${w}`) || 0) + 0.5);
     });
   }
   (rounds[key] || []).forEach(([w, l, wr, lr]) => { if (points.has(w)) rating.set(w, wr); if (points.has(l)) rating.set(l, lr); });
   if (!points.size) return null;
   const ids = [...points.keys()];
-  const h2h = new Map(ids.map((a) => [a, ids.filter((b) => b !== a && points.get(b) === points.get(a) && beat.has(`${a}>${b}`)).length]));
+  const h2h = new Map(ids.map((a) => [a, ids.filter((b) => b !== a && points.get(b) === points.get(a)).reduce((sum, b) => sum + (h2hScore.get(`${a}>${b}`) || 0), 0)]));
   ids.sort((a, b) => points.get(b) - points.get(a) || h2h.get(b) - h2h.get(a) || (rating.get(b) || 0) - (rating.get(a) || 0) || a - b);
   return new Map(ids.map((x, i) => [x, i + 1]));
 }
@@ -4475,9 +4602,9 @@ function openRival(id) {
     const yearData = league[year] || {};
     Object.keys(yearData).forEach((tier) =>
       historyRoundKeys().forEach((key) =>
-        (yearData[tier][key] || []).forEach(([w, l, wr, lr]) => {
-          if (w === id) games.push({ year, key, tier: Number(tier), win: true, opp: l, oppRating: lr, rating: wr });
-          else if (l === id) games.push({ year, key, tier: Number(tier), win: false, opp: w, oppRating: wr, rating: lr });
+        (yearData[tier][key] || []).forEach(([w, l, wr, lr, d]) => {
+          if (w === id) games.push({ year, key, tier: Number(tier), win: !d, draw: !!d, opp: l, oppRating: lr, rating: wr });
+          else if (l === id) games.push({ year, key, tier: Number(tier), win: false, draw: !!d, opp: w, oppRating: wr, rating: lr });
         })
       )
     );
@@ -4488,11 +4615,12 @@ function openRival(id) {
     .map((year) => {
       const list = games.filter((g) => g.year === year).reverse();
       if (!list.length) return year === state.year ? `<div class="modal-section"><h3>Year ${year}</h3><p class="modal-sub">No results recorded for them this season yet.</p></div>` : "";
-      const w = list.filter((g) => g.win).length;
+      const w = list.filter((g) => g.win).length, d = list.filter((g) => g.draw).length;
       const tiers = [...new Set(list.map((g) => g.tier))];
       const rows = list.map((g) => ({
         round: roundShort(roundKeyLabel(g.key)),
         win: g.win,
+        draw: g.draw,
         oppName: historyName(g.opp),
         oppPos: posAt(year, g.tier, g.key, g.opp),
         oppRating: g.oppRating,
@@ -4501,13 +4629,13 @@ function openRival(id) {
         cls: g.opp === HISTORY_PLAYER_ID ? "res2-you" : "",
       }));
       return `<div class="modal-section">
-        <h3>Year ${year} · League ${tiers.join(" → ")} · ${w}–${list.length - w}</h3>
+        <h3>Year ${year} · League ${tiers.join(" → ")} · ${wdl(w, d, list.length - w - d)}</h3>
         ${resultsListHtml(rows)}
       </div>`;
     })
     .join("");
   const thisYear = games.filter((g) => g.year === state.year);
-  const tw = thisYear.filter((g) => g.win).length;
+  const tw = thisYear.filter((g) => g.win).length, td = thisYear.filter((g) => g.draw).length;
   // Their skills: 3 fixed ⭐ specialisations, levels following their rating.
   const focusNow = inSeason() ? state.activeSkills : [];
   const skillRows = SKILL_KEYS.map((k) => {
@@ -4516,7 +4644,7 @@ function openRival(id) {
   }).join("");
   const html = `
     ${stickyHeadHtml(r.name)}
-    ${resultsSummaryHtml({ league: r.league, rating: r.rating, season: `${tw}–${thisYear.length - tw}`, pos: currentTablePositions(r.league).get(id), allTime: `${r.wins}–${r.losses}` })}
+    ${resultsSummaryHtml({ league: r.league, rating: r.rating, season: wdl(tw, td, thisYear.length - tw - td), pos: currentTablePositions(r.league).get(id), allTime: wdl(r.wins, r.draws, r.losses) })}
     <div class="modal-section">
       <h3>Skills</h3>
       ${skillRows}
@@ -4567,7 +4695,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   let progress = null;
   if (start && start.day !== state.day) progress = progressRows(start);
   const season = state.seasonResults || [];
-  const w = season.filter((r) => r.win).length;
+  const w = season.filter((r) => r.win).length, dr = season.filter((r) => r.draw).length;
   const moveText = (from2, to2) => (to2 < from2 ? `⬆️ Promoted to League ${to2}` : to2 > from2 ? `⬇️ Relegated to League ${to2}` : `Staying in League ${to2}`);
   const playedTier = state.lastStandingsTier || tierBefore;
   let icon = "📅", title = "", sub = "";
@@ -4586,7 +4714,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   } else if (from === "regular" && to === "playoffs") {
     icon = "🏆"; title = "Through to the playoffs!"; sub = `Year ${state.year} · League ${playedTier}`;
     how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize}`]);
-    how.push(["📋 Record", `${w}–${season.length - w}`]);
+    how.push(["📋 Record", wdl(w, dr, season.length - w - dr)]);
     if (playedTier > 1 && state.lastPlayerPosition <= BAL.promotionTablePlaces) how.push(["⬆️ Promotion", `secured (top ${BAL.promotionTablePlaces})`]);
     const info = getNextMatchInfo();
     next.push(["🌱 Your seed", `#${state.playoff.playerSeed} of ${BAL.playoffSize}`]);
@@ -4597,7 +4725,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   } else if (from === "regular" && to === "offseason") {
     icon = "📋"; title = "Regular season over"; sub = `Year ${state.year} · League ${playedTier}`;
     how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize}`]);
-    how.push(["📋 Record", `${w}–${season.length - w}`]);
+    how.push(["📋 Record", wdl(w, dr, season.length - w - dr)]);
     how.push(["🏆 Playoffs", `missed (top ${BAL.playoffSize} only)`]);
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
     next.push(...campAndNextYearRows());
@@ -4983,6 +5111,7 @@ function openHowTo() {
     `Each side's <b>match-day rating</b> = performance × ${B.perfWeight} + focus-skill edge + luck. Higher wins. Rating isn't part of it — it rises and falls with your results as a record.`,
     `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Skills means all 7, averaged — the week's focus skills count separately, in the edge. A rival's comes from their 7 skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
     `<b>🎯 Focus-skill edge:</b> whoever has the better average in the week's focus skills gets <b>${B.skillEdgeWeight}</b> match-day rating for every point they're ahead.`,
+    `<b>🤝 Draws:</b> if the two match-day totals finish within ${B.drawBand} of each other it's a draw — about 1 even game in 7, fewer when one side is clearly better. A draw is 1 point each and half the win prize. Playoff games can't be drawn: a dead heat goes to whoever has the better focus skills.`,
     "Luck is random for both sides and is drawn so you win exactly as often as the win chance says. It's usually a small nudge; upsets always stay possible.",
     "The result screen explains every number; the next-match preview shows both sides' focus skills.",
   ]));
@@ -4995,7 +5124,7 @@ function openHowTo() {
       `Miss the playoffs: a ${B.trainingCampDays}-day <b>training camp</b>; knocked out: camp for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
       `${B.leagueCount} leagues — you start in League ${B.leagueCount}. <b>${B.relegationCount} go up</b> from each: the playoff champion plus the next ${B.promotionTablePlaces} highest in the table. Bottom ${B.relegationCount} go down.`,
       "Every rival plays real simulated matches — all tables are live. Tap a name to see their season.",
-      "<b>Rating</b> (🏆) is your strength and sets your win chance. <b>Table position</b> comes from league points (3 per win); players level on points are split by their games against each other, then by rating.",
+      `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b> comes from league points (${B.winPoints} a win, ${B.drawPoints} a draw); players level on points are split by their games against each other, then by rating.`,
       "<b>Match History</b> shows your <b>upcoming</b> matches (the rest of the season, then your playoff path), your past matches, and every league result for this season and last.",
     ])}`);
 
@@ -5420,7 +5549,7 @@ function runDay() {
   if (matchResult) {
     const oppText = matchResult.opponentName ? ` vs ${matchResult.opponentName}` : "";
     const label = matchResult.roundLabel || "Match";
-    const summary = `🏆 ${label}${oppText} (${matchResult.opponentRating}) — ${matchResult.win ? "WON" : "LOST"}. Rating ${fmt(matchResult.rankBefore)} → ${fmt(state.rank)}. +$${matchResult.cashReward}.`;
+    const summary = `🏆 ${label}${oppText} (${matchResult.opponentRating}) — ${matchResult.win ? "WON" : matchResult.draw ? "DREW" : "LOST"}. Rating ${fmt(matchResult.rankBefore)} → ${fmt(state.rank)}. +$${matchResult.cashReward}.`;
     const e = { html: summary, cls: "event-match" };
     state.logEntries.push(e);
     appendLog(e.html, e.cls);

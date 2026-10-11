@@ -4,11 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CELLOG Mechanics Map</title>
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <style>
 .cellog-back{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;
   padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;background:#0b1220;border-bottom:1px solid #263149;
   font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 .cellog-back a{color:#34d0a0;text-decoration:none}
+.cellog-back a.cellog-brand{color:#e7edf7;font-weight:800;font-size:18px;letter-spacing:.2px;margin-right:6px}
+.cellog-back a.cellog-brand small{color:#34d0a0;font-size:13px;font-weight:600;margin-right:4px}
 .cellog-back span{color:#93a1bd;font-weight:500;font-size:12.5px;margin-left:auto}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}.cellog-back{padding-top:8px}</style>
@@ -17,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a href="../index.html">← Back to CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.73.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.74.0</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -160,7 +165,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
   <figure>
     <div class="sheet" id="sheet"></div>
-    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.73).</figcaption>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.74).</figcaption>
   </figure>
 
   <section class="detail" id="detail" aria-live="polite"></section>
@@ -221,12 +226,12 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["rival", "Rival", "league & rating set skills", "match", 4, 5, "Each rival has 3 fixed specialisations. A mid-table rival's ⭐ skills sit 10 under their league's cap, higher or lower with their rating."],
 
     ["rating", "Rating", "Elo, up to ±24 a match", "career", 5, 1, "Rises with wins and falls with losses, on the rating gap (an unlikely result moves it more). A record of how you've done: it decides prize size, breaks table ties and places rivals within their league. It isn't part of the match itself."],
-    ["result", "Win or loss", "one match a week", "match", 5, 3, "The match outcome feeds your rating, cash and the league table."],
-    ["table", "League table", "wins, head-to-head, rating", "career", 5, 5, "40 players per league (fewer in shorter games), 3 points a win. Level on points: head-to-head wins, then rating."],
+    ["result", "Win, draw or loss", "one match a week", "match", 5, 3, "Finishing within 30 of each other is a draw (about 1 even game in 7). The outcome feeds your rating, cash and the league table."],
+    ["table", "League table", "wins, head-to-head, rating", "career", 5, 5, "40 players per league (fewer in shorter games): 3 points a win, 1 a draw. Level on points: head-to-head (a draw counts half), then rating. Shows W–D–L, points and form."],
     ["league", "League", "5 tiers · best league", "career", 5, 7, "The league you play in sets your rivals; the best league you've ever reached sets skill caps, coach and staff levels, and the pro requirement."],
 
     ["calendar", "Season calendar", "preseason → season → camp", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → training camp until the Final. The Final ends the year."],
-    ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination. The champion wins +$1,000 and +40 rating, and is promoted."],
+    ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination: no draws — a dead heat goes to the better focus skills. The champion wins +$1,000 and +40 rating, and is promoted."],
     ["promo", "Promotion & relegation", "top 3 + champion · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
     ["yearend", "New year", "raise · renewal · gear expires", "career", 6, 9, "When the Final's day ends: a pay rise (+$10/day a year, up to 5 years), the pro renewal check, and equipment wears out."],
   ];
@@ -288,9 +293,9 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["rating", "rival", "places them in the league", "decides"],
     ["luck", "result", "random each side", "decides"],
     ["matchday", "result", "higher total wins", "decides"],
-    ["result", "rating", "± up to 24", "decides"],
-    ["result", "cash", "prize: $60 + rating ÷ 20", "helps"],
-    ["result", "table", "3 points a win", "decides"],
+    ["result", "rating", "± up to 24 (draw = ½)", "decides"],
+    ["result", "cash", "prize: $60 + rating ÷ 20 (draw: half)", "helps"],
+    ["result", "table", "3 a win · 1 a draw", "decides"],
     ["table", "playoffs", "top 16", "decides"],
     ["table", "promo", "top 3 up · bottom 4 down", "decides"],
     ["playoffs", "promo", "champion goes up", "helps"],
