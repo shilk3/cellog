@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.72.0";
+const APP_VERSION = "4.73.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -121,22 +121,19 @@ const BAL = {
   // that stops being one drops straight to the lower cap.
   specialisationCount: 3,
   otherSkillCapGap: 20,
-  // Match day, on top of each side's performance: every point your focus
-  // skills average above (or below) the opponent's is worth this much
-  // match-day rating.
-  skillEdgeWeight: 4,
-  // Skills match model (beta, per save): match-day = performance × this +
-  // the focus-skill edge at skillsEdgeWeight per point — rating left out.
-  skillsPerfWeight: 8,
-  skillsEdgeWeight: 10,
-  skillsLuckScale: 250, // its luck (luckScale's counterpart; rating changes keep luckScale)
-  skillsRivalBelowCap: 10, // a mid-league rival's ⭐ skills this far under the league cap
-  skillsRivalSpread: 0.06, // + this per rating point above the league's mid rating
+  // Match day: match-day rating = performance × perfWeight + the focus-skill
+  // edge (skillEdgeWeight per point your focus skills average above the
+  // opponent's) + luck. Rating isn't part of it.
+  perfWeight: 8,
+  skillEdgeWeight: 10,
+  // Match-day luck: the match-day gap that makes one side a 10-to-1 favourite.
+  matchLuckScale: 250,
+  rivalBelowCap: 10, // a mid-league rival's ⭐ skills this far under the league cap
+  rivalSkillSpread: 0.06, // + this per rating point above the league's mid rating
   // How many focus skills an in-season week has: chance of 1, 2 or 3.
   focusSkillOdds: { 1: 0.3, 2: 0.5, 3: 0.2 },
-  // How much luck there is on match day: the rating gap that makes one side
-  // a 10-to-1 favourite (classic Elo uses 400). Smaller = less luck, so
-  // ratings, performance and focus skills decide more — upsets still happen.
+  // Rating (Elo) scale: the rating gap that makes one side a 10-to-1
+  // favourite for rating changes (classic Elo uses 400).
   luckScale: 300,
   // Rivals' Health / Calm / Rest on match day, for their performance.
   rivalCondition: 80,
@@ -920,7 +917,6 @@ function freshState() {
   return {
     saveVersion: SAVE_VERSION,
     gameLength: BAL.gameLength, // "short" | "half" | "full" — see applyGameLength
-    matchModel: "classic", // "classic" | "skills" (beta) — see matchWeights
     day: 1, // total career days played — flavor/log only
     playerName: null,
     year: 1,
@@ -1631,18 +1627,12 @@ function performanceScore(keys) {
   return performanceBreakdown(keys).score;
 }
 
-// Your effective strength for a match right now: base rank, adjusted by
-// today's performance. The single source of truth for that adjustment, so
-// win-probability and any "what fought" display can never drift apart.
-function currentMatchRating(keys) {
-  return state.rank + (performanceScore(keys) - 70) * 3;
-}
-
 // ---- Rivals' skills ----
 // Every rival has 3 fixed specialisations and small personal ups and downs
-// per skill (±4). Their levels follow their rating — so they rise and fall
-// with results — under the same caps as yours (their league's cap for a
-// specialisation, otherSkillCapGap lower for the rest).
+// per skill (±4). Their levels are anchored to their league and follow
+// their rating within it — so they rise and fall with results — under the
+// same caps as yours (their league's cap for a specialisation,
+// otherSkillCapGap lower for the rest).
 function ensureRivalProfile(r) {
   if (Array.isArray(r.specs) && r.specs.length === BAL.specialisationCount && r.skillOffsets) return r;
   const pool = SKILL_KEYS.slice();
@@ -1651,22 +1641,14 @@ function ensureRivalProfile(r) {
   r.skillOffsets = Object.fromEntries(SKILL_KEYS.map((k) => [k, randInt(-4, 4)]));
   return r;
 }
-// A specialisation's level for a rating: ~34 for a typical League 5 rival,
-// ~55 in League 3, ~90 in League 1.
-function rivalBaseSkill(rating) {
-  return 30 + (rating - 400) * 0.05;
-}
 function rivalSkill(r, key) {
   ensureRivalProfile(r);
   const spec = r.specs.includes(key);
   const top = LEAGUE_SKILL_CAP[r.league] || LEAGUE_SKILL_CAP[5];
   const cap = spec ? top : top - BAL.otherSkillCapGap;
-  // Skills model: anchored to their league — a mid-table rival's ⭐ skills sit
-  // skillsRivalBelowCap under the cap, spread by where their rating sits in
-  // the league's starting band — so their skills, not rating, set the bar.
-  const base = skillsModel()
-    ? top - BAL.skillsRivalBelowCap + (r.rating - leagueRatingMid(r.league)) * BAL.skillsRivalSpread
-    : rivalBaseSkill(r.rating);
+  // A mid-table rival's ⭐ skills sit rivalBelowCap under the league cap,
+  // spread by where their rating sits in the league's starting band.
+  const base = top - BAL.rivalBelowCap + (r.rating - leagueRatingMid(r.league)) * BAL.rivalSkillSpread;
   return clamp(base + (spec ? 0 : -10) + (r.skillOffsets[key] || 0), 1, cap);
 }
 function leagueRatingMid(tier) {
@@ -1682,42 +1664,34 @@ function rivalPerformance(r) {
   return PERF_WEIGHTS.skill * rivalFocusAverage(r, SKILL_KEYS) + (1 - PERF_WEIGHTS.skill) * BAL.rivalCondition;
 }
 
-// The match model, per save. Classic: match-day = rating + (performance −
-// 70) × 3 + the focus-skill edge. Skills (beta): performance ×
-// skillsPerfWeight + the edge at skillsEdgeWeight — rating isn't in it,
-// though it still moves with results (on rating-vs-rating maths) as a
-// record of how you've done.
-function skillsModel() {
-  return state.matchModel === "skills";
-}
+// Match day: performance × perfWeight + the focus-skill edge + luck.
+// Rating isn't in it — it moves with results (on rating-vs-rating maths) as
+// a record of how you've done.
 function matchWeights() {
-  return skillsModel()
-    ? { rating: 0, perf: BAL.skillsPerfWeight, perfBase: 0, edge: BAL.skillsEdgeWeight, luck: BAL.skillsLuckScale }
-    : { rating: 1, perf: 3, perfBase: 70, edge: BAL.skillEdgeWeight, luck: BAL.luckScale };
+  return { perf: BAL.perfWeight, edge: BAL.skillEdgeWeight, luck: BAL.matchLuckScale };
 }
 // One side's match-day rating before the edge and luck.
-function matchBase(rating, perf) {
-  const w = matchWeights();
-  return rating * w.rating + (perf - w.perfBase) * w.perf;
+function matchBase(perf) {
+  return perf * BAL.perfWeight;
 }
-// Classic rating maths: the chance the rating gap alone gives you.
+// Rating (Elo) maths: the chance the rating gap alone gives you.
 function ratingExpectation(rating, oppRating) {
   return 1 / (1 + Math.pow(10, (oppRating - rating) / BAL.luckScale));
 }
 
 // Everything a match against this opponent comes down to, before luck:
-// both match-day ratings (rating + performance, + the focus-skill edge for
+// both match-day ratings (performance, + the focus-skill edge for
 // whoever has the better focus skills) and your win chance. keys: the
 // skills tested (this week's focus; all 7 for a week not yet revealed).
 function matchup(entry, keys = state.activeSkills) {
   const rival = entry && entry.rivalId != null ? findRival(entry.rivalId) : null;
   const oppRating = rival ? rival.rating : entry && entry.rating != null ? entry.rating : Number(entry) || 0;
   const yourPerf = performanceScore(keys);
-  const yourBase = matchBase(state.rank, yourPerf);
+  const yourBase = matchBase(yourPerf);
   const youFocus = activeSkillAverage(keys);
   const oppFocus = rival ? rivalFocusAverage(rival, keys) : null;
   const oppPerf = rival ? rivalPerformance(rival, keys) : 70;
-  const oppBase = matchBase(oppRating, oppPerf);
+  const oppBase = matchBase(oppPerf);
   const edge = oppFocus == null ? 0 : (youFocus - oppFocus) * matchWeights().edge;
   const yourEdge = Math.max(0, edge), oppEdge = Math.max(0, -edge);
   const yourMatch = yourBase + yourEdge, oppMatch = oppBase + oppEdge;
@@ -1779,9 +1753,9 @@ function resolveMatch(opponent) {
   const oppPerf = Math.round(mu.oppPerf * 10) / 10;
   const K = BAL.ratingK;
   const actual = win ? 1 : 0;
-  // Classic: rating moves on the match's own win chance. Skills: on the
-  // rating gap alone, so rating stays a record of results.
-  const ratingProb = skillsModel() ? ratingExpectation(rankBefore, opponentRating) : winProb;
+  // Rating moves on the rating gap alone (not the match odds), so it stays
+  // a record of results.
+  const ratingProb = ratingExpectation(rankBefore, opponentRating);
   let ratingChange = Math.round(K * (actual - ratingProb));
   if (ratingChange < 0) ratingChange = Math.round(ratingChange * rankLossMult);
   state.rank = clamp(state.rank + ratingChange, BAL.ratingMin, BAL.ratingMax);
@@ -1801,18 +1775,17 @@ function resolveMatch(opponent) {
   // draw at a fifth of the size (LUCK_SHOWN), so luck reads as the small
   // nudge it usually is. Only when that isn't enough to explain the result
   // (an upset) is it topped up, split between the sides, to just past what
-  // the ratings and performances left — a few points' margin. Columns add up
-  // exactly and the winner always has the higher total.
-  // Skills model: rating is shown for context but isn't part of the sum.
+  // the performances and edge left — a few points' margin. Columns add up
+  // exactly and the winner always has the higher total. Rating is shown for
+  // context but isn't part of the sum.
   const w = matchWeights();
   const yourRatingShown = Math.round(rankBefore);
-  const yourPerfShown = Math.round((perf - w.perfBase) * w.perf);
+  const yourPerfShown = Math.round(matchBase(perf));
   const oppRatingShown = Math.round(opponentRating);
-  const oppPerfShown = Math.round((mu.oppPerf - w.perfBase) * w.perf);
+  const oppPerfShown = Math.round(matchBase(mu.oppPerf));
   const yourEdgeShown = Math.round(mu.yourEdge);
   const oppEdgeShown = Math.round(mu.oppEdge);
-  const yourRatingPart = yourRatingShown * w.rating, oppRatingPart = oppRatingShown * w.rating;
-  const baseGap = yourRatingPart + yourPerfShown + yourEdgeShown - (oppRatingPart + oppPerfShown + oppEdgeShown);
+  const baseGap = yourPerfShown + yourEdgeShown - (oppPerfShown + oppEdgeShown);
   let yourLuckShown = Math.round(yourLuck * LUCK_SHOWN);
   let oppLuckShown = Math.round(oppLuck * LUCK_SHOWN);
   const shownGap = baseGap + yourLuckShown - oppLuckShown; // your total − theirs
@@ -1822,8 +1795,8 @@ function resolveMatch(opponent) {
     yourLuckShown += yourPart;
     oppLuckShown -= fix - yourPart;
   }
-  const yourFinalShown = yourRatingPart + yourPerfShown + yourEdgeShown + yourLuckShown;
-  const oppFinalShown = oppRatingPart + oppPerfShown + oppEdgeShown + oppLuckShown;
+  const yourFinalShown = yourPerfShown + yourEdgeShown + yourLuckShown;
+  const oppFinalShown = oppPerfShown + oppEdgeShown + oppLuckShown;
 
   return {
     win,
@@ -1847,7 +1820,7 @@ function resolveMatch(opponent) {
       })),
     },
     winProb: Math.round(winProb * 100),
-    model: skillsModel() ? "skills" : "classic",
+    model: "skills", // older results (no model) were rating + performance
     perfWeight: w.perf, // what each point of performance was worth
     luckScale: w.luck,
     edgeWeight: w.edge,
@@ -1948,12 +1921,12 @@ function recordMyMatch(result) {
 // ratings and lifetime records — this is what makes the other 199 rivals a
 // real, evolving world rather than static names.
 function resolveNpcMatch(rivalA, rivalB) {
-  // Same match-day maths as yours: rating + performance, + the focus-skill
+  // Same match-day maths as yours: performance, + the focus-skill
   // edge for whoever has the better focus skills this week.
   const keys = state.activeSkills;
   const edge = (rivalFocusAverage(rivalA, keys) - rivalFocusAverage(rivalB, keys)) * matchWeights().edge;
-  const mA = matchBase(rivalA.rating, rivalPerformance(rivalA, keys)) + Math.max(0, edge);
-  const mB = matchBase(rivalB.rating, rivalPerformance(rivalB, keys)) + Math.max(0, -edge);
+  const mA = matchBase(rivalPerformance(rivalA)) + Math.max(0, edge);
+  const mB = matchBase(rivalPerformance(rivalB)) + Math.max(0, -edge);
   const aWon = simulateNpcMatch(mA, mB, matchWeights().luck);
   const change = eloChange(rivalA.rating, rivalB.rating, aWon);
   rivalA.rating = clamp(rivalA.rating + change, BAL.ratingMin, BAL.ratingMax);
@@ -3197,7 +3170,8 @@ function ratingCashExplainerHtml(result) {
   const bonus = result.championBonus || { cash: 0, rating: 0 };
   const row = (label, value, cls = "") => `<tr class="${cls}"><td>${label}</td><td>${value}</td></tr>`;
   const raw = result.ratingChangeRaw;
-  // Skills model: rating moves on the rating gap alone, not the match odds.
+  // Rating moves on the rating gap alone, not the match odds (older results:
+  // on the match odds).
   const p = result.ratingProb != null ? result.ratingProb : result.winProb;
   const byRating = result.model === "skills" ? " by rating" : "";
   const ratingRows = [
@@ -3282,7 +3256,7 @@ function luckExplainerHtml(result) {
   const gap = result.matchRating - theirs; // + = you're ahead, before luck
   const scale = result.luckScale || BAL.luckScale;
   const chanceFor = (g) => Math.round(100 / (1 + Math.pow(10, -g / scale)));
-  const ladderGaps = [-300, -200, -100, 0, 100, 200, 300];
+  const ladderGaps = result.model === "skills" ? [-200, -100, -50, 0, 50, 100, 200] : [-300, -200, -100, 0, 100, 200, 300];
   const rows = ladderGaps.filter((g) => g !== gap).map((g) => ({ gap: g, chance: chanceFor(g), you: false }));
   rows.push({ gap, chance: result.winProb, you: true });
   rows.sort((x, y) => x.gap - y.gap || (x.you ? 1 : -1));
@@ -3293,7 +3267,7 @@ function luckExplainerHtml(result) {
     <div class="match-sub perf-note">Both sides get random luck every match, and the highest match-day rating wins. Luck is usually a small nudge; now and then the underdog has an inspired day and sneaks it.</div>
     <div class="match-sub perf-note">So your win chance comes down to the gap before luck: ${result.model === "skills" ? `your performance + edge (${result.matchRating}) against theirs (${theirs}) — rating isn't part of it` : result.opponentMatchRating != null ? `your rating + performance + edge (${result.matchRating}) against theirs (${theirs})` : `your rating + performance (${result.matchRating}) against their rating (${result.opponentRating})`} — <b>${gapLabel(gap)}</b> this time. The bigger the gap, the more luck the underdog needs, but upsets always stay possible:</div>
     <table class="perf-table win-ladder">
-      <thead><tr><th>Rating gap</th><th>Win chance</th></tr></thead>
+      <thead><tr><th>${result.model === "skills" ? "Match-day gap" : "Rating gap"}</th><th>Win chance</th></tr></thead>
       <tbody>${ladder}</tbody>
     </table>`;
 }
@@ -3361,7 +3335,7 @@ function showMatchModal(result, extraHtml = "", { onContinue = null, continueLab
         <details class="match-more">
           <summary>How was my performance calculated?</summary>
           ${performanceTableHtml(result.breakdown)}
-          <div class="match-sub perf-note">${result.model === "skills" ? `Each point of performance is worth ${result.perfWeight} match-day rating — rating itself isn't part of it (🧪 Skills match model).` : "Each point of performance above 70 adds 3 to your match-day rating; below 70 it costs 3."}</div>
+          <div class="match-sub perf-note">${result.model === "skills" ? `Each point of performance is worth ${result.perfWeight} match-day rating — rating itself isn't part of it.` : "Each point of performance above 70 adds 3 to your match-day rating; below 70 it costs 3."}</div>
           <div class="match-sub perf-note">🎯 Focus skills: whoever averages higher in this week's focus skills gets ${result.edgeWeight || BAL.skillEdgeWeight} match-day rating for every point they're ahead.</div>
         </details>
         <details class="match-more">
@@ -3606,7 +3580,6 @@ function openMenu() {
     <div class="menu-row" id="menuTutorial"><span>📖 Quick Tutorial</span><span class="arrow">›</span></div>
     <a class="menu-row guide-link" href="guide/map.html"><span>🗺️ Mechanics Map <span class="menu-note">how everything connects</span></span><span class="arrow">›</span></a>
     <a class="menu-row guide-link" href="guide/infographic.html"><span>📊 Infographic <span class="menu-note">every rule &amp; number</span></span><span class="arrow">›</span></a>
-    <div class="menu-row" id="menuModel"><span>🧪 Match model <span class="menu-note">${skillsModel() ? "Skills (beta)" : "Classic"}</span></span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuGames"><span>🎮 Games <span class="menu-note">${gameLengthInfo(state.gameLength).icon} ${gameLengthInfo(state.gameLength).name} game</span></span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuSaveTransfer"><span>💾 Export / Import Save</span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuInstall"><span>📲 Add to Home Screen</span><span class="arrow">›</span></div>
@@ -3615,7 +3588,6 @@ function openMenu() {
   `;
   openModal(html);
   $("menuGames").addEventListener("click", () => openGames());
-  $("menuModel").addEventListener("click", openMatchModel);
   $("menuShop").addEventListener("click", openShop);
   $("menuCareer").addEventListener("click", openCareer);
   $("menuLeagues").addEventListener("click", () => openLeagues(state.leagueTier));
@@ -3630,35 +3602,6 @@ function openMenu() {
   $("menuReset").addEventListener("click", () => {
     if (confirm(`Restart your ${gameLengthInfo(state.gameLength).name} game? This wipes its progress (your other games are kept).`)) startNewGame(state.gameLength);
   });
-}
-
-// Beta: choose how this save's matches are decided. Switchable any time,
-// both ways; only this game is affected.
-function openMatchModel() {
-  const opt = (key, title, body) => `
-    <div class="menu-row model-opt${state.matchModel === key ? " on" : ""}" data-model="${key}">
-      <span><b>${state.matchModel === key ? "✅" : "⚪"} ${title}</b><span class="model-desc">${body}</span></span>
-    </div>`;
-  const html = `
-    <h2>🧪 Match model</h2>
-    <p class="modal-sub">How this ${gameLengthInfo(state.gameLength).name} game's matches are decided. You can switch back any time; your other games aren't affected.</p>
-    ${opt("classic", "Classic", "Match-day rating = rating + (performance − 70) × 3 + focus-skill edge (" + BAL.skillEdgeWeight + " per point) + luck. A big rating gap usually decides it.")}
-    ${opt("skills", "Skills (beta)", `Match-day rating = performance × ${BAL.skillsPerfWeight} + focus-skill edge (${BAL.skillsEdgeWeight} per point) + luck. Rating isn't part of it — it still rises and falls with your results as a record. The week's focus skills matter most.`)}
-  `;
-  openModal(html, { page: { key: "matchModel", reopen: openMatchModel } });
-  document.querySelectorAll("[data-model]").forEach((el) =>
-    el.addEventListener("click", () => {
-      const m = el.dataset.model;
-      if (m === state.matchModel) return;
-      state.matchModel = m;
-      const e = { html: `🧪 Match model: <b>${m === "skills" ? "Skills (beta)" : "Classic"}</b> — win chances now ${m === "skills" ? "come from performance and focus skills, not rating" : "include rating again"}.`, cls: "event-good" };
-      state.logEntries.push(e);
-      appendLog(e.html, e.cls);
-      saveState();
-      renderTopbar();
-      openMatchModel();
-    })
-  );
 }
 
 /* ---------------------------------------------------------------------- */
@@ -5033,12 +4976,12 @@ function openHowTo() {
     `Pick <b>${B.specialisationCount} specialisations</b>. They can reach your best league's skill cap; the other ${7 - B.specialisationCount} skills stop <b>${B.otherSkillCapGap} lower</b>:`,
     `League 5: ${LEAGUE_SKILL_CAP[5]} / ${LEAGUE_SKILL_CAP[5] - B.otherSkillCapGap} · League 4: ${LEAGUE_SKILL_CAP[4]} / ${LEAGUE_SKILL_CAP[4] - B.otherSkillCapGap} · League 3: ${LEAGUE_SKILL_CAP[3]} / ${LEAGUE_SKILL_CAP[3] - B.otherSkillCapGap} · League 2: ${LEAGUE_SKILL_CAP[2]} / ${LEAGUE_SKILL_CAP[2] - B.otherSkillCapGap} · League 1: ${LEAGUE_SKILL_CAP[1]} / ${LEAGUE_SKILL_CAP[1] - B.otherSkillCapGap}. A coach still sets each skill's own ceiling.`,
     `Change them any time (Career → ⭐ Specialisations), but a skill that stops being one <b>drops to the lower cap</b> straight away.`,
-    "Every rival has 3 specialisations too — fixed for good — and their skill levels follow their rating. Tap a rival to see them.",
+    `Every rival has 3 specialisations too — fixed for good. A mid-table rival's ⭐ skills sit ${B.rivalBelowCap} under their league's cap, higher or lower with their rating. Tap a rival to see them.`,
   ]));
 
   sec("match", "⚔️", "Match day", ul([
-    "Each side's <b>match-day rating</b> = rating + performance + focus-skill edge + luck. Higher wins.",
-    `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Each point above 70 adds 3; below 70 costs 3. Skills means all 7, averaged — the week's focus skills count separately, in the edge. A rival's comes from their 7 skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
+    `Each side's <b>match-day rating</b> = performance × ${B.perfWeight} + focus-skill edge + luck. Higher wins. Rating isn't part of it — it rises and falls with your results as a record.`,
+    `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Skills means all 7, averaged — the week's focus skills count separately, in the edge. A rival's comes from their 7 skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
     `<b>🎯 Focus-skill edge:</b> whoever has the better average in the week's focus skills gets <b>${B.skillEdgeWeight}</b> match-day rating for every point they're ahead.`,
     "Luck is random for both sides and is drawn so you win exactly as often as the win chance says. It's usually a small nudge; upsets always stay possible.",
     "The result screen explains every number; the next-match preview shows both sides' focus skills.",

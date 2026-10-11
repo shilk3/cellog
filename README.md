@@ -144,25 +144,20 @@ what each change costs first). Every rival has 3 specialisations too, fixed
 for good, under the same caps, with levels that follow their rating — so
 they rise and fall with their results.
 
-**🧪 Match model (beta, ☰ menu, per game)**: *Classic* is described below.
-*Skills* takes rating out of the match: match-day rating = performance × 8 +
-focus-skill edge (10 per point ahead) + luck (scale 250, so smaller swings).
-Rivals' skills are anchored to their league — a mid-table rival's ⭐ skills
-sit 10 under the league cap, ±0.06 per rating point from the league's middle
-— so the week's focus skills decide most matches. Rating still moves with
-results, on rating-vs-rating maths, as a record. Switch back any time.
-
-**Match day**: both sides get a match-day rating = rating + performance +
-focus-skill edge + luck, and the higher one wins. Your performance comes
-from your stats — all 7 skills averaged (55%), Health, Calm and Rest — (each
-point above 70 adds 3, below 70 costs 3); a rival's from their 7 skills, with
-Health, Calm and Rest at 80. Whoever
-averages higher in the week's focus skills gets 4 match-day rating per
-point ahead (🎯 Focus-skill edge) — shown on the result screen and the
-next-match preview. Luck is random for both sides every match,
-drawn so the odds of winning follow an Elo-style win chance for the gap
-(a 300 gap makes you a 10-to-1 favourite — tighter than classic Elo's 400,
-so luck matters less) — upsets always stay possible — and the scores
+**Match day**: both sides get a match-day rating = performance × 8 +
+focus-skill edge + luck, and the higher one wins. Rating isn't part of it:
+it rises and falls with results (on rating-vs-rating Elo maths, a 300 gap =
+10-to-1) as a record of how you've done, and sets prize money. Your
+performance comes from your stats — all 7 skills averaged (55%), Health
+(25%), Calm (15%) and Rest (5%); a rival's from their 7 skills, with Health,
+Calm and Rest at 80. Rivals' skills are anchored to their league: a
+mid-table rival's ⭐ skills sit 10 under the league cap, ±0.06 per rating
+point from the league's middle. Whoever averages higher in the week's focus
+skills gets 10 match-day rating per point ahead (🎯 Focus-skill edge) —
+shown on the result screen and the next-match preview. Luck is random for
+both sides every match, drawn so the odds follow an Elo-style curve on the
+match-day gap (a 250 gap makes you a 10-to-1 favourite) — upsets always
+stay possible — and the scores
 show each side's luck at a fifth of its real draw (topped up just enough to
 explain an upset), so luck reads as the small nudge it usually is. The result
 screen leads with VICTORY / DEFEAT by the margin and the round, then your

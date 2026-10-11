@@ -886,9 +886,6 @@ details.match-more[open] { padding-bottom: 8px; }
 
 /* Games screen / menu: the game length beside a label */
 .menu-note { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-left: 4px; }
-.model-opt { cursor: pointer; align-items: flex-start; }
-.model-opt .model-desc { display: block; font-weight: 400; font-size: 12.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
-.model-opt.on { border-color: var(--accent); }
 
 /* Specialisation picker */
 .spec-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
