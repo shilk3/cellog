@@ -1,6 +1,6 @@
 // Bump this on every deploy that changes cached files — it's what makes the
 // browser notice this file changed and install a new service worker.
-const CACHE_NAME = "cellog-v138";
+const CACHE_NAME = "cellog-v139";
 const ASSETS = [
   "./",
   "index.html",
@@ -10,6 +10,8 @@ const ASSETS = [
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
+  "guide/infographic.html",
+  "guide/map.html",
 ];
 
 self.addEventListener("install", (event) => {

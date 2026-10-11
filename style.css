@@ -635,6 +635,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .menu-row:first-of-type { border-top: none; }
 .menu-row span.arrow { color: var(--text-dim); }
+a.menu-row { color: inherit; text-decoration: none; }
 
 .version-tag {
   text-align: center;

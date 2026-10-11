@@ -6,6 +6,13 @@ Namecheap (A `@` → 76.76.21.21, CNAME `www` → cname.vercel-dns.com; www
 redirects to the apex). [cellog.vercel.app](https://cellog.vercel.app) and
 the original GitHub Pages address still work too.
 
+**Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.website/guide/map.html)
+— every mechanic as a box with arrows for what it pushes on (tap one to
+trace it) — and 📊 [Infographic](https://cellog.website/guide/infographic.html),
+every rule and number. They're copies of two claude.ai artifacts, built by
+`python3 tools/build_guides.py <infographic Main.dc.html> <map .html>`;
+rebuild them whenever a rule changes, with the usual version bump.
+
 A mobile-first simulation game: manage a rising Excel esports competitor. Every
 day has up to 24 hours — split them across Skill Training, Gym, Sleep,
 Relax, and Food. Everything is connected:

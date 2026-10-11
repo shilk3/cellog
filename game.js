@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.70.1";
+const APP_VERSION = "4.71.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3604,6 +3604,8 @@ function openMenu() {
     <div class="menu-row" id="menuRename"><span>✏️ Rename Player</span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuHow"><span>❓ How to Play</span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuTutorial"><span>📖 Quick Tutorial</span><span class="arrow">›</span></div>
+    <a class="menu-row guide-link" href="guide/map.html"><span>🗺️ Mechanics Map <span class="menu-note">how everything connects</span></span><span class="arrow">›</span></a>
+    <a class="menu-row guide-link" href="guide/infographic.html"><span>📊 Infographic <span class="menu-note">every rule &amp; number</span></span><span class="arrow">›</span></a>
     <div class="menu-row" id="menuModel"><span>🧪 Match model <span class="menu-note">${skillsModel() ? "Skills (beta)" : "Classic"}</span></span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuGames"><span>🎮 Games <span class="menu-note">${gameLengthInfo(state.gameLength).icon} ${gameLengthInfo(state.gameLength).name} game</span></span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuSaveTransfer"><span>💾 Export / Import Save</span><span class="arrow">›</span></div>
@@ -3622,6 +3624,8 @@ function openMenu() {
   $("menuHow").addEventListener("click", openHowTo);
   $("menuTutorial").addEventListener("click", () => openTutorial(0));
   $("menuInstall").addEventListener("click", openInstall);
+  // The guides are separate pages: save on the way out (nothing's lost anyway).
+  document.querySelectorAll(".guide-link").forEach((a) => a.addEventListener("click", () => saveState()));
   $("menuSaveTransfer").addEventListener("click", () => openSaveTransfer(state.gameLength));
   $("menuReset").addEventListener("click", () => {
     if (confirm(`Restart your ${gameLengthInfo(state.gameLength).name} game? This wipes its progress (your other games are kept).`)) startNewGame(state.gameLength);

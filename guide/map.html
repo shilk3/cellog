@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CELLOG Mechanics Map</title>
+<style>
+.cellog-back{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;background:#0b1220;border-bottom:1px solid #263149;
+  font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.cellog-back a{color:#34d0a0;text-decoration:none}
+.cellog-back span{color:#93a1bd;font-weight:500;font-size:12.5px;margin-left:auto}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}.cellog-back{padding-top:8px}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+</head>
+<body>
+<nav class="cellog-back"><a href="../index.html">← Back to CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.71.0</span></nav>
+<style>
+/* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
+:root {
+  --bg: #f4f6f3;
+  --sheet: #ffffff;
+  --grid: #e3e8e2;
+  --ink: #18221c;
+  --ink-dim: #5c6b62;
+  --head: #e9eee8;
+  --helps: #1f8a5a;
+  --hurts: #c6413a;
+  --decides: #5d6b8a;
+  --c-plan: #2f6fd1;
+  --c-stats: #1f8a5a;
+  --c-money: #b7791f;
+  --c-match: #8b4fc7;
+  --c-career: #0f8a8a;
+  --card: #ffffff;
+  --sel: #f2b52b;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1512; --sheet: #141c18; --grid: #222d27; --ink: #e6efe9; --ink-dim: #93a49a; --head: #1b2520;
+    --helps: #4cc38a; --hurts: #ef6b63; --decides: #93a2c4;
+    --c-plan: #6ea2f2; --c-stats: #4cc38a; --c-money: #e0a74a; --c-match: #b98ae8; --c-career: #3cc2c2;
+    --card: #18221d; --sel: #f2c14e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1512; --sheet: #141c18; --grid: #222d27; --ink: #e6efe9; --ink-dim: #93a49a; --head: #1b2520;
+  --helps: #4cc38a; --hurts: #ef6b63; --decides: #93a2c4;
+  --c-plan: #6ea2f2; --c-stats: #4cc38a; --c-money: #e0a74a; --c-match: #b98ae8; --c-career: #3cc2c2;
+  --card: #18221d; --sel: #f2c14e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; }
+header h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(26px, 4vw, 40px); letter-spacing: -0.5px; margin: 0; text-wrap: balance; }
+header h1 .cell { font-family: var(--f-mono); font-weight: 600; font-size: 0.45em; color: var(--ink-dim); vertical-align: middle; border: 1px solid var(--grid); background: var(--head); padding: 2px 6px; border-radius: 4px; margin-right: 8px; }
+header p { color: var(--ink-dim); max-width: 68ch; margin: 8px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 18px 0 10px; font-size: 13px; align-items: center; }
+.legend .grp { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.legend .sw { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.ln { width: 26px; height: 0; border-top: 2.5px solid; display: inline-block; }
+.ln.dash { border-top-style: dashed; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.toolbar button { font: 600 13px var(--f-body); color: var(--ink); background: var(--sheet); border: 1px solid var(--grid); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.toolbar button:hover { border-color: var(--ink-dim); }
+.toolbar button:focus-visible, .chip:focus-visible, .node:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+.toolbar .hint { color: var(--ink-dim); font-size: 13px; }
+.sheet { background: var(--sheet); border: 1px solid var(--grid); border-radius: 10px; overflow: auto; -webkit-overflow-scrolling: touch; max-height: 78vh; }
+.sheet svg { display: block; }
+figure { margin: 0; }
+figcaption { color: var(--ink-dim); font-size: 13px; margin-top: 8px; }
+.detail { margin-top: 18px; background: var(--sheet); border: 1px solid var(--grid); border-radius: 10px; padding: 16px; }
+.detail h2 { font-family: var(--f-display); margin: 0; font-size: 22px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.detail h2 .ref { font-family: var(--f-mono); font-size: 13px; color: var(--ink-dim); font-weight: 600; }
+.detail .what { margin: 6px 0 12px; max-width: 70ch; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+.cols h3 { font: 600 12px var(--f-mono); text-transform: uppercase; letter-spacing: 0.6px; color: var(--ink-dim); margin: 0 0 6px; }
+.rel { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rel li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.rel .k { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; }
+.rel button { all: unset; cursor: pointer; font-weight: 600; border-bottom: 1px dotted var(--ink-dim); }
+.rel button:focus-visible { outline: 2px solid var(--sel); }
+.rel .lab { color: var(--ink-dim); }
+.index { margin-top: 24px; }
+.index h2 { font-family: var(--f-display); font-size: 20px; margin: 0 0 4px; }
+.index > p { color: var(--ink-dim); margin: 0 0 12px; font-size: 14px; }
+.cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.cat h3 { font: 600 12px var(--f-mono); text-transform: uppercase; letter-spacing: 0.6px; margin: 0 0 6px; display: flex; align-items: center; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--f-body); color: var(--ink); background: var(--sheet); border: 1px solid var(--grid); border-left: 4px solid var(--c, var(--grid)); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+.chip.on { border-color: var(--sel); border-left-color: var(--sel); }
+/* SVG parts */
+.colhead rect { fill: var(--head); }
+.colhead text { fill: var(--ink-dim); font: 600 12px var(--f-mono); }
+.gridline { stroke: var(--grid); stroke-width: 1; }
+.edge path { fill: none; stroke-width: 1.6; opacity: 0.75; }
+.edge.helps path { stroke: var(--helps); }
+.edge.hurts path { stroke: var(--hurts); }
+.edge.decides path { stroke: var(--decides); }
+.edge.dash path { stroke-dasharray: 6 4; }
+.edge .lbl rect { fill: var(--sheet); opacity: 0.92; }
+.edge .lbl text { font: 500 10.5px var(--f-body); fill: var(--ink-dim); }
+.node rect.box { fill: var(--card); stroke: var(--grid); stroke-width: 1.2; }
+.node rect.tab { }
+.node text.t { font: 700 13.5px var(--f-display); fill: var(--ink); }
+.node text.s { font: 400 11px var(--f-body); fill: var(--ink-dim); }
+.node text.r { font: 600 10px var(--f-mono); fill: var(--ink-dim); }
+.node { cursor: pointer; }
+.node:hover rect.box { stroke: var(--ink-dim); }
+svg.focus .edge, svg.focus .node { opacity: 0.13; transition: opacity 0.15s; }
+svg.focus .edge.lit, svg.focus .node.lit { opacity: 1; }
+svg.focus .edge.lit path { stroke-width: 2.6; opacity: 1; }
+svg.focus .edge.lit .lbl text { fill: var(--ink); font-weight: 600; }
+svg.focus .node.sel rect.box { stroke: var(--sel); stroke-width: 3; }
+/* Labels only for the traced box, so the full map stays readable. */
+svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
+@media (prefers-reduced-motion: reduce) { svg.focus .edge, svg.focus .node { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="cell">A1:G12</span>CELLOG Mechanics Map</h1>
+    <p>Every game mechanic and what it pushes on. Read it left to right: the hours you plan each day build your stats, your stats and the week's focus decide matches, and results move you through the season. Tap any box to light up only its arrows, or pick one from the list under the map.</p>
+  </header>
+
+  <div class="legend" aria-label="Legend">
+    <div class="grp">
+      <span class="sw"><span class="dot" style="background:var(--c-plan)"></span>Your daily plan</span>
+      <span class="sw"><span class="dot" style="background:var(--c-stats)"></span>Stats &amp; states</span>
+      <span class="sw"><span class="dot" style="background:var(--c-money)"></span>Money &amp; staff</span>
+      <span class="sw"><span class="dot" style="background:var(--c-match)"></span>Match day</span>
+      <span class="sw"><span class="dot" style="background:var(--c-career)"></span>Season &amp; career</span>
+    </div>
+    <div class="grp">
+      <span class="sw"><span class="ln" style="border-color:var(--helps)"></span>helps you</span>
+      <span class="sw"><span class="ln" style="border-color:var(--hurts)"></span>costs or hurts</span>
+      <span class="sw"><span class="ln" style="border-color:var(--decides)"></span>decides or gates</span>
+      <span class="sw"><span class="ln dash" style="border-color:var(--decides)"></span>Classic match model only</span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
+    <button type="button" id="zoomFit">Fit width</button>
+    <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+    <button type="button" id="clearSel">Show everything</button>
+    <span class="hint" id="hint">Tap a box to trace it.</span>
+  </div>
+
+  <figure>
+    <div class="sheet" id="sheet"></div>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.71.0).</figcaption>
+  </figure>
+
+  <section class="detail" id="detail" aria-live="polite"></section>
+
+  <section class="index">
+    <h2>All mechanics</h2>
+    <p>The same boxes as a list. Pick one to trace it on the map.</p>
+    <div class="cats" id="cats"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const COLW = 250, X0 = 120, ROWH = 92, Y0 = 70, BW = 200, BH = 58;
+  const CAT = {
+    plan: { name: "Your daily plan", c: "var(--c-plan)" },
+    stats: { name: "Stats & states", c: "var(--c-stats)" },
+    money: { name: "Money & staff", c: "var(--c-money)" },
+    match: { name: "Match day", c: "var(--c-match)" },
+    career: { name: "Season & career", c: "var(--c-career)" },
+  };
+  // col: 0..6 (A..G), row: 0..11
+  const N = [
+    ["hours", "Day's hours", "16–24h, set by Nutrition", "plan", 0, 0, "Each day you share out your hours with the sliders. How many you get depends on yesterday's Nutrition (16h at 40 or less, the full 24h at 90+), plus any carb-loaded bonus hours."],
+    ["food", "Food", "builds Nutrition", "plan", 0, 1, "Food hours raise Nutrition. With Nutrition already at 100, each Food hour past 1h banks an extra hour for tomorrow (carb-loading, up to +3h)."],
+    ["sleep", "Sleep", "7h holds Rest", "plan", 0, 2, "7h of sleep holds Rest; each hour short costs 1.3 Rest, each hour over adds 1.4 (up to 3). With Rest full, oversleeping pushes the day's training multiplier past ×2."],
+    ["relax", "Relax", "3h holds Calm", "plan", 0, 3, "3h of Relax holds Calm; each hour short costs 2.4, each hour over adds 2.4. Calm past 100 becomes Chill, a reserve that drains first."],
+    ["gym", "Gym", "builds Health", "plan", 0, 4, "Gym hours build Health, but every hour carries a 2.5% injury chance that day. Locked while injured."],
+    ["train", "Skill training", "hours per skill", "plan", 0, 5, "Hours on a skill raise it. In the season only the week's 1–3 focus skills can be trained; in preseason and training camp all 7 can. Gains shrink as a skill nears 100, and an untrained skill slowly rusts."],
+    ["work", "Work / Pro Duties", "9h a day · 5h when pro", "plan", 0, 7, "Employed: 9h of Work a day earns your daily pay. Pro: 5h of Pro Duties at pro pay, and hours beyond 5h go towards techniques. Missing required hours costs one of 3 chances."],
+    ["jobsearch", "Job Search", "when unemployed", "plan", 0, 8, "After being fired (or not renewed as pro) the Work slider becomes Job Search. 10–40h in total gets you hired again; living costs keep running meanwhile."],
+
+    ["nutrition", "Nutrition", "0–100", "stats", 1, 1, "Built by Food, slips when neglected. Sets how many hours tomorrow has."],
+    ["rest", "Rest", "0–100", "stats", 1, 2, "Built by Sleep. The big training multiplier: ×1 at 70 up to ×2 at 100. Below 80 it wears down Health and Calm. Counts 5% of match performance."],
+    ["calm", "Calm (+ Chill)", "0–100, Chill to 130", "stats", 1, 3, "Built by Relax. Counts 15% of match performance (Chill counts as 100 at most). At 0 you burn out."],
+    ["health", "Health", "0–100", "stats", 1, 4, "Built by Gym, capped by your Physio level. Scales training (×0.5 at 0 up to ×1 at 100) and counts 25% of match performance."],
+    ["skills", "Skills ×7", "⭐ 3 specialisations", "stats", 1, 5, "Seven case skills. Your 3 ⭐ specialisations can reach your best league's cap; the other four stop 20 lower. The week's focus skills are what a match tests."],
+    ["cash", "Cash", "your bank", "money", 1, 8, "Money in from pay and prizes, out on living costs, staff wages and things you buy."],
+    ["living", "Living costs", "$50 every day", "money", 1, 9, "Charged every day whatever you're doing: preseason, unemployed or pro."],
+
+    ["support", "Support staff", "6 roles, hired weekly", "money", 2, 1, "Physio, Sleep App, Nutritionist, Meditation Coach, Recovery Program and Team Manager. Each is hired a week at a time for a wage; higher levels unlock in higher leagues."],
+    ["gear", "Equipment & items", "bought outright", "money", 2, 2, "Equipment lasts until the year ends: Second Monitor and Gaming PC (+5% / +10% training), Ergonomic Chair (−20% injury risk), Headphones (+0.5 Calm a day), Mattress (−25% Rest lost). Coffee, Energy Drink and Spa Day are instant top-ups once a week."],
+    ["burnout", "Burnout", "Calm hits 0", "stats", 2, 3, "Training is only 20% effective until Calm is back to 35."],
+    ["injury", "Injury", "Gym locked 3–5 days", "stats", 2, 4, "−5 to −10 Health and the Gym locked for 3–5 days. Never stops you playing a match."],
+    ["coaches", "Skill coaches", "Lv1–5, hired weekly", "money", 2, 5, "One coach per skill. Without a coach a skill stops at 50; a coach raises that ceiling (+10 to +50) and speeds training (+5% to +30%). Contracts are weekly and end after each match. Half price in preseason."],
+    ["caps", "Skill caps", "league cap · coach ceiling", "career", 2, 6, "A skill's limit is the lower of two: your best league's cap (⭐ 60/70/80/90/100 from League 5 to 1, others 20 lower) and your coach's ceiling (50 with no coach)."],
+    ["leave", "Annual leave", "all preseason", "career", 2, 8, "Preseason is paid annual leave: no Work or Pro Duties needed, and skill coaches are half price. Job Search carries on if you're unemployed."],
+
+    ["perf", "Performance", "0–100", "match", 3, 2, "Your match form: focus-skill average 55%, Health 25%, Calm 15%, Rest 5%, minus 5% for each unmastered technique. A rival's is their focus skills plus 80 for the rest."],
+    ["focus", "Week's focus", "1–3 skills (30/50/20%)", "match", 3, 5, "Each in-season week rolls 1, 2 or 3 focus skills (30%, 50%, 20% of weeks). They are the only skills you can train that week and exactly what the match tests."],
+    ["edge", "Focus-skill edge", "for whoever's ahead", "match", 3, 6, "Whoever averages higher in the week's focus skills gets a bonus for every point they're ahead: 4 a point in Classic, 10 in Skills."],
+    ["techniques", "Techniques", "pro only", "match", 3, 7, "About every 30 days as a pro a new technique appears. Pro Duties hours past 5h master it; each unmastered one costs 5% match performance."],
+    ["pro", "Pro status", "League 2+ & skill average", "career", 3, 8, "Go pro automatically once you've reached League 2 and your 7 skills average 75+ (85+ once League 1 is your best). Lasts to year end; renewed only if the average still holds."],
+
+    ["luck", "Luck", "random, both sides", "match", 4, 1, "Each side gets a random luck draw. It's sized so you win exactly as often as the win chance says; upsets always stay possible."],
+    ["matchday", "Match-day rating", "Classic or Skills model", "match", 4, 3, "Classic: rating + (performance − 70) × 3 + edge. Skills (beta): performance × 8 + edge. The higher total after luck wins."],
+    ["rival", "Rival", "rating sets their skills", "match", 4, 5, "Each rival has 3 fixed specialisations. Their skill levels follow their rating (Classic) or sit 10 under their league's cap, spread by rating (Skills)."],
+
+    ["rating", "Rating", "Elo, up to ±24 a match", "career", 5, 1, "Rises with wins and falls with losses: an unlikely result moves it more. Decides prize size, breaks table ties and, in Classic, is part of every match."],
+    ["result", "Win or loss", "one match a week", "match", 5, 3, "The match outcome feeds your rating, cash and the league table."],
+    ["table", "League table", "wins, head-to-head, rating", "career", 5, 5, "40 players per league (fewer in shorter games), 3 points a win. Level on points: head-to-head wins, then rating."],
+    ["league", "League", "5 tiers · best league", "career", 5, 7, "The league you play in sets your rivals; the best league you've ever reached sets skill caps, coach and staff levels, and the pro requirement."],
+
+    ["calendar", "Season calendar", "preseason → season → camp", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → training camp until the Final. The Final ends the year."],
+    ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination. The champion wins +$1,000 and +40 rating, and is promoted."],
+    ["promo", "Promotion & relegation", "top 3 + champion · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
+    ["yearend", "New year", "raise · renewal · gear expires", "career", 6, 9, "When the Final's day ends: a pay rise (+$10/day a year, up to 5 years), the pro renewal check, and equipment wears out."],
+  ];
+  // [from, to, label, kind, dash]
+  const E = [
+    ["hours", "food", "", "decides"], ["hours", "sleep", "", "decides"], ["hours", "relax", "", "decides"], ["hours", "gym", "", "decides"], ["hours", "train", "", "decides"], ["hours", "work", "your hours", "decides"],
+    ["food", "nutrition", "builds", "helps"],
+    ["nutrition", "hours", "sets tomorrow's length", "decides"],
+    ["food", "hours", "carb-load +1–3h", "helps"],
+    ["sleep", "rest", "builds", "helps"],
+    ["relax", "calm", "builds", "helps"],
+    ["gym", "health", "builds", "helps"],
+    ["gym", "injury", "2.5% risk per hour", "hurts"],
+    ["injury", "gym", "locks it", "hurts"],
+    ["injury", "health", "−5 to −10", "hurts"],
+    ["rest", "health", "below 80 wears down", "hurts"],
+    ["rest", "calm", "below 80 wears down", "hurts"],
+    ["rest", "train", "×1 → ×2 gains", "helps"],
+    ["health", "train", "×0.5 → ×1 gains", "helps"],
+    ["calm", "burnout", "at 0", "hurts"],
+    ["burnout", "train", "gains ×0.2", "hurts"],
+    ["train", "skills", "raises", "helps"],
+    ["caps", "skills", "ceiling", "decides"],
+    ["coaches", "caps", "+10 to +50 ceiling", "helps"],
+    ["coaches", "train", "+5% to +30% gains", "helps"],
+    ["league", "caps", "best league sets cap", "decides"],
+    ["league", "coaches", "unlocks levels", "decides"],
+    ["league", "support", "unlocks levels", "decides"],
+    ["leave", "coaches", "half price", "helps"],
+    ["cash", "coaches", "weekly wages", "hurts"],
+    ["cash", "support", "weekly wages", "hurts"],
+    ["cash", "gear", "buy", "hurts"],
+    ["living", "cash", "−$50 a day", "hurts"],
+    ["work", "cash", "pay from $70/day", "helps"],
+    ["work", "jobsearch", "miss hours 3× → fired", "hurts"],
+    ["jobsearch", "work", "10–40h → hired", "helps"],
+    ["support", "nutrition", "Nutritionist", "helps"],
+    ["support", "rest", "Sleep App", "helps"],
+    ["support", "calm", "Meditation", "helps"],
+    ["support", "health", "Physio", "helps"],
+    ["support", "injury", "Physio · Recovery", "helps"],
+    ["support", "rating", "Manager: smaller losses", "helps"],
+    ["gear", "train", "PC · Monitor", "helps"],
+    ["gear", "injury", "Chair −20% risk", "helps"],
+    ["gear", "calm", "Headphones · Spa", "helps"],
+    ["gear", "rest", "Mattress · Coffee", "helps"],
+    ["focus", "train", "only these in season", "decides"],
+    ["focus", "perf", "which skills count", "decides"],
+    ["focus", "edge", "skills compared", "decides"],
+    ["skills", "perf", "focus average 55%", "helps"],
+    ["health", "perf", "25%", "helps"],
+    ["calm", "perf", "15%", "helps"],
+    ["rest", "perf", "5%", "helps"],
+    ["techniques", "perf", "−5% each", "hurts"],
+    ["skills", "edge", "your focus average", "helps"],
+    ["rival", "edge", "their focus average", "hurts"],
+    ["rival", "matchday", "their total", "hurts"],
+    ["perf", "matchday", "×3 Classic · ×8 Skills", "helps"],
+    ["edge", "matchday", "4 / 10 per point", "helps"],
+    ["rating", "matchday", "Classic only", "decides", true],
+    ["luck", "result", "random each side", "decides"],
+    ["matchday", "result", "higher total wins", "decides"],
+    ["result", "rating", "± up to 24", "decides"],
+    ["result", "cash", "prize: $60 + rating ÷ 20", "helps"],
+    ["result", "table", "3 points a win", "decides"],
+    ["table", "playoffs", "top 16", "decides"],
+    ["table", "promo", "top 3 up · bottom 4 down", "decides"],
+    ["playoffs", "promo", "champion goes up", "helps"],
+    ["playoffs", "cash", "champion +$1,000", "helps"],
+    ["playoffs", "rating", "champion +40", "helps"],
+    ["promo", "league", "moves you", "decides"],
+    ["league", "rival", "tougher rivals", "hurts"],
+    ["league", "pro", "League 2+ reached", "decides"],
+    ["skills", "pro", "average 75+ (85+)", "decides"],
+    ["pro", "work", "5h Pro Duties, pro pay", "decides"],
+    ["pro", "techniques", "one every ~30 days", "hurts"],
+    ["work", "techniques", "Pro hours past 5h master", "helps"],
+    ["calendar", "focus", "rolled each season week", "decides"],
+    ["calendar", "train", "preseason & camp: all 7", "helps"],
+    ["calendar", "leave", "preseason", "decides"],
+    ["calendar", "table", "39 rounds", "decides"],
+    ["leave", "work", "no Work needed", "helps"],
+    ["calendar", "yearend", "the Final ends the year", "decides"],
+    ["yearend", "work", "+$10/day raise", "helps"],
+    ["yearend", "pro", "renewal check", "decides"],
+    ["yearend", "gear", "equipment expires", "hurts"],
+  ];
+  const byId = {};
+  N.forEach((n) => { byId[n[0]] = { id: n[0], title: n[1], sub: n[2], cat: n[3], col: n[4], row: n[5], what: n[6] }; });
+  const COLS = "ABCDEFG";
+  const COLNAMES = ["Plan", "Stats", "Modifiers", "Match inputs", "Match", "Results", "Season"];
+  const NCOL = 7, NROW = 10;
+  const W = X0 * 0 + 40 + NCOL * COLW, H = Y0 + NROW * ROWH + 20;
+  const cx = (n) => 40 + n.col * COLW + COLW / 2;
+  const cy = (n) => Y0 + n.row * ROWH + ROWH / 2;
+  const ref = (n) => COLS[n.col] + (n.row + 1);
+  const svgNS = "http://www.w3.org/2000/svg";
+  const el = (t, a = {}, p) => { const e = document.createElementNS(svgNS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Flowchart of every CELLOG mechanic and the arrows between them: daily hours build stats, stats and the week's focus decide matches, and results drive rating, cash, the table, promotion and pro status." });
+  // Sheet grid + column headers (A–G) and row numbers
+  const g0 = el("g", {}, svg);
+  for (let c = 0; c <= NCOL; c++) el("line", { class: "gridline", x1: 40 + c * COLW, y1: 30, x2: 40 + c * COLW, y2: H }, g0);
+  for (let r = 0; r <= NROW; r++) el("line", { class: "gridline", x1: 0, y1: Y0 + r * ROWH, x2: W, y2: Y0 + r * ROWH }, g0);
+  const ch = el("g", { class: "colhead" }, svg);
+  el("rect", { x: 0, y: 0, width: W, height: 30 }, ch);
+  el("rect", { x: 0, y: 0, width: 40, height: H }, ch);
+  for (let c = 0; c < NCOL; c++) { const t = el("text", { x: 40 + c * COLW + COLW / 2, y: 20, "text-anchor": "middle" }, ch); t.textContent = `${COLS[c]} · ${COLNAMES[c]}`; }
+  for (let r = 0; r < NROW; r++) { const t = el("text", { x: 20, y: Y0 + r * ROWH + ROWH / 2 + 4, "text-anchor": "middle" }, ch); t.textContent = r + 1; }
+
+  const defs = el("defs", {}, svg);
+  ["helps", "hurts", "decides"].forEach((k) => {
+    const m = el("marker", { id: "ah-" + k, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z", style: `fill:var(--${k})` }, m);
+  });
+
+  // Edge geometry: leave/enter by the facing sides; same column → top/bottom.
+  function anchors(a, b) {
+    const ax = cx(a), ay = cy(a), bx = cx(b), by = cy(b);
+    if (a.col === b.col) {
+      const down = by > ay;
+      const sx = ax + (down ? 30 : -30);
+      return { x1: sx, y1: ay + (down ? BH / 2 : -BH / 2), x2: sx, y2: by + (down ? -BH / 2 : BH / 2), vertical: true };
+    }
+    const right = bx > ax;
+    return { x1: ax + (right ? BW / 2 : -BW / 2), y1: ay, x2: bx + (right ? -BW / 2 : BW / 2), y2: by, vertical: false };
+  }
+  const gE = el("g", {}, svg), gN = el("g", {}, svg), gL = el("g", {}, svg);
+  // spread several edges leaving/entering the same side
+  const sideCount = {};
+  const edges = E.map(([f, t, label, kind, dash], i) => ({ i, f, t, label, kind, dash: !!dash }));
+  edges.forEach((e) => {
+    const a = byId[e.f], b = byId[e.t];
+    const k1 = e.f + (b.col > a.col ? "R" : b.col < a.col ? "L" : b.row > a.row ? "B" : "T");
+    const k2 = e.t + (a.col > b.col ? "R" : a.col < b.col ? "L" : a.row > b.row ? "B" : "T");
+    (sideCount[k1] = sideCount[k1] || []).push([e, "out"]);
+    (sideCount[k2] = sideCount[k2] || []).push([e, "in"]);
+  });
+  const off = new Map();
+  Object.values(sideCount).forEach((list) => {
+    list.sort((p, q) => { const o = (x) => { const n = byId[x[1] === "out" ? x[0].t : x[0].f]; return n.row * 10 + n.col; }; return o(p) - o(q); });
+    const n = list.length, step = Math.min(10, (BH - 14) / Math.max(1, n - 1));
+    list.forEach(([e, dir], j) => off.set(e.i + dir, n === 1 ? 0 : (j - (n - 1) / 2) * step));
+  });
+  edges.forEach((e) => {
+    const a = byId[e.f], b = byId[e.t];
+    const p = anchors(a, b);
+    let { x1, y1, x2, y2 } = p;
+    if (p.vertical) { x1 += off.get(e.i + "out") * 1.6; x2 += off.get(e.i + "in") * 1.6; }
+    else { y1 += off.get(e.i + "out"); y2 += off.get(e.i + "in"); }
+    let d, mx, my;
+    if (p.vertical) {
+      const dy = Math.max(30, Math.abs(y2 - y1) / 2) * Math.sign(y2 - y1);
+      d = `M${x1},${y1} C${x1},${y1 + dy} ${x2},${y2 - dy} ${x2},${y2}`;
+      mx = (x1 + x2) / 2; my = (y1 + y2) / 2;
+    } else {
+      const dir = Math.sign(x2 - x1);
+      const dx = Math.max(50, Math.abs(x2 - x1) / 2) * dir;
+      d = `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+      mx = (x1 + x2) / 2; my = (y1 + y2) / 2;
+    }
+    const g = el("g", { class: `edge ${e.kind}${e.dash ? " dash" : ""}`, "data-f": e.f, "data-t": e.t }, gE);
+    el("path", { d, "marker-end": `url(#ah-${e.kind})` }, g);
+    e.g = g;
+    if (e.label) {
+      const lg = el("g", { class: `edge lbl-wrap ${e.kind}`, "data-f": e.f, "data-t": e.t }, gL);
+      const l = el("g", { class: "lbl" }, lg);
+      const tw = e.label.length * 5.6 + 8;
+      el("rect", { x: mx - tw / 2, y: my - 8, width: tw, height: 15, rx: 4 }, l);
+      const t = el("text", { x: mx, y: my + 3.5, "text-anchor": "middle" }, l);
+      t.textContent = e.label;
+      e.lg = lg;
+    }
+  });
+  Object.values(byId).forEach((n) => {
+    const g = el("g", { class: "node", tabindex: "0", role: "button", "aria-label": `${n.title}: ${n.sub}`, "data-id": n.id }, gN);
+    const x = cx(n) - BW / 2, y = cy(n) - BH / 2;
+    el("rect", { class: "box", x, y, width: BW, height: BH, rx: 8 }, g);
+    el("rect", { class: "tab", x, y, width: 5, height: BH, rx: 2, style: `fill:${CAT[n.cat].c}` }, g);
+    const t = el("text", { class: "t", x: x + 14, y: y + 24 }, g); t.textContent = n.title;
+    const s = el("text", { class: "s", x: x + 14, y: y + 42 }, g); s.textContent = n.sub;
+    const r = el("text", { class: "r", x: x + BW - 8, y: y + 15, "text-anchor": "end" }, g); r.textContent = ref(n);
+    n.g = g;
+    g.addEventListener("click", () => select(n.id));
+    g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(n.id); } });
+  });
+  const sheet = document.getElementById("sheet");
+  sheet.appendChild(svg);
+
+  // Zoom: fit width by default on wide screens; readable size on phones.
+  let scale = 1;
+  function applyScale() { svg.setAttribute("width", Math.round(W * scale)); svg.setAttribute("height", Math.round(H * scale)); }
+  function fit() { scale = Math.max(0.3, (sheet.clientWidth - 2) / W); applyScale(); }
+  document.getElementById("zoomFit").addEventListener("click", fit);
+  document.getElementById("zoomIn").addEventListener("click", () => { scale = Math.min(1.6, scale * 1.25); applyScale(); });
+  document.getElementById("zoomOut").addEventListener("click", () => { scale = Math.max(0.3, scale / 1.25); applyScale(); });
+  if (sheet.clientWidth >= 900) fit(); else { scale = 0.72; applyScale(); }
+
+  // Detail panel + selection
+  const detail = document.getElementById("detail");
+  const kindVar = { helps: "var(--helps)", hurts: "var(--hurts)", decides: "var(--decides)" };
+  function relList(list, side) {
+    if (!list.length) return `<p class="lab">Nothing.</p>`;
+    return `<ul class="rel">${list.map((e) => { const o = byId[side === "in" ? e.f : e.t]; return `<li><span class="k" style="background:${kindVar[e.kind]}"></span><span><button type="button" data-go="${o.id}">${o.title}</button> <span class="lab">${e.label ? "— " + e.label : ""}${e.dash ? " (Classic only)" : ""}</span></span></li>`; }).join("")}</ul>`;
+  }
+  let current = null;
+  function select(id) {
+    current = id;
+    const n = byId[id];
+    svg.classList.add("focus");
+    svg.querySelectorAll(".lit,.sel").forEach((x) => x.classList.remove("lit", "sel"));
+    n.g.classList.add("lit", "sel");
+    const ins = edges.filter((e) => e.t === id), outs = edges.filter((e) => e.f === id);
+    ins.concat(outs).forEach((e) => { e.g.classList.add("lit"); if (e.lg) e.lg.classList.add("lit"); byId[e.f].g.classList.add("lit"); byId[e.t].g.classList.add("lit"); });
+    detail.innerHTML = `<h2>${n.title} <span class="ref">${ref(n)} · ${CAT[n.cat].name}</span></h2><p class="what">${n.what}</p>
+      <div class="cols"><div><h3>Pushed on by (${ins.length})</h3>${relList(ins, "in")}</div><div><h3>Pushes on (${outs.length})</h3>${relList(outs, "out")}</div></div>`;
+    document.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.id === id));
+    document.getElementById("hint").textContent = `Tracing ${n.title}: ${ins.length} in, ${outs.length} out.`;
+  }
+  function clearSel() {
+    current = null;
+    svg.classList.remove("focus");
+    svg.querySelectorAll(".lit,.sel").forEach((x) => x.classList.remove("lit", "sel"));
+    document.querySelectorAll(".chip").forEach((c) => c.classList.remove("on"));
+    document.getElementById("hint").textContent = "Tap a box to trace it.";
+    detail.innerHTML = `<h2>How it fits together <span class="ref">${N.length} mechanics · ${E.length} links</span></h2>
+      <p class="what">Three loops drive the game. <b>Daily loop:</b> hours → stats → better training tomorrow (Rest and Health multiply your gains; Nutrition sets tomorrow's hours). <b>Weekly loop:</b> the week's focus decides what you can train and what the match tests, so skills, performance and the focus-skill edge meet the rival and luck in one result. <b>Season loop:</b> results move your rating, cash and table place, which decide playoffs, promotion and your best league; that league raises your skill caps and unlocks coaches, staff and the pro path, which loop back into what you can train and earn.</p>
+      <p class="what">Pick any box to see exactly what pushes on it and what it pushes on.</p>`;
+  }
+  detail.addEventListener("click", (ev) => { const b = ev.target.closest("[data-go]"); if (b) { select(b.dataset.go); const n = byId[b.dataset.go]; const r = n.g.getBoundingClientRect(), s = sheet.getBoundingClientRect(); sheet.scrollBy({ left: r.left - s.left - s.width / 2 + r.width / 2, top: r.top - s.top - s.height / 2 + r.height / 2, behavior: "smooth" }); } });
+  document.getElementById("clearSel").addEventListener("click", clearSel);
+  svg.addEventListener("click", (ev) => { if (!ev.target.closest(".node")) clearSel(); });
+
+  // Index chips
+  const cats = document.getElementById("cats");
+  Object.keys(CAT).forEach((k) => {
+    const list = Object.values(byId).filter((n) => n.cat === k);
+    const d = document.createElement("div"); d.className = "cat";
+    d.innerHTML = `<h3><span class="dot" style="background:${CAT[k].c}"></span>${CAT[k].name}</h3><div class="chips">${list.map((n) => `<button type="button" class="chip" style="--c:${CAT[k].c}" data-id="${n.id}">${n.title}</button>`).join("")}</div>`;
+    cats.appendChild(d);
+  });
+  cats.addEventListener("click", (ev) => { const c = ev.target.closest(".chip"); if (!c) return; select(c.dataset.id); const n = byId[c.dataset.id]; sheet.scrollIntoView({ behavior: "smooth", block: "start" }); const r = n.g.getBoundingClientRect(), s = sheet.getBoundingClientRect(); sheet.scrollBy({ left: r.left - s.left - s.width / 2 + r.width / 2, top: r.top - s.top - s.height / 2 + r.height / 2 }); });
+
+  clearSel();
+})();
+</script>
+
+</body>
+</html>

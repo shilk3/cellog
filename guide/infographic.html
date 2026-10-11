@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CELLOG Infographic</title>
+<style>
+.cellog-back{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;background:#0b1220;border-bottom:1px solid #263149;
+  font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.cellog-back a{color:#34d0a0;text-decoration:none}
+.cellog-back span{color:#93a1bd;font-weight:500;font-size:12.5px;margin-left:auto}
+</style>
+
+<style>
+:root{
+  --bg:#0b1220; --bg-elev:#131c2e; --bg-elev-2:#1a2438; --border:#263149;
+  --text:#e7edf7; --text-dim:#93a1bd;
+  --skill:#34d0a0; --phys:#4ea1ff; --nutrition:#ffcc4d; --rest:#b892ff; --composure:#ff6b6b; --work:#ff9f43;
+  --accent:#34d0a0; --danger:#ff5d5d; --warn:#ffb020;
+}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;}
+table{border-collapse:collapse;width:100%;}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);font-size:12.5px;}
+th{color:var(--text-dim);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:0.5px;}
+code{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;background:var(--bg-elev-2);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--warn);white-space:nowrap;}
+a{color:var(--skill);}
+</style>
+<style>.ig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.ig-wrap{min-width:1180px}.cellog-back button{font:600 13px inherit;color:#e7edf7;background:#131c2e;border:1px solid #263149;border-radius:8px;padding:4px 10px}</style>
+</head>
+<body>
+<nav class="cellog-back"><a href="../index.html">← Back to CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.71.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
+
+<div style="width:100%;max-width:1320px;margin:0 auto;padding:56px 32px 140px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box;">
+
+<!-- ============ HEADER ============ -->
+<div style="display:flex;flex-direction:column;gap:14px;">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div style="font-size:42px;font-weight:800;letter-spacing:0.3px;">CELLOG</div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.71.0</div>
+  </div>
+  <div style="font-size:18px;color:var(--text-dim);max-width:920px;line-height:1.55;">Every mechanic, threshold and formula behind the Excel esports manager sim — exactly as implemented in <code>game.js</code>, laid out as one connected system.</div>
+</div>
+
+<!-- ============ 01 CORE LOOP ============ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--skill);margin-bottom:6px;">01 — The Core Loop</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">Every day you allocate up to 24 hours. Most days just resolve stats. Every 7th day is also a match. Every 39th round closes a season and feeds the league ladder. Match winnings fund the Shop, which raises your ceilings and multipliers. <b>End Day ▶</b> plays one day; <b>To Match ▶▶</b> repeats the same plan through the next match (<b>End Week ▶▶</b> outside the season, up to 7 days) and shows a week summary — stopping early to let you re-plan on an injury, losing/finding a job or going pro, burnout, a new technique, or Nutrition shrinking the day below your plan.</div>
+  </div>
+  <div style="overflow-x:auto;">
+    <div style="position:relative;width:1180px;height:420px;">
+      <!-- loop-back: Resolve Day -> Plan Day (most days) -->
+      <svg width="8" height="44" viewBox="0 0 8 44" preserveAspectRatio="none" style="position:absolute;left:351px;top:226px;width:8px;height:44px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 44"></path></svg>
+      <svg width="235" height="8" viewBox="0 0 235 8" preserveAspectRatio="none" style="position:absolute;left:120px;top:266px;width:235px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 235 4 L 0 4"></path></svg>
+      <svg width="8" height="44" viewBox="0 0 8 44" preserveAspectRatio="none" style="position:absolute;left:116px;top:226px;width:8px;height:44px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 44 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:195px;top:278px;width:110px;text-align:center;font-size:11.5px;color:var(--text-dim);">most days (no match)</div>
+
+      <!-- long loop-back: Shop -> Plan Day (spend cash) -->
+      <svg width="8" height="114" viewBox="0 0 8 114" preserveAspectRatio="none" style="position:absolute;left:1056px;top:226px;width:8px;height:114px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 114"></path></svg>
+      <svg width="900" height="8" viewBox="0 0 900 8" preserveAspectRatio="none" style="position:absolute;left:160px;top:336px;width:900px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 900 4 L 0 4"></path></svg>
+      <svg width="8" height="114" viewBox="0 0 8 114" preserveAspectRatio="none" style="position:absolute;left:156px;top:226px;width:8px;height:114px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 114 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:500px;top:348px;width:220px;text-align:center;font-size:11.5px;color:var(--text-dim);">spend cash → raise caps</div>
+
+      <!-- straight connectors A-B-C-D-E -->
+      <svg width="35" height="8" viewBox="0 0 35 8" preserveAspectRatio="none" style="position:absolute;left:220px;top:174px;width:35px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 35 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="35" height="8" viewBox="0 0 35 8" preserveAspectRatio="none" style="position:absolute;left:455px;top:174px;width:35px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 35 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:418px;top:110px;width:110px;text-align:center;font-size:11.5px;color:var(--text-dim);">every 7 days</div>
+      <svg width="35" height="8" viewBox="0 0 35 8" preserveAspectRatio="none" style="position:absolute;left:690px;top:174px;width:35px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 35 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="35" height="8" viewBox="0 0 35 8" preserveAspectRatio="none" style="position:absolute;left:925px;top:174px;width:35px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 35 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <!-- cards -->
+      <div style="position:absolute;left:20px;top:130px;width:200px;height:96px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:14px;font-weight:700;">📝 Plan Your Day</span><span style="font-size:11.5px;color:var(--text-dim);line-height:1.4;">Allocate hours across Work, Skills, Gym, Sleep, Relax &amp; Food · End Day ▶ or To Match ▶▶</span></div>
+      <div style="position:absolute;left:255px;top:130px;width:200px;height:96px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:14px;font-weight:700;">⚙️ Resolve Day</span><span style="font-size:11.5px;color:var(--text-dim);line-height:1.4;">Stats update, injury/burnout rolls, employment resolves</span></div>
+      <div style="position:absolute;left:490px;top:130px;width:200px;height:96px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:14px;font-weight:700;">⚔️ Weekly Match</span><span style="font-size:11.5px;color:var(--text-dim);line-height:1.4;">Win probability from your stats → rating (Elo) + cash</span></div>
+      <div style="position:absolute;left:725px;top:130px;width:200px;height:96px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:14px;font-weight:700;">🏆 Season &amp; League</span><span style="font-size:11.5px;color:var(--text-dim);line-height:1.4;">Round-robin points → promotion/relegation, playoffs</span></div>
+      <div style="position:absolute;left:960px;top:130px;width:200px;height:96px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:14px;font-weight:700;">🧑‍🏫 Staff</span><span style="font-size:11.5px;color:var(--text-dim);line-height:1.4;">Hire coaches &amp; support weekly (or auto-rehire) → raise caps/multipliers</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 02 DAILY HOURS BUDGET ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--nutrition);margin-bottom:6px;">02 — The Daily Hours Budget</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">Nutrition doesn't affect training — it decides how long the day <i>is</i>. <code>dailyHoursCap(nutrition)</code> interpolates linearly between the floor and ceiling.</div>
+  </div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:220px;background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--danger);border-radius:10px;padding:18px 20px;">
+      <div style="font-size:24px;font-weight:800;">16h</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Nutrition ≤ 40 — the floor. Day can't shrink further.</div>
+    </div>
+    <div style="flex:1;min-width:220px;background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--nutrition);border-radius:10px;padding:18px 20px;">
+      <div style="font-size:24px;font-weight:800;">16h → 24h</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Nutrition 40–90 — straight linear ramp between the two anchors.</div>
+    </div>
+    <div style="flex:1;min-width:220px;background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--skill);border-radius:10px;padding:18px 20px;">
+      <div style="font-size:24px;font-weight:800;">24h</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Nutrition ≥ 90 — the full ceiling, every hour of the day.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 03 FATIGUE / DIMINISHING RETURNS ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--phys);margin-bottom:6px;">03 — Fatigue: Diminishing Returns Per Activity</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">Every trainable activity (Skills, Gym, Food) runs its raw hours through <code>effectiveHours(h)</code> before any gain formula sees them — dumping 16h into one thing is never as good as 16h would suggest.</div>
+  </div>
+  <div style="display:flex;gap:2px;border-radius:10px;overflow:hidden;">
+    <div style="flex:8;background:var(--bg-elev);border:1px solid var(--border);padding:16px;text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--skill);">100%</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:4px;">0–8h effective</div></div>
+    <div style="flex:4;background:var(--bg-elev);border:1px solid var(--border);padding:16px;text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--warn);">60%</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:4px;">8–12h effective</div></div>
+    <div style="flex:3;background:var(--bg-elev);border:1px solid var(--border);padding:16px;text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--danger);">30%</div><div style="font-size:12.5px;color:var(--text-dim);margin-top:4px;">12h+ effective</div></div>
+  </div>
+  <div style="font-size:12.5px;color:var(--text-dim);"><code>effectiveHours(h) = min(h,8) + max(0, min(h,12)−8)×0.6 + max(0, h−12)×0.3</code></div>
+</div>
+
+<!-- ============ 04 THE 7 SKILLS ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--skill);margin-bottom:6px;">04 — The 7 Case Specialties</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">Only 1–3 skills are "active" each week, revealed only once the previous week ends. Preseason is the exception — every skill is trainable. Any skill under 1h/day (active-but-neglected, or simply locked this week) rusts — unless its Coach is hired, which stops it rusting entirely.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">📈</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Data Analysis</div></div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">🗺️</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Mapping</div></div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">📝</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Text Processing</div></div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">🎲</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Game Logic</div></div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">🔢</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Math &amp; Formulas</div></div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">⏱️</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Time &amp; Dates</div></div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:16px;"><div style="font-size:22px;">🃏</div><div style="font-size:14px;font-weight:700;margin-top:6px;">Cards &amp; Random</div></div>
+    <div style="background:var(--bg-elev-2);border:1px dashed var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;color:var(--text-dim);">In-season: 1–3 active per week (1: 30% · 2: 50% · 3: 20%), rerolled every 7 days · Preseason &amp; off-season: all 7 open</div>
+  </div>
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px 24px;display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:40px;flex-wrap:wrap;">
+      <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Gain (≥1h/day)</div><code>effectiveHours × 0.24 × focus × health × rest × diminish × coach</code></div>
+      <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Rust (&lt;1h/day, no coach hired)</div><code>−min(0.15, value × 0.003)</code> per day</div>
+    </div>
+    <div style="font-size:12.5px;color:var(--text-dim);">Diminishing: <code>skillDiminish(v) = clamp(1 − 0.85×(v/100)^1.5, 0.12, 1.0)</code> — an accelerating falloff, so the last stretch toward 100 is a long tail, not a wall.</div>
+    <table style="margin-top:6px;">
+      <tr><th>Skill ceiling gate</th><th>Tier 1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+      <tr><td>Hired coach this week (Lv1–5; none = 50)</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td></tr>
+      <tr><td>Peak league ever reached</td><td>100</td><td>90</td><td>80</td><td>70</td><td>60</td></tr>
+    </table>
+    <div style="font-size:12.5px;color:var(--text-dim);">Effective cap = <b>the lower</b> of the two gates — and coach Lv N only unlocks in the league whose cap matches it.</div>
+  </div>
+</div>
+
+<!-- ============ 05 THE FOUR VITALS ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--phys);margin-bottom:6px;">05 — The Four Vitals</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">Gym, Sleep, Relax and Food each have their own decay threshold, and each feeds a different multiplier elsewhere in the system.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--phys);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:16px;font-weight:700;">🏃 Gym → Physical Health</div>
+      <div style="font-size:12px;color:var(--text-dim);">Cap: 70 base, +10 per Sports Physio level (max 100)</div>
+      <code>gain = effectiveHours × 0.6 × physio × rest × diminish</code>
+      <div style="font-size:12.5px;color:var(--text-dim);">Rest below 80 wears it down: <code>max(0, 80−rest)×0.04</code>/day regardless of Gym hours. Below 1h/day: detrain <code>−0.35</code>/day (Recovery Program reduces).</div>
+      <div style="font-size:12.5px;color:var(--text-dim);"><b>Injury risk:</b> every Gym hour adds <code>2.5%</code> that day — 0h is the only risk-free day, 8h (the max) is 20% (Physio cuts it 20/35/50%). Injury: <b>−5 to −10</b> Health, locks the Gym <b>3–5 days</b> (Recovery shortens). Never stops you playing a match.</div>
+    </div>
+
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--rest);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:16px;font-weight:700;">🌙 Sleep → Rest</div>
+      <div style="font-size:12px;color:var(--text-dim);">Threshold: 7h/day ideal · Cap: 100</div>
+      <code>below 7h: −(7−h)×1.3×sleepApp &nbsp; above: +min(h−7,3)×1.4</code>
+      <div style="font-size:12.5px;color:var(--text-dim);">The only vital with a <b>training-effectiveness</b> effect (skills and Gym) — a smooth slide, no steps:</div>
+      <code>multiplier = 1 + clamp((rest − 70) / 30, 0, 1)</code>
+      <table>
+        <tr><th>Rest</th><th>Training multiplier</th></tr>
+        <tr><td>≤ 70</td><td>×1.0</td></tr>
+        <tr><td>85</td><td>×1.5</td></tr>
+        <tr><td>100</td><td>×2.0</td></tr>
+      </table>
+      <div style="font-size:12.5px;color:var(--text-dim);"><b>⚡ Overcharge:</b> at Rest 100, sleeping past 7h lifts that day's training further — <b>×3 at 10h, ×4 at 12h</b>, linear between (8h ×2.3, 9h ×2.7, 11h ×3.5).</div>
+      <div style="font-size:12.5px;color:var(--text-dim);">Below 80 Rest also wears down Health and Calm (more the lower it goes).</div>
+    </div>
+
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--composure);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:16px;font-weight:700;">🎮 Relax → Calm</div>
+      <div style="font-size:12px;color:var(--text-dim);">Threshold: 3h/day · Cap: 100</div>
+      <code>relax = (relaxH − 3) × 2.4 &nbsp;(gains ×meditation, only 3 extra hours count)</code>
+      <code>+ sleep bonus: 7h +1.5 · 8h+ +3 &nbsp; − max(0, 80−rest)×0.08</code>
+      <div style="font-size:12.5px;color:var(--text-dim);">3h Relax holds it level. Training no longer drains it.</div>
+      <div style="font-size:12.5px;color:var(--text-dim);"><b>😎 Chill:</b> Calm past 100 becomes Chill — gains bank at <b>half rate</b> up to <b>130</b>, fading 1/day. The reserve drains first on short-Relax days; match day counts Calm as 100 max.</div>
+      <div style="font-size:12.5px;color:var(--text-dim);">Swings <b>match day</b> specifically — low Calm cuts your active-skill contribution:</div>
+      <table>
+        <tr><th>Calm</th><th>Match skill multiplier</th></tr>
+        <tr><td>&lt; 10</td><td>50%</td></tr>
+        <tr><td>10–19</td><td>75%</td></tr>
+        <tr><td>≥ 20</td><td>100%</td></tr>
+      </table>
+      <div style="font-size:12.5px;color:var(--danger);"><b>Burnout:</b> Calm ≤ 0 → skill training effectiveness cut to <b>20%</b> until Calm recovers to ≥ 35.</div>
+    </div>
+
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--nutrition);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:16px;font-weight:700;">🥗 Food → Nutrition</div>
+      <div style="font-size:12px;color:var(--text-dim);">Threshold: 1h/day · Cap: 100 · Starts at 75</div>
+      <code>gain = effectiveHours × 5 × diminish × nutritionist</code>
+      <code>below 1h: −9/day flat (Nutritionist reduces)</code>
+      <div style="font-size:12.5px;color:var(--text-dim);">Doesn't touch training effectiveness at all — its only job is <b>Section 02's daily hours budget</b>. Rest already owns training effectiveness; this is deliberately a separate lever.</div>
+      <div style="font-size:12.5px;color:var(--text-dim);"><b>🍝 Carb loading:</b> once Nutrition is already at 100, each Food hour past 1h banks <b>+1h for tomorrow only</b> (max +3h at 4h Food) — 1:1, so it shifts hours between days rather than adding any. End Week stops on a carb-loaded day so the extra hours can be planned.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ 06 WORK, PRO & CHANCES ============ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--work);margin-bottom:6px;">06 — Work, Pro Duties &amp; Chances</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">Work funds everything else — 9h/day, except on paid <b>🏖️ annual leave</b> — the whole 21-day preseason, which starts the day after the Final (Work / Pro Duties greyed out, full pay, no chances at risk and used ones still come back, a Pro’s technique clock paused; a job search carries on as normal). Up to <b>4h of overtime</b> on top pays <b>half</b> the job’s hourly rate (pay ÷ 9 ÷ 2 — $4/h at the starting $70/day) per extra hour. You start each job with <b>3.0 chances</b>; the job-security bar shows exactly what today's shortfall will cost before you commit to it. Pay grows with tenure and a flat cost of living runs in the background — stay employed and you profit, lose your job and the bills don't stop (and your pay rate starts over).</div>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <div style="position:relative;width:900px;height:360px;">
+      <!-- Employed -> Pro -->
+      <svg width="380" height="8" viewBox="0 0 380 8" preserveAspectRatio="none" style="position:absolute;left:260px;top:81px;width:380px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 380 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:340px;top:53px;width:220px;text-align:center;font-size:11.5px;color:var(--text-dim);">Reached League 2 (ever) &amp; skill average 75+ (85+ once League 1 is your best) · lasts to year end; renewed only if the average still clears it</div>
+
+      <!-- Employed -> Unemployed (fired) -->
+      <svg width="8" height="155" viewBox="0 0 8 155" preserveAspectRatio="none" style="position:absolute;left:146px;top:130px;width:8px;height:155px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 155"></path></svg>
+      <svg width="190" height="8" viewBox="0 0 190 8" preserveAspectRatio="none" style="position:absolute;left:340px;top:281px;width:190px;height:8px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 190 4 L 0 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:75px;top:190px;width:150px;text-align:center;font-size:11px;line-height:1.4;color:var(--danger);">3 chances lost · pay resets to min</div>
+
+      <!-- Pro -> Unemployed (dropped) -->
+      <svg width="8" height="155" viewBox="0 0 8 155" preserveAspectRatio="none" style="position:absolute;left:746px;top:130px;width:8px;height:155px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 155"></path></svg>
+      <svg width="190" height="8" viewBox="0 0 190 8" preserveAspectRatio="none" style="position:absolute;left:560px;top:281px;width:190px;height:8px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 190 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:675px;top:190px;width:150px;text-align:center;font-size:11px;line-height:1.4;color:var(--danger);">3 chances lost · pay resets to min</div>
+
+      <!-- Unemployed -> Employed (rehired) -->
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:446px;top:160px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 80 L 4 0"></path></svg>
+      <svg width="260" height="8" viewBox="0 0 260 8" preserveAspectRatio="none" style="position:absolute;left:190px;top:156px;width:260px;height:8px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 260 4 L 0 4"></path></svg>
+      <svg width="8" height="30" viewBox="0 0 8 30" preserveAspectRatio="none" style="position:absolute;left:186px;top:130px;width:8px;height:30px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 30 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:230px;top:168px;width:180px;text-align:center;font-size:11px;color:var(--skill);">10–40h job search (random each time)</div>
+
+      <!-- nodes -->
+      <div style="position:absolute;left:40px;top:40px;width:220px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--work);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:15px;font-weight:700;">💼 Employed</span><span style="font-size:11.5px;color:var(--text-dim);">9h/day Work required · $70→$120/day</span></div>
+      <div style="position:absolute;left:640px;top:40px;width:220px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--work);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:15px;font-weight:700;">🏆 Pro</span><span style="font-size:11.5px;color:var(--text-dim);">5h/day Pro Duties · $100→$150/day · masters techniques</span></div>
+      <div style="position:absolute;left:340px;top:240px;width:220px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--danger);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center;"><span style="font-size:15px;font-weight:700;">🔍 Unemployed</span><span style="font-size:11.5px;color:var(--text-dim);">Job Search — at least 1h/day to end the day; hours accumulate</span></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Work — chance lost by hours worked <span style="color:var(--text-dim);font-weight:400;">(9h required)</span></div>
+      <table>
+        <tr><th>9h</th><th>8h</th><th>7h</th><th>6h</th><th>5h</th><th>4h</th><th>3h</th><th>2h</th><th>1h</th><th>0h</th></tr>
+        <tr><td>0</td><td>0.1</td><td>0.3</td><td>0.4</td><td>0.5</td><td>0.6</td><td>0.7</td><td>0.8</td><td>0.9</td><td><b>1.0</b></td></tr>
+      </table>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Pro Duties — chance lost by hours worked <span style="color:var(--text-dim);font-weight:400;">(5h required)</span></div>
+      <table>
+        <tr><th>5h</th><th>4h</th><th>3h</th><th>2h</th><th>1h</th><th>0h</th></tr>
+        <tr><td>0</td><td>0.1</td><td>0.2</td><td>0.4</td><td>0.7</td><td><b>1.0</b></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;">
+    <div style="font-size:13px;font-weight:700;">Pro technique queue</div>
+    <div style="font-size:12.5px;color:var(--text-dim);">Every <b>30 days</b>, a new Excel technique queues up needing a random <b>25–40h</b> to master. Any Pro Duties hours beyond the 5h minimum go toward the front of the queue (FIFO — one at a time; spare hours roll on to the next). Falling behind never costs progress, it just queues — but every <b>not-yet-mastered</b> technique costs <code>5%</code> match performance, stacking (capped at 100%).</div>
+    <div style="font-size:12.5px;color:var(--text-dim);">Chances recover automatically: each chance lost expires <b>21 days (3 weeks)</b> after it's earned.</div>
+  </div>
+
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--danger);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;">
+    <div style="font-size:13px;font-weight:700;">💸 Cost of living, tenure &amp; the year-end summary</div>
+    <div style="font-size:12.5px;color:var(--text-dim);"><b>$50/day</b> cost of living, charged every single day no matter your employment status — preseason, regular season, playoffs, offseason, employed, Pro, or unemployed, it never stops. Pay is tied to still <b>having</b> the role, not to hitting the exact hour target that day — falling short costs a chance (see the tables below), not income. It isn't flat either — it's <b>tenure-based</b>:</div>
+    <table>
+      <tr><th>Years in role</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6+</th></tr>
+      <tr><td>Work pay</td><td>$70</td><td>$80</td><td>$90</td><td>$100</td><td>$110</td><td><b>$120</b></td></tr>
+      <tr><td>Pro Duties pay</td><td>$100</td><td>$110</td><td>$120</td><td>$130</td><td>$140</td><td><b>$150</b></td></tr>
+    </table>
+    <div style="font-size:12.5px;color:var(--text-dim);">+$10/year for 5 years, then it plateaus. Each role's rate is tracked independently (<code>employment.workPay</code> / <code>.proPay</code>) and only rises while you're continuously in that role — getting fired or dropped resets that one role's rate straight back to its minimum, no seniority carried over, even if the other role's rate is untouched.</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;background:var(--bg-elev-2);border-radius:8px;padding:12px 14px;"><div style="font-size:13px;font-weight:700;color:var(--skill);">+$20 to +$100/day net</div><div style="font-size:11.5px;color:var(--text-dim);margin-top:2px;">Employed or Pro, any day — hours met or not: pay ($70–$150) − $50 expenses</div></div>
+      <div style="flex:1;min-width:200px;background:var(--bg-elev-2);border-radius:8px;padding:12px 14px;"><div style="font-size:13px;font-weight:700;color:var(--danger);">−$50/day net</div><div style="font-size:11.5px;color:var(--text-dim);margin-top:2px;">Unemployed only: no pay, expenses still due. (The day you're actually fired still pays — pay stops the day after.)</div></div>
+    </div>
+    <div style="font-size:12.5px;color:var(--text-dim);">Cash has no floor — it can go <b>negative</b>, a real consequence of a long stretch without a job. <code>state.yearCashFlow</code> tracks Work/Pro pay, match winnings and expenses all season; the moment a new year begins, a modal shows the full breakdown, the net, and any raise just earned — exactly what "a new year starts" means in cash terms.</div>
+  </div>
+</div>
+
+<!-- ============ 07 MATCH DAY ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--composure);margin-bottom:6px;">07 — Match Day</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">One match every 7 days in the regular season (plus playoffs). Both sides get a match-day rating = rating + performance + luck, and the higher one wins. The luck is built so the chance of winning is exactly the Elo win probability shown in the topbar preview — upsets always stay possible.</div>
+  </div>
+
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+    <div style="font-size:13px;font-weight:700;">Performance score — weighted blend of your stats</div>
+    <div style="display:flex;gap:2px;height:30px;border-radius:6px;overflow:hidden;">
+      <div style="flex:55;background:var(--skill);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#06281e;">55% Active Skills</div>
+      <div style="flex:25;background:var(--phys);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#06233f;">25% Health</div>
+      <div style="flex:15;background:var(--composure);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#3f0909;">15% Calm</div>
+      <div style="flex:5;background:var(--rest);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#241138;">5%</div>
+    </div>
+    <code>score = clamp((avgActiveSkill × composureMult)×0.55 + phys×0.25 + composure×0.15 + rest×0.05, 0, 100)</code>
+    <div style="font-size:12.5px;color:var(--text-dim);">Pro with unmastered techniques: score ×= <code>(1 − min(1, queueLength × 5%))</code> — the match-day cost of falling behind.</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:13px;font-weight:700;">Match-day rating &amp; luck</div>
+      <code>matchDay = rating + (perf − 70) × 3 + luck</code>
+      <code>luck = Gumbel(scale 400/ln10, centred 0) — one per side</code>
+      <code>P(win) = 1 / (1 + 10^((oppRating − (rating + (perf − 70) × 3))/400))</code>
+      <div style="font-size:12.5px;color:var(--text-dim);">The result is decided by the real luck draws (so upsets happen exactly as often as the win chance says). <b>🧪 Skills match model (beta, opt-in per game):</b> match-day = performance × 8 + edge 10 per point + luck (scale 250) — rating left out (it still moves with results, on rating-vs-rating maths); rivals' skills anchored 10 under their league cap, ±0.06 per rating point. <b>Luck size:</b> a 300 match-day gap makes a 10-to-1 favourite (classic Elo: 400), so luck decides less — rating changes use the same scale. The luck shown is cosmetic: each side's real draw at <b>⅕</b> of its size (median ≈ 24), topped up just enough to explain an upset, so the columns always add up; and rivals' performance is real: their week's focus skills (55%) plus Health/Calm/Rest at 80. <b>🎯 Focus-skill edge:</b> whoever averages higher in the week's focus skills gets 4 match-day rating per point ahead. <b>League tables</b> rank by points, then head-to-head among tied players, then rating, with W and L columns.</div>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:13px;font-weight:700;">Outcome</div>
+      <code>rating change = round(24 × (actual − winProb))</code>
+      <code>cash: win → round(60 + rating/20) · lose → 0 · champion +$1,000, +40 rating</code>
+      <div style="font-size:12.5px;color:var(--text-dim);">Team Manager trims rating lost on a loss and pads cash on a win. Rating floor/ceiling: <b>0–5000</b>, the same for every rival. Starting rating: <b>480</b>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 08 SEASON STRUCTURE ============ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--rest);margin-bottom:6px;">08 — Season Structure</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;"><b>Three game lengths</b>, picked when a game starts, each with its own save slot (☰ → 🎮 Games): <b>Short</b> — 10 per league (9 rounds), top 4 playoffs, 2 up/2 down, 1-week preseason; <b>Half</b> — 20 (19), top 8, 3/3, 2 weeks; <b>Full</b> — 40 (39), top 16, 4/4, 3 weeks. Same 5 leagues in all; camp is a week per playoff round. The day of the Final is the year’s last day for everyone. Reach the Final, win or lose, and the new year starts straight after it. Miss the playoffs (28 days) or get knocked out (R16 21, QF 14, SF 7) and you go to training camp until then, which gives back as training the time the rest of the playoffs would have taken — so an early exit never costs you prep time.</div>
+  </div>
+  <div style="overflow-x:auto;">
+    <div style="position:relative;width:1180px;height:470px;">
+      <svg width="50" height="8" viewBox="0 0 50 8" preserveAspectRatio="none" style="position:absolute;left:210px;top:101px;width:50px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 50 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <svg width="50" height="8" viewBox="0 0 50 8" preserveAspectRatio="none" style="position:absolute;left:510px;top:101px;width:50px;height:8px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 50 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:500px;top:73px;width:70px;text-align:center;font-size:11px;color:var(--skill);">top 16</div>
+
+      <svg width="8" height="110" viewBox="0 0 8 110" preserveAspectRatio="none" style="position:absolute;left:381px;top:150px;width:8px;height:110px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 110" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:393px;top:197px;width:140px;font-size:11px;color:var(--danger);">missed top 16</div>
+      <svg width="130" height="110" viewBox="0 0 130 110" preserveAspectRatio="none" style="position:absolute;left:470px;top:150px;width:130px;height:110px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-knockout" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" /></marker></defs><path d="M 130 0 L 130 80 L 0 80 L 0 108" marker-end="url(#dc-arrow-head-knockout)"></path></svg>
+      <div style="position:absolute;left:608px;top:178px;width:150px;font-size:11px;color:var(--danger);">knocked out</div>
+
+      <svg width="50" height="8" viewBox="0 0 50 8" preserveAspectRatio="none" style="position:absolute;left:780px;top:101px;width:50px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 50 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <svg width="430" height="8" viewBox="0 0 430 8" preserveAspectRatio="none" style="position:absolute;left:510px;top:301px;width:430px;height:8px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 0 4 L 430 4" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="8" height="155" viewBox="0 0 8 155" preserveAspectRatio="none" style="position:absolute;left:936px;top:150px;width:8px;height:155px;overflow:visible;fill:none;stroke:var(--text-dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--text-dim)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 155 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <svg width="8" height="250" viewBox="0 0 8 250" preserveAspectRatio="none" style="position:absolute;left:896px;top:150px;width:8px;height:250px;overflow:visible;fill:none;stroke:var(--work);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--work)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 250"></path></svg>
+      <svg width="785" height="8" viewBox="0 0 785 8" preserveAspectRatio="none" style="position:absolute;left:115px;top:396px;width:785px;height:8px;overflow:visible;fill:none;stroke:var(--work);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--work)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 785 4 L 0 4"></path></svg>
+      <svg width="8" height="250" viewBox="0 0 8 250" preserveAspectRatio="none" style="position:absolute;left:111px;top:150px;width:8px;height:250px;overflow:visible;fill:none;stroke:var(--work);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--work)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 250 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:457px;top:408px;width:100px;text-align:center;font-size:11px;color:var(--work);">Year N+1</div>
+
+      <div style="position:absolute;left:20px;top:60px;width:190px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:3px;justify-content:center;"><span style="font-size:13.5px;font-weight:700;">Preseason</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4;">21 days of 🏖️ annual leave · train any of the 7 skills, no matches · skill coaches half price</span></div>
+      <div style="position:absolute;left:260px;top:60px;width:250px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:3px;justify-content:center;"><span style="font-size:13.5px;font-weight:700;">Regular Season</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4;">39 rounds, 1 match every 7 days · weekly reveal: 1–3 active skills</span></div>
+      <div style="position:absolute;left:560px;top:60px;width:220px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--skill);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:3px;justify-content:center;"><span style="font-size:13.5px;font-weight:700;">Playoffs</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4;">Top 16 · R16→QF→SF→Final, single elim · champion is promoted and gets the offseason</span></div>
+      <div style="position:absolute;left:830px;top:60px;width:220px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--work);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:3px;justify-content:center;"><span style="font-size:13.5px;font-weight:700;">Final day → New Year</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4;">Everything carries over — skills, Rest, Calm, Nutrition, cash, rating. All 7 skills trainable.</span></div>
+      <div style="position:absolute;left:260px;top:260px;width:250px;height:90px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--danger);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:3px;justify-content:center;"><span style="font-size:13.5px;font-weight:700;">Training Camp</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4;">Missed top 16: 28 days · knocked out: rest of the playoff window (R16 21d, QF 14d, SF/Final 7d) · everything carries over, all 7 skills</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 09 LEAGUES ============ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--skill);margin-bottom:6px;">09 — Leagues, Promotion &amp; Relegation</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">5 tiers, 40 competitors each — 199 persistent named rivals in total, spanning all 5 leagues, plus your own slot. Every tier runs a genuine round-robin in lockstep with your own matches, so all 5 tables are live from round 1. New careers start at League 5.</div>
+  </div>
+  <div style="overflow-x:auto;">
+    <div style="position:relative;width:1180px;height:670px;">
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:556px;top:70px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 80 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:636px;top:70px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 80" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <div style="position:absolute;left:568px;top:92px;width:66px;font-size:10.5px;line-height:1.3;color:var(--skill);">↑ 🏆 champion + top 3</div>
+      <div style="position:absolute;left:648px;top:98px;width:70px;font-size:10.5px;color:var(--danger);">↓ bottom 4</div>
+
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:556px;top:220px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 80 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:636px;top:220px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 80" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:556px;top:370px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 80 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:636px;top:370px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 80" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:556px;top:520px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--skill);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--skill)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 80 L 4 0" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+      <svg width="8" height="80" viewBox="0 0 8 80" preserveAspectRatio="none" style="position:absolute;left:636px;top:520px;width:8px;height:80px;overflow:visible;fill:none;stroke:var(--danger);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><defs><marker id="dc-arrow-head-filled" orient="auto" markerWidth="5" markerHeight="5" refX="3.2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="var(--danger)" stroke="none" style="fill:context-stroke"/></marker></defs><path d="M 4 0 L 4 80" marker-end="url(#dc-arrow-head-filled)"></path></svg>
+
+      <div style="position:absolute;left:20px;top:0px;width:1140px;height:70px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;">League 1 <span style="color:var(--text-dim);font-weight:400;font-size:12px;">— top tier</span></span><span style="font-size:12px;color:var(--text-dim);">40 competitors · skill cap 100</span></div>
+      <div style="position:absolute;left:20px;top:150px;width:1140px;height:70px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;">League 2</span><span style="font-size:12px;color:var(--text-dim);">40 competitors · skill cap 90 · go-pro threshold</span></div>
+      <div style="position:absolute;left:20px;top:300px;width:1140px;height:70px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;">League 3</span><span style="font-size:12px;color:var(--text-dim);">40 competitors · skill cap 80</span></div>
+      <div style="position:absolute;left:20px;top:450px;width:1140px;height:70px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;">League 4</span><span style="font-size:12px;color:var(--text-dim);">40 competitors · skill cap 70</span></div>
+      <div style="position:absolute;left:20px;top:600px;width:1140px;height:70px;box-sizing:border-box;background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;">League 5 <span style="color:var(--text-dim);font-weight:400;font-size:12px;">— new careers start here</span></span><span style="font-size:12px;color:var(--text-dim);">40 competitors · skill cap 60</span></div>
+    </div>
+  </div>
+  <div style="font-size:12.5px;color:var(--text-dim);">Skill cap tracks your <b>peak</b> league tier ever reached, not your current one — getting relegated doesn't lower it. Four go up from every league below League 1: the <b>playoff champion</b>, plus the <b>top 3</b> of the table other than the champion — so a top-3 finish is always promoted (if the champion is already top 3, 4th place takes the last spot). Bottom 4 go down. Every league plays out its own knockout, and movement is applied once the playoffs are over.</div>
+</div>
+
+<!-- ============ 10 STAFF ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--warn);margin-bottom:6px;">10 — Staff &amp; Items</div>
+    <div style="font-size:15px;color:var(--text-dim);max-width:920px;">13 staff — 7 skill Coaches (5 levels) and 6 support staff (3 levels). Staff are hired <b>one week at a time</b>: the week's wage is paid up front (pro-rated × days left ÷ 7 if hired mid-week; moving a hired one up a level costs just the extra wages), a week ends after each match, and nothing renews by default — you choose again every week. Every coach and support-staff member has an optional <b>🔁 Auto-rehire</b> switch (a coach is kept on even when their skill isn’t in that week’s focus): when a week ends they’re kept on at the same level for the next one (at its pro-rated wage) if the cash is there; if not, they’re off that week, the switch turns itself off, and the log and a “Couldn’t rehire staff” screen say so. They only work while hired. Each higher level is a <b>one-off fee</b> that unlocks only once your peak league allows it, and costs more per week. Wages are tuned so spare weekly money covers ~90% of what you'd want in a 1-skill week and ~40% in a 3-skill week.</div>
+  </div>
+
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px;">📈 🗺️ 📝 🎲 🔢 ⏱️ 🃏 Skill Coaches <span style="color:var(--text-dim);font-weight:400;font-size:12px;">— one per skill, identical structure</span></div>
+    <table>
+      <tr><th>Level</th><th>Unlocks</th><th>One-off fee</th><th>Wage/wk</th><th>Training bonus</th><th>Ceiling</th></tr>
+      <tr><td>None</td><td>—</td><td>—</td><td>—</td><td>—</td><td>50</td></tr>
+      <tr><td>1</td><td>League 5</td><td>free</td><td>$185</td><td>+5%</td><td>60</td></tr>
+      <tr><td>2</td><td>League 4</td><td>$600</td><td>$245</td><td>+10%</td><td>70</td></tr>
+      <tr><td>3</td><td>League 3</td><td>$1,000</td><td>$300</td><td>+15%</td><td>80</td></tr>
+      <tr><td>4</td><td>League 2</td><td>$1,600</td><td>$360</td><td>+22%</td><td>90</td></tr>
+      <tr><td>5</td><td>League 1</td><td>$2,500</td><td>$470</td><td>+30%</td><td>100</td></tr>
+    </table>
+    <div style="font-size:12.5px;color:var(--text-dim);margin-top:8px;">Ceiling also never exceeds your league cap: <b>⭐ 3 specialisations</b> (yours to change any time — a skill that stops being one drops to the lower cap) reach the full cap, the other 4 stop 20 lower — L5 60/40, L4 70/50, L3 80/60, L2 90/70, L1 100/80. Rivals have 3 fixed specialisations too, with levels that follow their rating. Above this week's ceiling a skill is never cut down: ≥1h holds it, &lt;1h lets it rust. A hired coach stops their skill rusting at all, even in a week it isn't trained.</div>
+  </div>
+
+  <div style="font-size:13px;color:var(--text-dim);">Support staff: Lv1 free from the start · Lv2 $500, unlocks in League 3 · Lv3 $1,200, unlocks in League 1 · optional 🔁 Auto-rehire per person, coaches included.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🩺 Sports Physio</div>
+      <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
+      <tr><td>1</td><td>$30</td><td>−20% injury, +5% Gym, Health cap 80</td></tr><tr><td>2</td><td>$48</td><td>−35% injury, +10% Gym, Health cap 90</td></tr><tr><td>3</td><td>$75</td><td>−50% injury, +18% Gym, Health cap 100</td></tr></table>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🥗 Nutritionist</div>
+      <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
+      <tr><td>1</td><td>$20</td><td>+15% Nutrition gain, −15% lost</td></tr><tr><td>2</td><td>$32</td><td>+30% gain, −30% lost</td></tr><tr><td>3</td><td>$50</td><td>+50% gain, −50% lost</td></tr></table>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🧑‍💼 Team Manager</div>
+      <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
+      <tr><td>1</td><td>$20</td><td>−10% rating lost on defeat</td></tr><tr><td>2</td><td>$32</td><td>−20% rating lost, +5% prizes</td></tr><tr><td>3</td><td>$50</td><td>−35% rating lost, +10% prizes</td></tr></table>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">💤 Sleep Coach App</div>
+      <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
+      <tr><td>1</td><td>$15</td><td>−15% Rest lost from poor sleep</td></tr><tr><td>2</td><td>$24</td><td>−25% Rest lost</td></tr><tr><td>3</td><td>$38</td><td>−40% Rest lost</td></tr></table>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🧘 Meditation Coach</div>
+      <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
+      <tr><td>1</td><td>$15</td><td>+20% Calm relief from Relax</td></tr><tr><td>2</td><td>$24</td><td>+40% relief</td></tr><tr><td>3</td><td>$38</td><td>+65% relief</td></tr></table>
+    </div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🧊 Recovery Program</div>
+      <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
+      <tr><td>1</td><td>$15</td><td>−1 day injury, −30% detraining</td></tr><tr><td>2</td><td>$24</td><td>−2 days, −55% detraining</td></tr><tr><td>3</td><td>$38</td><td>−3 days, −80% detraining</td></tr></table>
+    </div>
+  </div>
+  <div style="font-size:12.5px;color:var(--text-dim);">Health caps at 70 with no physio hired; above the cap it only falls if the day's net is down.</div>
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+    <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">⚡ Energy Items — instant top-ups, each once a week (nothing past 100)</div>
+    <table><tr><th>Item</th><th>Price</th><th>Now</th><th>Next day</th></tr>
+    <tr><td>☕ Coffee</td><td>$40</td><td>+10 Rest</td><td>−4 Rest</td></tr>
+    <tr><td>🧃 Energy Drink</td><td>$90</td><td>+15 Rest, +10 Calm</td><td>−5 Rest, −3 Calm</td></tr>
+    <tr><td>💆 Spa Day</td><td>$250</td><td>+10 Rest, +30 Calm</td><td>no crash</td></tr></table>
+  </div>
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
+    <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🛠️ Equipment — bought outright (never pro-rated), works until the current year ends</div>
+    <table><tr><th>Item</th><th>Price</th><th>Effect</th></tr>
+    <tr><td>🖥️ Second Monitor</td><td>$700</td><td>+5% skill training</td></tr>
+    <tr><td>💻 Gaming PC</td><td>$5,000</td><td>+10% skill training</td></tr>
+    <tr><td>🪑 Ergonomic Chair</td><td>$2,400</td><td>−20% Gym injury risk</td></tr>
+    <tr><td>🎧 Noise-cancelling Headphones</td><td>$900</td><td>+0.5 Calm a day</td></tr>
+    <tr><td>🛏️ Memory-foam Mattress</td><td>$2,800</td><td>−25% Rest lost from short sleep</td></tr></table>
+  </div>
+</div>
+
+<!-- ============ 11 LEGEND ============ -->
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:-4px;">11 — Icon &amp; Color Key</div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--skill);display:inline-block;"></span>📈🗺️📝🎲🔢⏱️🃏 Skills</div>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--phys);display:inline-block;"></span>🏃 Gym / Physical Health</div>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--rest);display:inline-block;"></span>🌙 Sleep / Rest</div>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--composure);display:inline-block;"></span>🎮 Relax / Calm</div>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--nutrition);display:inline-block;"></span>🥗 Food / Nutrition</div>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--work);display:inline-block;"></span>💼📱🔍 Work / Pro / Job Search</div>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:8px 16px;">💰 Cash &nbsp;·&nbsp; 🏆 Rating &amp; Championship &nbsp;·&nbsp; 🤕 Injury &nbsp;·&nbsp; 🔥 Burnout / Fired &nbsp;·&nbsp; 📘 Technique</div>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<div style="border-top:1px solid var(--border);padding-top:24px;font-size:12px;color:var(--text-dim);">
+  Compiled directly from <code>game.js</code> v4.49.1 — every formula, threshold and table above is the live implementation, not an approximation.
+</div>
+
+</div>
+
+</div></div>
+<script>(function(){var b=document.getElementById('igFit'),w=document.querySelector('.ig-wrap'),on=false;if(!b||!w)return;b.addEventListener('click',function(){on=!on;w.style.zoom=on?Math.min(1,(innerWidth-4)/1320):'';b.textContent=on?'Full size':'Fit width';});if(innerWidth>=1180)b.hidden=true;})();</script>
+</body>
+</html>
