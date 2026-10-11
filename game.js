@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.71.0";
+const APP_VERSION = "4.72.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1573,8 +1573,8 @@ function resolveEmploymentDay() {
 /* ---------------------------------------------------------------------- */
 /* Match simulation                                                       */
 /* ---------------------------------------------------------------------- */
-// Every match tests only this round's active 1-3 skills — a live case
-// competition on those specific specialties, not the full roster of 7.
+// The week's focus skills (or any given list), averaged — what the
+// focus-skill edge compares. Performance uses all 7 (allSkillAverage).
 function activeSkillAverage(keys = state.activeSkills) {
   const active = keys;
   if (!active.length) return 0;
@@ -1588,8 +1588,10 @@ function activeSkillAverage(keys = state.activeSkills) {
 // weigh in too).
 const PERF_WEIGHTS = { skill: 0.55, phys: 0.25, composure: 0.15, rest: 0.05 };
 
-// keys: the skills being tested (this week's focus unless given).
+// Performance counts all 7 skills, every match; the week's focus skills
+// matter through the focus-skill edge instead. (keys is kept for callers.)
 function performanceBreakdown(keys = state.activeSkills) {
+  keys = SKILL_KEYS;
   const s = state.stats;
   // Low Calm hits you hardest where it matters most: match day. This
   // stacks on top of (doesn't replace) Calm's own weighted contribution
@@ -1674,10 +1676,10 @@ function leagueRatingMid(tier) {
 function rivalFocusAverage(r, keys = state.activeSkills) {
   return keys.length ? keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length : 0;
 }
-// A rival's match-day performance: their focus skills plus a steady
+// A rival's match-day performance: all 7 of their skills plus a steady
 // rivalCondition for Health / Calm / Rest, on your weights.
-function rivalPerformance(r, keys = state.activeSkills) {
-  return PERF_WEIGHTS.skill * rivalFocusAverage(r, keys) + (1 - PERF_WEIGHTS.skill) * BAL.rivalCondition;
+function rivalPerformance(r) {
+  return PERF_WEIGHTS.skill * rivalFocusAverage(r, SKILL_KEYS) + (1 - PERF_WEIGHTS.skill) * BAL.rivalCondition;
 }
 
 // The match model, per save. Classic: match-day = rating + (performance −
@@ -3150,9 +3152,7 @@ function performanceTableHtml(b) {
       </tbody>
       <tfoot><tr><td>Total</td><td></td><td></td><td>${one(b.score)}<span class="perf-of">/100</span></td></tr></tfoot>
     </table>
-    <div class="match-sub perf-note">Values are out of 100; points = value × weight. Skill only counts this round's active skill${
-      raw && raw.skills.length > 1 ? "s, averaged" : ""
-    }.</div>`;
+    <div class="match-sub perf-note">Values are out of 100; points = value × weight. Skill is ${raw && raw.skills.length > 3 ? "all 7 skills" : "this round's focus skills"}, averaged${raw && raw.skills.length > 3 ? "; the week's focus skills count again in the focus-skill edge" : ""}.</div>`;
 }
 
 // Match result screen, top to bottom: what changed (Result), why (You vs
@@ -5038,7 +5038,7 @@ function openHowTo() {
 
   sec("match", "⚔️", "Match day", ul([
     "Each side's <b>match-day rating</b> = rating + performance + focus-skill edge + luck. Higher wins.",
-    `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Each point above 70 adds 3; below 70 costs 3. A rival's comes from their focus skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
+    `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Each point above 70 adds 3; below 70 costs 3. Skills means all 7, averaged — the week's focus skills count separately, in the edge. A rival's comes from their 7 skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
     `<b>🎯 Focus-skill edge:</b> whoever has the better average in the week's focus skills gets <b>${B.skillEdgeWeight}</b> match-day rating for every point they're ahead.`,
     "Luck is random for both sides and is drawn so you win exactly as often as the win chance says. It's usually a small nudge; upsets always stay possible.",
     "The result screen explains every number; the next-match preview shows both sides' focus skills.",

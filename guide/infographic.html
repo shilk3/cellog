@@ -29,7 +29,7 @@ a{color:var(--skill);}
 <style>.ig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.ig-wrap{min-width:1180px}.cellog-back button{font:600 13px inherit;color:#e7edf7;background:#131c2e;border:1px solid #263149;border-radius:8px;padding:4px 10px}</style>
 </head>
 <body>
-<nav class="cellog-back"><a href="../index.html">← Back to CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.71.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
+<nav class="cellog-back"><a href="../index.html">← Back to CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.72.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
 
 <div style="width:100%;max-width:1320px;margin:0 auto;padding:56px 32px 140px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box;">
 
@@ -37,7 +37,7 @@ a{color:var(--skill);}
 <div style="display:flex;flex-direction:column;gap:14px;">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <div style="font-size:42px;font-weight:800;letter-spacing:0.3px;">CELLOG</div>
-    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.71.0</div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.72.0</div>
   </div>
   <div style="font-size:18px;color:var(--text-dim);max-width:920px;line-height:1.55;">Every mechanic, threshold and formula behind the Excel esports manager sim — exactly as implemented in <code>game.js</code>, laid out as one connected system.</div>
 </div>
@@ -308,7 +308,7 @@ a{color:var(--skill);}
       <code>matchDay = rating + (perf − 70) × 3 + luck</code>
       <code>luck = Gumbel(scale 400/ln10, centred 0) — one per side</code>
       <code>P(win) = 1 / (1 + 10^((oppRating − (rating + (perf − 70) × 3))/400))</code>
-      <div style="font-size:12.5px;color:var(--text-dim);">The result is decided by the real luck draws (so upsets happen exactly as often as the win chance says). <b>🧪 Skills match model (beta, opt-in per game):</b> match-day = performance × 8 + edge 10 per point + luck (scale 250) — rating left out (it still moves with results, on rating-vs-rating maths); rivals' skills anchored 10 under their league cap, ±0.06 per rating point. <b>Luck size:</b> a 300 match-day gap makes a 10-to-1 favourite (classic Elo: 400), so luck decides less — rating changes use the same scale. The luck shown is cosmetic: each side's real draw at <b>⅕</b> of its size (median ≈ 24), topped up just enough to explain an upset, so the columns always add up; and rivals' performance is real: their week's focus skills (55%) plus Health/Calm/Rest at 80. <b>🎯 Focus-skill edge:</b> whoever averages higher in the week's focus skills gets 4 match-day rating per point ahead. <b>League tables</b> rank by points, then head-to-head among tied players, then rating, with W and L columns.</div>
+      <div style="font-size:12.5px;color:var(--text-dim);">The result is decided by the real luck draws (so upsets happen exactly as often as the win chance says). <b>🧪 Skills match model (beta, opt-in per game):</b> match-day = performance × 8 + edge 10 per point + luck (scale 250) — rating left out (it still moves with results, on rating-vs-rating maths); rivals' skills anchored 10 under their league cap, ±0.06 per rating point. <b>Luck size:</b> a 300 match-day gap makes a 10-to-1 favourite (classic Elo: 400), so luck decides less — rating changes use the same scale. The luck shown is cosmetic: each side's real draw at <b>⅕</b> of its size (median ≈ 24), topped up just enough to explain an upset, so the columns always add up; and performance uses <b>all 7 skills</b> averaged (55%) for you and rivals (rivals: Health/Calm/Rest at 80); the week's focus skills count in the edge. <b>🎯 Focus-skill edge:</b> whoever averages higher in the week's focus skills gets 4 match-day rating per point ahead. <b>League tables</b> rank by points, then head-to-head among tied players, then rating, with W and L columns.</div>
     </div>
     <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px;">
       <div style="font-size:13px;font-weight:700;">Outcome</div>
