@@ -34,7 +34,7 @@ a{color:var(--skill);}
 <style>.ig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.ig-wrap{min-width:1180px}.cellog-back button{font:600 13px inherit;color:#e7edf7;background:#131c2e;border:1px solid #263149;border-radius:8px;padding:4px 10px}</style>
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.77.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.78.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
 
 <div style="width:100%;max-width:1320px;margin:0 auto;padding:56px 32px 140px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box;">
 
@@ -42,7 +42,7 @@ a{color:var(--skill);}
 <div style="display:flex;flex-direction:column;gap:14px;">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <div style="font-size:42px;font-weight:800;letter-spacing:0.3px;">CELLOG</div>
-    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.77.0</div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.78.0</div>
   </div>
   <div style="font-size:18px;color:var(--text-dim);max-width:920px;line-height:1.55;">Every mechanic, threshold and formula behind the Excel esports manager sim — exactly as implemented in <code>game.js</code>, laid out as one connected system.</div>
 </div>
@@ -139,7 +139,7 @@ a{color:var(--skill);}
   <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px 24px;display:flex;flex-direction:column;gap:10px;">
     <div style="display:flex;gap:40px;flex-wrap:wrap;">
       <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Gain (≥1h/day)</div><code>effectiveHours × 0.24 × focus × health × rest × diminish × coach</code></div>
-      <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Rust (&lt;1h/day, no coach hired)</div><code>−min(0.15, value × 0.003)</code> per day</div>
+      <div><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;">Rust (&lt;1h/day, no coach hired)</div><code>−min(0.15, value × 0.003)</code> per day, never below the skill's <b>XP</b></div>
     </div>
     <div style="font-size:12.5px;color:var(--text-dim);">Diminishing: <code>skillDiminish(v) = clamp(1 − 0.85×(v/100)^1.5, 0.12, 1.0)</code> — an accelerating falloff, so the last stretch toward 100 is a long tail, not a wall.</div>
     <table style="margin-top:6px;">
@@ -151,7 +151,7 @@ a{color:var(--skill);}
   </div>
   <div style="background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid #c9b6ff;border-radius:10px;padding:20px 24px;display:flex;flex-direction:column;gap:10px;">
     <div style="font-size:15px;font-weight:700;">🎓 Experience — XP 0–100 per skill <span style="font-size:12px;font-weight:600;color:var(--text-dim);">(new in v4.75)</span></div>
-    <div style="font-size:13.5px;color:var(--text-dim);">Earned by <b>playing</b>, not training: every match a skill is in focus earns it XP, win or lose. Only while you play in <b>League 4 or higher</b> (relegation to League 5 pauses it). Never rusts. Shown as the violet strip along the bottom of each skill bar.</div>
+    <div style="font-size:13.5px;color:var(--text-dim);">Earned by <b>playing</b>, not training: every match a skill is in focus earns it XP, win or lose. Only while you play in <b>League 4 or higher</b> (relegation to League 5 pauses it). Never rusts — and it's a <b>floor</b>: a skill never rusts below its XP, and a ⭐ specialisation you swap out only drops to its XP if that's above the lower cap (XP 100 → it stays at 100). Shown as the violet strip along the bottom of each skill bar.</div>
     <table>
       <tr><th>XP per focus match</th><th>League match</th><th>Playoff match</th><th>Seasons to 100</th></tr>
       <tr><td>Full game</td><td>+1</td><td>+2</td><td>~8–9½</td></tr>

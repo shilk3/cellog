@@ -903,6 +903,7 @@ details.match-more[open] { padding-bottom: 8px; }
 .spec-name { flex: 1; font-weight: 700; }
 .spec-val { font-size: 12px; color: var(--text-dim); text-align: right; }
 .spec-loss { color: var(--danger); font-weight: 700; }
+.spec-keep { color: #c9b6ff; font-weight: 700; }
 
 /* A skill's experience (0–100): a violet strip along the bottom of its bar,
    with the next match's gain faint after it — the Chill strip's twin. */

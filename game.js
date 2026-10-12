@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.77.0";
+const APP_VERSION = "4.78.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -624,16 +624,27 @@ function leagueSkillCap(key = null, s = state) {
 function skillCap(key) {
   return Math.min(skillShopCap(key), leagueSkillCap(key));
 }
+// A skill's experience: also its floor — it never rusts below it, and
+// dropping it as a specialisation never takes it below it either.
+function skillXp(key, s = state) {
+  return (s.stats.xp && s.stats.xp[key]) || 0;
+}
+// Where a skill lands if it stops being a specialisation: the lower cap, or
+// its XP if that's higher (never above where it is now).
+function specDropTo(key, s = state) {
+  return Math.min(s.stats.skills[key], Math.max(leagueSkillCap(key, s), skillXp(key, s)));
+}
 // Sets your specialisations. A skill that stops being one drops straight
-// to the lower cap. Returns what was lost: [{ key, from, to }].
+// to the lower cap — or to its XP, if that's higher. Returns what was
+// lost: [{ key, from, to }].
 function setSpecialisations(keys, s = state) {
   s.specialisations = keys.slice(0, BAL.specialisationCount);
   const losses = [];
   SKILL_KEYS.forEach((k) => {
-    const cap = leagueSkillCap(k, s);
-    if (s.stats.skills[k] > cap) {
-      losses.push({ key: k, from: s.stats.skills[k], to: cap });
-      s.stats.skills[k] = cap;
+    const to = specDropTo(k, s);
+    if (s.stats.skills[k] > to + 1e-9) {
+      losses.push({ key: k, from: s.stats.skills[k], to });
+      s.stats.skills[k] = to;
     }
   });
   return losses;
@@ -1248,8 +1259,11 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
       // books — even in a week it isn't trained (or can't be).
       skills[key] = s.skills[key];
     } else {
+      // Rust never takes a skill below its XP (one already at or under its
+      // XP doesn't rust at all).
       const rust = Math.min(0.15, s.skills[key] * 0.003);
-      skills[key] = Math.max(0, s.skills[key] - rust);
+      const floor = Math.min(s.skills[key], (s.xp && s.xp[key]) || 0);
+      skills[key] = Math.max(0, floor, s.skills[key] - rust);
     }
   });
 
@@ -1367,6 +1381,8 @@ function resolveDay() {
       events.push({ type: "bad", text: `${meta.icon} No ${meta.name} training: skill rusted slightly (${fmtSigned(delta, Math.abs(delta) < 0.1 ? 2 : 1)})` });
     } else if (isActive && hiredLevel(coachKey(key))) {
       events.push({ type: "neutral", text: `${meta.icon} No ${meta.name} training: your coach kept it steady` });
+    } else if (isActive && before > 0 && delta === 0) {
+      events.push({ type: "neutral", text: `${meta.icon} No ${meta.name} training: your experience held it (XP ${fmt(skillXp(key))})` });
     }
   });
 
@@ -3030,16 +3046,17 @@ function renderPlannerRows() {
       comboRowHtml(key, {
         icon: meta.icon,
         label: `${meta.name}${isSpecialisation(key) ? " ⭐" : ""}`,
-        outcomeText: `${fmt(s.skills[key])}/${cap}${lvl > 0 && (a.skills[key] || 0) < BAL.skillDecayThresholdHours ? " · held" : ""}${xpText(key)}`,
+        outcomeText: `${fmt(s.skills[key])}/${cap}${(a.skills[key] || 0) < BAL.skillDecayThresholdHours && (lvl > 0 || s.skills[key] <= skillXp(key) + 1e-9) ? " · held" : ""}${xpText(key)}`,
         value: s.skills[key],
         previewValue: preview.skills[key],
         cap,
         scaleMax: 100,
         hours: a.skills[key] || 0,
         maxHours: SKILL_MAX_HOURS,
-        // A hired coach stops rust: under 1h shows neutral, not red.
+        // A hired coach — or XP at the skill's level — stops rust: under 1h
+        // shows neutral, not red.
         markerHours: BAL.skillDecayThresholdHours,
-        heldBelow: lvl > 0,
+        heldBelow: lvl > 0 || s.skills[key] <= skillXp(key) + 1e-9,
         shopTag,
         barClass: "skill",
         xpStrip: xpStripHtml(key, { preview: true }),
@@ -3985,7 +4002,8 @@ function openSpecialisations({ required = false, onDone = null } = {}, picked = 
     const m = skillMeta(k);
     const on = picked.includes(k);
     const lvl = state.stats.skills[k];
-    const loss = !on && lvl > other ? `<span class="spec-loss">drops ${fmt(lvl)} → ${other}</span>` : "";
+    const dropTo = Math.min(lvl, Math.max(other, skillXp(k)));
+    const loss = !on && lvl > dropTo + 1e-9 ? `<span class="spec-loss">drops ${fmt(lvl)} → ${fmt(dropTo)}${dropTo > other ? " (XP)" : ""}</span>` : !on && lvl > other ? `<span class="spec-keep">kept by XP ${fmt(skillXp(k))}</span>` : "";
     return `<button class="spec-row${on ? " on" : ""}" data-spec="${k}" aria-pressed="${on}">
         <span class="spec-star">${on ? "⭐" : "☆"}</span>
         <span class="spec-name">${m.icon} ${m.name}</span>
@@ -3995,7 +4013,7 @@ function openSpecialisations({ required = false, onDone = null } = {}, picked = 
   const ready = picked.length === n;
   const html = `
     ${required ? `<h2>⭐ Choose ${n} specialisations</h2>` : stickyHeadHtml("⭐ Specialisations")}
-    <p class="modal-sub">Your ${n} specialisations can reach your best league's skill cap (<b>${top}</b> now, League ${state.peakLeagueTier}); the other skills stop at <b>${other}</b>. Coaches still set each skill's own ceiling. You can change them any time — but a skill that stops being one <b>drops to ${other}</b> straight away.</p>
+    <p class="modal-sub">Your ${n} specialisations can reach your best league's skill cap (<b>${top}</b> now, League ${state.peakLeagueTier}); the other skills stop at <b>${other}</b>. Coaches still set each skill's own ceiling. You can change them any time — but a skill that stops being one <b>drops to ${other}</b> straight away, or only to its <b>XP</b> if that's higher.</p>
     ${required && state.day > 1 ? `<p class="modal-sub">Your career already has skills above ${other}: pick which ${n} to keep — the rest drop to ${other}.</p>` : ""}
     <div class="spec-list">${rows}</div>
     <p class="modal-sub">${picked.length}/${n} chosen.</p>
@@ -5236,18 +5254,20 @@ function openHowTo() {
     `A skill trained under ${B.skillDecayThresholdHours}h a day — or locked because it's not in focus — slowly rusts (about 1 point a week).`,
     "A hired <b>Coach</b> stops their skill rusting at all, trained or not. Coached rows show blue-grey instead of red under 1h, and <b>held</b>.",
     "Above its ceiling a skill is never cut down: 1h a day holds it.",
+    "<b>🎓 Experience is a floor:</b> a skill never rusts below its XP.",
   ]));
 
   sec("specs", "⭐", "Specialisations", ul([
     `Pick <b>${B.specialisationCount} specialisations</b>. They can reach your best league's skill cap; the other ${7 - B.specialisationCount} skills stop <b>${B.otherSkillCapGap} lower</b>:`,
     `League 5: ${LEAGUE_SKILL_CAP[5]} / ${LEAGUE_SKILL_CAP[5] - B.otherSkillCapGap} · League 4: ${LEAGUE_SKILL_CAP[4]} / ${LEAGUE_SKILL_CAP[4] - B.otherSkillCapGap} · League 3: ${LEAGUE_SKILL_CAP[3]} / ${LEAGUE_SKILL_CAP[3] - B.otherSkillCapGap} · League 2: ${LEAGUE_SKILL_CAP[2]} / ${LEAGUE_SKILL_CAP[2] - B.otherSkillCapGap} · League 1: ${LEAGUE_SKILL_CAP[1]} / ${LEAGUE_SKILL_CAP[1] - B.otherSkillCapGap}. A coach still sets each skill's own ceiling.`,
-    `Change them any time (Career → ⭐ Specialisations), but a skill that stops being one <b>drops to the lower cap</b> straight away.`,
+    `Change them any time (Career → ⭐ Specialisations), but a skill that stops being one <b>drops to the lower cap</b> straight away — or only to its <b>XP</b>, if that's higher.`,
     `Every rival has 3 specialisations too — fixed for good. A mid-table rival's ⭐ skills sit ${B.rivalBelowCap} under their league's cap, higher or lower with their rating. Tap a rival to see them.`,
   ]));
 
   sec("xp", "🎓", "Experience", ul([
     `Every match a skill is in focus earns it <b>+${B.xpPerMatch} XP</b>, win or lose — <b>+${B.xpPerMatch * B.xpPlayoffMult}</b> in a playoff match. Up to ${B.xpMax} per skill, and it never rusts.`,
     `Only earned while you play in <b>League ${B.xpFromTier} or higher</b> — in League 5 there's none yet, and a relegation back there pauses it.`,
+    `<b>XP is a floor:</b> a skill never rusts below its XP, and if it stops being a ⭐ specialisation it only drops to its XP (when that's above the lower cap). Max a skill's XP and it stays at 100 whichever skills are your ⭐ — so you can swap them around.`,
     `It builds slowly: a skill fills in about 8–9 seasons. It shows as the violet strip along the bottom of each skill bar (<b>XP</b> beside the number), with the next match's gain faint after it.`,
     `Experience makes you <b>finish faster</b>: a minute per ${B.xpPerMinute} XP across the week's focus skills. The faster finish settles a dead heat (see Match day).`,
   ]));
