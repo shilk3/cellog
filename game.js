@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.74.2";
+const APP_VERSION = "4.75.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -21,7 +21,7 @@ const SAVE_VERSION = 7;
 // Nested records a save might be missing a newer field in: filled from a
 // new career's defaults, keeping everything the save already has.
 const SAVE_DEFAULT_PATHS = [
-  "stats", "stats.skills", "allocation", "allocation.skills", "employment", "staff", "items", "items.crash",
+  "stats", "stats.skills", "stats.xp", "allocation", "allocation.skills", "employment", "staff", "items", "items.crash",
   "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades",
 ];
 
@@ -191,14 +191,22 @@ const BAL = {
   techniqueMinHours: 25,
   techniqueMaxHours: 40,
   techniquePenaltyPerUnmastered: 0.05,
+  // Experience: every match a skill is in focus earns it XP (0–100, never
+  // rusts) — only while you play in League xpFromTier or higher, playoff
+  // matches counting xpPlayoffMult times. xpPerMatch is the game length's
+  // (length), so a skill fills in roughly 8–9 seasons in every length.
+  xpPerMatch: 1, // (length)
+  xpMax: 100,
+  xpFromTier: 4,
+  xpPlayoffMult: 2,
 };
 
 // Game lengths, chosen when a game starts (state.gameLength). Each has its
 // own save slot. A year ends on the day of the Final either way.
 const GAME_LENGTHS = {
-  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7 },
-  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14 },
-  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21 },
+  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4 },
+  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2 },
+  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1 },
 };
 const GAME_LENGTH_KEYS = ["short", "half", "full"];
 const ALL_PLAYOFF_STAGES = ["r16", "qf", "sf", "f"];
@@ -220,6 +228,7 @@ function applyGameLength(key) {
   BAL.relegationCount = g.moveCount;
   BAL.promotionTablePlaces = g.moveCount - 1;
   BAL.preseasonDays = g.preseasonDays;
+  BAL.xpPerMatch = g.xpPerMatch;
   BAL.trainingCampDays = playoffStages().length * BAL.roundIntervalDays;
 }
 // A game length's numbers in one line, for the pickers.
@@ -968,6 +977,7 @@ function freshState() {
     yearCashFlow: { workPay: 0, matchCash: 0, expenses: 0 }, // resets every year; summarized at year-end
     stats: {
       skills: Object.fromEntries(SKILL_KEYS.map((k) => [k, 8])),
+      xp: Object.fromEntries(SKILL_KEYS.map((k) => [k, 0])), // experience per skill, 0–100 — see awardMatchXp
       phys: 65,
       rest: 100, // higher = better; drains when sleep < idealSleep
       composure: 92, // higher = better; drains when relax < relaxComposureThreshold
@@ -1764,6 +1774,31 @@ function recordRivalResultVsPlayer(rivalId, outcome, playerRating) {
   else rival.wins += 1;
 }
 
+// Experience earned by one match: each of the week's focus skills gains
+// xpPerMatch (double in a knockout), but only while you play in League
+// xpFromTier or higher. Returns what moved, for the result screen.
+// All 7 skills' experience added up — for the progress tables.
+function xpTotal(s = state) {
+  return SKILL_KEYS.reduce((sum, k) => sum + ((s.stats.xp && s.stats.xp[k]) || 0), 0);
+}
+function xpEarnsHere(tier = state.leagueTier) {
+  return tier <= BAL.xpFromTier;
+}
+function xpPerFocusMatch(knockout) {
+  return BAL.xpPerMatch * (knockout ? BAL.xpPlayoffMult : 1);
+}
+function awardMatchXp(knockout) {
+  if (!xpEarnsHere()) return { earned: false, skills: [] };
+  const gain = xpPerFocusMatch(knockout);
+  const xp = state.stats.xp;
+  const skills = state.activeSkills.map((key) => {
+    const before = xp[key] || 0;
+    xp[key] = Math.min(BAL.xpMax, before + gain);
+    return { key, before, after: xp[key] };
+  });
+  return { earned: true, skills };
+}
+
 function resolveMatch(opponent) {
   const managerEff = upgradeEffect("manager");
   const rankLossMult = managerEff ? managerEff.rankLossMult : 1.0;
@@ -1813,6 +1848,7 @@ function resolveMatch(opponent) {
   if (win) state.wins += 1;
   else if (draw) state.draws = (state.draws || 0) + 1;
   else state.losses += 1;
+  const xp = awardMatchXp(mu.knockout);
 
   // Display figures for the result screen — cosmetic only; the result was
   // settled above by the real luck draws. Each side's shown luck is its real
@@ -1894,6 +1930,7 @@ function resolveMatch(opponent) {
     // From the displayed totals so the verdict always matches them; rounding
     // can make a sub-1 margin look like a tie, which reads as "less than 1".
     margin: Math.abs(yourFinalShown - oppFinalShown),
+    xp, // experience this match earned the focus skills
   };
 }
 
@@ -2795,7 +2832,7 @@ function lockedZoneHtml(cap, scaleMax) {
 // under the marker reads neutral rather than red.
 // bank / bankPreview: a reserve above 100 (Calm), drawn as a bright strip
 // over the full bar — its width is the reserve's share of the most it can hold.
-function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap, scaleMax = cap, hours, maxHours, markerHours, shopTag, disabled, barClass, heldBelow = false, bank = 0, bankPreview = 0 }) {
+function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap, scaleMax = cap, hours, maxHours, markerHours, shopTag, disabled, barClass, heldBelow = false, bank = 0, bankPreview = 0, xpStrip = "" }) {
   const barPct = clamp((value / scaleMax) * 100, 0, 100);
   const previewPct = previewValue == null ? barPct : clamp((previewValue / scaleMax) * 100, 0, 100);
   const overlayLeft = Math.min(barPct, previewPct);
@@ -2818,7 +2855,7 @@ function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap,
       <span class="combo-outcome">${outcomeText}</span>
       <span class="activity-hours"><span id="hoursVal_${key}">${hours}</span>h</span>
     </div>
-    <div class="bar combo-bar"><div class="bar-fill ${barClass}" style="width:${barPct}%"></div>${lockedZoneHtml(cap, scaleMax)}${overlayHtml}${bankHtml(bank, bankPreview)}</div>
+    <div class="bar combo-bar"><div class="bar-fill ${barClass}" style="width:${barPct}%"></div>${lockedZoneHtml(cap, scaleMax)}${overlayHtml}${bankHtml(bank, bankPreview)}${xpStrip}</div>
     <div class="stepper">
       <button class="step-btn" data-key="${key}" data-dir="-1" ${disabled ? "disabled" : ""}>−</button>
       <div class="slider-wrap">
@@ -2836,6 +2873,23 @@ function bankHtml(bank, bankPreview) {
   const now = clamp((bank / room) * 100, 0, 100);
   const next = clamp((bankPreview / room) * 100, 0, 100);
   return `<div class="bar-bank" style="width:${now}%"></div>${next > now + 0.3 ? `<div class="bar-bank bar-bank-gain" style="left:${now}%;width:${next - now}%"></div>` : ""}`;
+}
+
+// A skill's experience: a bright strip along the bottom of its bar, the
+// width its share of 100 — plus, faint, what the next match would add.
+function xpStripHtml(key, { preview = false } = {}) {
+  const xp = (state.stats.xp && state.stats.xp[key]) || 0;
+  const next = preview && inSeason() && xpEarnsHere() && state.activeSkills.includes(key)
+    ? Math.min(BAL.xpMax, xp + xpPerFocusMatch(playerKnockout())) : xp;
+  if (xp < 0.5 && next < 0.5) return "";
+  const now = clamp((xp / BAL.xpMax) * 100, 0, 100);
+  const to = clamp((next / BAL.xpMax) * 100, 0, 100);
+  return `<div class="bar-xp" style="width:${now}%"></div>${to > now + 0.1 ? `<div class="bar-xp bar-xp-gain" style="left:${now}%;width:${to - now}%"></div>` : ""}`;
+}
+// "XP 12" beside a skill once experience can be (or has been) earned.
+function xpText(key) {
+  const xp = (state.stats.xp && state.stats.xp[key]) || 0;
+  return xp > 0 || xpEarnsHere() ? ` · XP ${fmt(xp)}` : "";
 }
 
 // Net of cost of living, not gross pay — what actually lands in (or leaves)
@@ -2928,7 +2982,7 @@ function renderPlannerRows() {
       comboRowHtml(key, {
         icon: meta.icon,
         label: `${meta.name}${isSpecialisation(key) ? " ⭐" : ""}`,
-        outcomeText: `${fmt(s.skills[key])}/${cap}${lvl > 0 && (a.skills[key] || 0) < BAL.skillDecayThresholdHours ? " · held" : ""}`,
+        outcomeText: `${fmt(s.skills[key])}/${cap}${lvl > 0 && (a.skills[key] || 0) < BAL.skillDecayThresholdHours ? " · held" : ""}${xpText(key)}`,
         value: s.skills[key],
         previewValue: preview.skills[key],
         cap,
@@ -2940,6 +2994,7 @@ function renderPlannerRows() {
         heldBelow: lvl > 0,
         shopTag,
         barClass: "skill",
+        xpStrip: xpStripHtml(key, { preview: true }),
       })
     );
   });
@@ -3264,6 +3319,9 @@ function matchResultTableHtml(result) {
   rows.push(row("💰 Cash", fmtMoney(result.cashBefore), fmtMoney(cashAfter), `+${fmtMoney(cashDelta)}`, "wk-up"));
   // Results saved before v4.48.2 carried the all-time record.
   rows.push(row(result.recordScope === "season" ? "📋 Season record" : "📋 Record", recText(rec), recText(recAfter), result.win ? "W" : result.draw ? "D" : "L", result.win ? "wk-up" : result.draw ? "" : "wk-down"));
+  // Experience each focus skill earned (results from before v4.75 have none).
+  const xp = result.xp;
+  if (xp && xp.earned) xp.skills.forEach((x) => rows.push(row(`${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP`, fmt(x.before), fmt(x.after), x.after > x.before ? `+${fmt(x.after - x.before)}` : "max", x.after > x.before ? "wk-up" : "")));
 
   return `
     <table class="perf-table result-table">
@@ -3425,6 +3483,7 @@ function nextMatchPreviewHtml() {
         <tbody>${focusRows}${edgeRow}</tbody>
       </table>
       <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance${mu.drawProb >= 0.005 ? ` · <b>${Math.round(mu.drawProb * 100)}%</b> draw` : ""}.</div>
+      <div class="match-sub perf-note">🎓 ${xpEarnsHere(tier) ? `Each focus skill earns <b>+${xpPerFocusMatch(info.kind === "playoff")} XP</b> from this match, win or lose.` : `Experience is earned from League ${BAL.xpFromTier} up.`}</div>
     </div>`;
 }
 
@@ -4072,8 +4131,8 @@ function openCareer() {
         const cause = skillCapCause(sk.key);
         return `
         <div class="skill-row-detail ${active ? "skill-row-detail-active" : ""}">
-          <div class="skill-row-detail-label"><span>${sk.icon} ${sk.name}${isSpecialisation(sk.key) ? " ⭐" : ""}${active ? " 🟢" : ""}</span><span>${fmt(val)}/${cap}${cause ? ` · cap: ${cause}` : ""}</span></div>
-          <div class="bar"><div class="bar-fill skill" style="width:${pct}%"></div>${lockedZoneHtml(cap, 100)}</div>
+          <div class="skill-row-detail-label"><span>${sk.icon} ${sk.name}${isSpecialisation(sk.key) ? " ⭐" : ""}${active ? " 🟢" : ""}</span><span>${fmt(val)}/${cap}${cause ? ` · cap: ${cause}` : ""}${xpText(sk.key)}</span></div>
+          <div class="bar"><div class="bar-fill skill" style="width:${pct}%"></div>${lockedZoneHtml(cap, 100)}${xpStripHtml(sk.key)}</div>
         </div>`;
       }).join("")}
     </div>
@@ -4678,6 +4737,7 @@ function phaseSnapshot() {
     composure: state.stats.composure,
     nutrition: state.stats.nutrition,
     skills: { ...state.stats.skills },
+    xp: xpTotal(),
   };
 }
 
@@ -4794,6 +4854,7 @@ function progressRows(start) {
   [["phys", "🏃 Health"], ["rest", "🌙 Rest"], ["composure", "🎮 Calm"], ["nutrition", "🥗 Nutrition"]].forEach(([k, label]) => {
     if (start[k] != null) rows.push([label, start[k], s[k]]);
   });
+  if (start.xp != null) rows.push(["🎓 Experience", start.xp, xpTotal()]);
   rows.push(["💰 Cash", start.cash, state.cash, "money"]);
   rows.push(["🏆 Rating", start.rank, state.rank]);
   return rows;
@@ -5105,6 +5166,13 @@ function openHowTo() {
     `League 5: ${LEAGUE_SKILL_CAP[5]} / ${LEAGUE_SKILL_CAP[5] - B.otherSkillCapGap} · League 4: ${LEAGUE_SKILL_CAP[4]} / ${LEAGUE_SKILL_CAP[4] - B.otherSkillCapGap} · League 3: ${LEAGUE_SKILL_CAP[3]} / ${LEAGUE_SKILL_CAP[3] - B.otherSkillCapGap} · League 2: ${LEAGUE_SKILL_CAP[2]} / ${LEAGUE_SKILL_CAP[2] - B.otherSkillCapGap} · League 1: ${LEAGUE_SKILL_CAP[1]} / ${LEAGUE_SKILL_CAP[1] - B.otherSkillCapGap}. A coach still sets each skill's own ceiling.`,
     `Change them any time (Career → ⭐ Specialisations), but a skill that stops being one <b>drops to the lower cap</b> straight away.`,
     `Every rival has 3 specialisations too — fixed for good. A mid-table rival's ⭐ skills sit ${B.rivalBelowCap} under their league's cap, higher or lower with their rating. Tap a rival to see them.`,
+  ]));
+
+  sec("xp", "🎓", "Experience", ul([
+    `Every match a skill is in focus earns it <b>+${B.xpPerMatch} XP</b>, win or lose — <b>+${B.xpPerMatch * B.xpPlayoffMult}</b> in a playoff match. Up to ${B.xpMax} per skill, and it never rusts.`,
+    `Only earned while you play in <b>League ${B.xpFromTier} or higher</b> — in League 5 there's none yet, and a relegation back there pauses it.`,
+    `It builds slowly: a skill fills in about 8–9 seasons. It shows as the violet strip along the bottom of each skill bar (<b>XP</b> beside the number), with the next match's gain faint after it.`,
+    "Coming next: experience will make you <b>finish matches faster</b>, and finish time will settle close matches.",
   ]));
 
   sec("match", "⚔️", "Match day", ul([
@@ -5660,6 +5728,7 @@ function weekSnapshot() {
   const s = state.stats;
   return {
     skills: { ...s.skills },
+    xp: xpTotal(),
     phys: s.phys,
     rest: s.rest,
     composure: s.composure,

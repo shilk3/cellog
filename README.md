@@ -144,6 +144,15 @@ what each change costs first). Every rival has 3 specialisations too, fixed
 for good, under the same caps, with levels that follow their rating — so
 they rise and fall with their results.
 
+**Experience**: every match a skill is in the week's focus earns it 🎓 XP,
+win or lose — +1 in a Full game (+2 Half, +4 Short), double in playoff
+matches — but only while you play in League 4 or higher. Up to 100 per skill
+and it never rusts, so a skill fills in about 8–9 seasons. It shows as a
+violet strip along the bottom of each skill bar (Plan and Career), as XP
+rows on the result screen and as 🎓 Experience in the progress tables. It
+doesn't touch matches yet: next, experience will set how fast you finish a
+match, and the faster finish will settle close ones.
+
 **Match day**: both sides get a match-day rating = performance × 8 +
 focus-skill edge + luck, and the higher one wins — unless the two finish
 within 30 of each other: a 🤝 draw (about 1 even game in 7, fewer when one

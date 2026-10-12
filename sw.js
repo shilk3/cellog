@@ -1,6 +1,6 @@
 // Bump this on every deploy that changes cached files — it's what makes the
 // browser notice this file changed and install a new service worker.
-const CACHE_NAME = "cellog-v144";
+const CACHE_NAME = "cellog-v145";
 const ASSETS = [
   "./",
   "index.html",
