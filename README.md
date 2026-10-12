@@ -149,15 +149,16 @@ win or lose — +1 in a Full game (+2 Half, +4 Short), double in playoff
 matches — but only while you play in League 4 or higher. Up to 100 per skill
 and it never rusts, so a skill fills in about 8–9 seasons. It shows as a
 violet strip along the bottom of each skill bar (Plan and Career), as XP
-rows on the result screen and as 🎓 Experience in the progress tables. It
-doesn't touch matches yet: next, experience will set how fast you finish a
-match, and the faster finish will settle close ones.
+rows on the result screen and as 🎓 Experience in the progress tables.
+Experience sets your ⏱ finish time: 30:00, less a minute per 10 XP (the
+week's focus skills' average), less 0–6 minutes of the day's form — never
+over 30:00. Rivals' experience comes with their league (League 5: 0, 4: ~10,
+3: ~25, 2: ~45, 1: ~65, a little higher or lower with rating).
 
 **Match day**: both sides get a match-day rating = performance × 8 +
 focus-skill edge + luck, and the higher one wins — unless the two finish
-within 30 of each other: a 🤝 draw (about 1 even game in 7, fewer when one
-side is clearly better; 1 point each and half the win prize). Playoff games
-can't be drawn — a dead heat goes to the better focus skills. Rating isn't part of it:
+within 60 of each other: a ⏱ dead heat (about 1 even game in 4), won by the
+faster finish. No draws, league or playoffs. Rating isn't part of it:
 it rises and falls with results (on rating-vs-rating Elo maths, a 300 gap =
 10-to-1) as a record of how you've done, and sets prize money. Your
 performance comes from your stats — all 7 skills averaged (55%), Health
@@ -176,9 +177,11 @@ screen leads with VICTORY / DEFEAT by the margin and the round, then your
 win chance, both sides' numbers side by side (Head to Head), what changed
 (rating, table position, cash, record), a preview of the next match
 (opponent, ratings, table places, win chance and the week's focus) and
-Continue — with the collapsible explanations below it. League tables (win 3 points, draw 1) rank
-by points, then head-to-head between tied players (a draw counts half), then
-rating; they show W–D–L, points and form (the last 5 results).
+Continue — with the collapsible explanations below it. Both finish times show
+under Head to Head, lit up when they settled a dead heat. League tables rank
+by wins, then head-to-head between tied players, then rating; they show W–L
+and form (the last 5 results). Seasons from before v4.76 keep their draws
+(W–D–L).
 
 **Game length**: chosen when a game starts, and each length keeps its own
 save — so up to three games on one device (☰ → 🎮 Games to switch, start or

@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.75.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.76.0</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -165,7 +165,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
   <figure>
     <div class="sheet" id="sheet"></div>
-    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.75.0).</figcaption>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.76.0).</figcaption>
   </figure>
 
   <section class="detail" id="detail" aria-live="polite"></section>
@@ -204,7 +204,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["calm", "Calm (+ Chill)", "0–100, Chill to 130", "stats", 1, 3, "Built by Relax, plus a Sleep bonus (+1.5 a day at 7h, +3 at 8h+); Rest below 80 wears it down. Counts 15% of match performance (Chill counts as 100 at most), and below 20 it also cuts the skills part (×0.75, ×0.5 under 10). At 0 you burn out."],
     ["health", "Health", "0–100", "stats", 1, 4, "Built by Gym (Rest boosts the gains), fades without it. Capped at 70, +10 per Physio level. Scales training (×0.5 at 0 up to ×1 at 100) and counts 25% of match performance."],
     ["skills", "Skills ×7", "⭐ 3 specialisations", "stats", 1, 5, "Seven case skills. Your 3 ⭐ specialisations can reach your best league's cap; the other four stop 20 lower. The week's focus skills are what a match tests."],
-    ["experience", "Experience ×7", "XP 0–100 per skill", "stats", 1, 6, "Every match a skill is in focus earns it XP, win or lose: +1 (Full), +2 (Half), +4 (Short), double in playoffs. Only while you play in League 4 or higher. Up to 100 per skill, never rusts — a skill fills in about 8–9 seasons. Coming next: experience sets how fast you finish a match."],
+    ["experience", "Experience ×7", "XP 0–100 per skill", "stats", 1, 6, "Every match a skill is in focus earns it XP, win or lose: +1 (Full), +2 (Half), +4 (Short), double in playoffs. Only while you play in League 4 or higher. Up to 100 per skill, never rusts — a skill fills in about 8–9 seasons. Your focus skills' average XP sets your finish time: a minute sooner per 10 XP."],
     ["cash", "Cash", "your bank", "money", 1, 8, "Money in from pay and prizes, out on living costs, staff wages and things you buy."],
     ["living", "Living costs", "$50 every day", "money", 1, 9, "Charged every day whatever you're doing: preseason, unemployed or pro."],
 
@@ -223,16 +223,17 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["pro", "Pro status", "League 2+ & skill average", "career", 3, 8, "Go pro automatically once you've reached League 2 and your 7 skills average 75+ (85+ once League 1 is your best). Lasts to year end; renewed only if the average still holds."],
 
     ["luck", "Luck", "random, both sides", "match", 4, 1, "Each side gets a random luck draw. It's sized so you win exactly as often as the win chance says; upsets always stay possible."],
-    ["matchday", "Match-day rating", "performance × 8 + edge", "match", 4, 3, "Performance × 8 + the focus-skill edge, plus luck for each side. The higher total wins. Rating isn't part of it."],
-    ["rival", "Rival", "skills set by league", "match", 4, 5, "Each rival has 3 fixed specialisations. A mid-table rival's ⭐ skills sit 10 under their league's cap, higher or lower with their rating."],
+    ["matchday", "Match-day rating", "performance × 8 + edge", "match", 4, 3, "Performance × 8 + the focus-skill edge, plus luck for each side. The higher total wins — unless the two finish within 60 of each other, a dead heat that the faster finish settles. Rating isn't part of it."],
+    ["rival", "Rival", "skills set by league", "match", 4, 5, "Each rival has 3 fixed specialisations. A mid-table rival's ⭐ skills sit 10 under their league's cap, higher or lower with their rating. Their experience comes with their league too: League 5: 0, 4: ~10, 3: ~25, 2: ~45, 1: ~65."],
 
+    ["finish", "Finish time", "never over 30:00", "match", 4, 7, "Both sides' finish time: 30:00, less a minute per 10 XP (the week's focus skills' average; a rival's by league), less 0–6 minutes of the day's form. It only counts in a dead heat — totals within 60 — where the faster finish wins."],
     ["rating", "Rating", "Elo, up to ±24 a match", "career", 5, 1, "Rises with wins and falls with losses, on the rating gap (an unlikely result moves it more). A record of how you've done: it decides prize size, breaks table ties and places rivals within their league. It isn't part of the match itself."],
-    ["result", "Win, draw or loss", "one match a week", "match", 5, 3, "Finishing within 30 of each other is a draw (about 1 even game in 7). The outcome feeds your rating, cash and the league table."],
-    ["table", "League table", "3 a win · 1 a draw", "career", 5, 5, "40 players per league (fewer in shorter games): 3 points a win, 1 a draw. Level on points: head-to-head (a draw counts half), then rating. Shows W–D–L, points and form."],
+    ["result", "Win or loss", "no draws", "match", 5, 3, "The higher match-day total wins. Within 60 of each other it's a dead heat (about 1 even game in 4), won by the faster finish. The outcome feeds your rating, cash and the league table."],
+    ["table", "League table", "most wins first", "career", 5, 5, "40 players per league (fewer in shorter games), ranked by wins. Level: head-to-head between them, then rating. Shows W–L and form (the last 5)."],
     ["league", "League", "5 tiers · best league", "career", 5, 7, "The league you play in sets your rivals; the best league you've ever reached sets skill caps, coach and staff levels, and the pro requirement."],
 
     ["calendar", "Season calendar", "preseason → season → camp", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → training camp until the Final. The Final ends the year. Game length (Short, Half or Full) sets the league size, rounds, playoff size, how many go up and down, and preseason length."],
-    ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination: no draws — a dead heat goes to the better focus skills. The champion wins +$1,000 and +40 rating, and is promoted."],
+    ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination; a dead heat goes to the faster finish, as in the league. Playoff matches earn double experience. The champion wins +$1,000 and +40 rating, and is promoted."],
     ["promo", "Up & down a league", "top 3 + champ · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
     ["yearend", "New year", "pay rise · pro renewal", "career", 6, 9, "When the Final's day ends: a pay rise (+$10/day a year, up to 5 years), the pro renewal check, and equipment wears out."],
   ];
@@ -295,9 +296,9 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["rating", "rival", "places them in the league", "decides"],
     ["luck", "result", "random each side", "decides"],
     ["matchday", "result", "higher total wins", "decides"],
-    ["result", "rating", "± up to 24 (draw = ½)", "decides"],
-    ["result", "cash", "prize: $60 + rating ÷ 20 (draw: half)", "helps"],
-    ["result", "table", "3 a win · 1 a draw", "decides"],
+    ["result", "rating", "± up to 24", "decides"],
+    ["result", "cash", "winner: $60 + rating ÷ 20", "helps"],
+    ["result", "table", "a win each", "decides"],
     ["table", "playoffs", "top 16 · seeding", "decides"],
     ["table", "promo", "top 3 up · bottom 4 down", "decides"],
     ["playoffs", "promo", "champion goes up", "helps"],
@@ -327,7 +328,9 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["support", "cash", "Manager: +5–10% prizes", "helps"],
     ["rating", "cash", "prize + rating ÷ 20", "helps"],
     ["rating", "table", "breaks ties", "decides"],
-    ["edge", "result", "settles knockout dead heats", "decides"],
+    ["experience", "finish", "1 min sooner per 10 XP", "helps"],
+    ["rival", "finish", "their XP, by league", "hurts"],
+    ["finish", "result", "faster wins a dead heat (within 60)", "decides"],
     ["yearend", "jobsearch", "pro not renewed", "hurts"],
   ];
   const byId = {};

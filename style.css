@@ -566,7 +566,7 @@ input[type="range"]::-webkit-slider-thumb {
 .league-table-header,
 .league-row {
   display: grid;
-  grid-template-columns: 24px 1fr 62px 28px 58px;
+  grid-template-columns: 24px 1fr 62px 58px;
   gap: 6px;
   align-items: center;
   padding: 7px 8px;
@@ -908,3 +908,8 @@ details.match-more[open] { padding-bottom: 8px; }
    with the next match's gain faint after it — the Chill strip's twin. */
 .bar-xp { position: absolute; bottom: 0; left: 0; height: 3px; background: #c9b6ff; border-radius: 999px; box-shadow: 0 0 4px rgba(201, 182, 255, 0.75); }
 .bar-xp-gain { opacity: 0.45; box-shadow: none; }
+
+/* Finish times under Head to Head; the row lights up when it decided a
+   dead heat. */
+.finish-table { margin-top: 6px; }
+.finish-table .finish-row td { color: var(--warn); font-weight: 700; }
