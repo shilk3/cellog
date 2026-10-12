@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.74.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.74.1</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -118,9 +118,9 @@ figcaption { color: var(--ink-dim); font-size: 13px; margin-top: 8px; }
 .edge .lbl text { font: 500 10.5px var(--f-body); fill: var(--ink-dim); }
 .node rect.box { fill: var(--card); stroke: var(--grid); stroke-width: 1.2; }
 .node rect.tab { }
-.node text.t { font: 700 13.5px var(--f-display); fill: var(--ink); }
-.node text.s { font: 400 11px var(--f-body); fill: var(--ink-dim); }
-.node text.r { font: 600 10px var(--f-mono); fill: var(--ink-dim); }
+.node text.t { font: 700 12px var(--f-display); fill: var(--ink); }
+.node text.s { font: 400 9.5px var(--f-body); fill: var(--ink-dim); }
+.node text.r { font: 600 8.5px var(--f-mono); fill: var(--ink-dim); }
 .node { cursor: pointer; }
 .node:hover rect.box { stroke: var(--ink-dim); }
 svg.focus .edge, svg.focus .node { opacity: 0.13; transition: opacity 0.15s; }
@@ -180,7 +180,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 <script>
 (function () {
   "use strict";
-  const COLW = 250, X0 = 120, ROWH = 80, Y0 = 52, BW = 200, BH = 54;
+  const COLW = 250, X0 = 120, ROWH = 80, Y0 = 52, BW = 160, BH = 40;
   const CAT = {
     plan: { name: "Your daily plan", c: "var(--c-plan)" },
     stats: { name: "Stats & states", c: "var(--c-stats)" },
@@ -201,7 +201,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
     ["nutrition", "Nutrition", "0–100", "stats", 1, 1, "Built by Food, slips when neglected. Sets how many hours tomorrow has."],
     ["rest", "Rest", "0–100", "stats", 1, 2, "Built by Sleep. The big training multiplier: ×1 at 70 up to ×2 at 100. Below 80 it wears down Health and Calm. Counts 5% of match performance."],
-    ["calm", "Calm (+ Chill)", "0–100, Chill to 130", "stats", 1, 3, "Built by Relax. Counts 15% of match performance (Chill counts as 100 at most). At 0 you burn out."],
+    ["calm", "Calm (+ Chill)", "0–100, Chill to 130", "stats", 1, 3, "Built by Relax, plus a Sleep bonus (+1.5 a day at 7h, +3 at 8h+); Rest below 80 wears it down. Counts 15% of match performance (Chill counts as 100 at most), and below 20 it also cuts the skills part (×0.75, ×0.5 under 10). At 0 you burn out."],
     ["health", "Health", "0–100", "stats", 1, 4, "Built by Gym, capped by your Physio level. Scales training (×0.5 at 0 up to ×1 at 100) and counts 25% of match performance."],
     ["skills", "Skills ×7", "⭐ 3 specialisations", "stats", 1, 5, "Seven case skills. Your 3 ⭐ specialisations can reach your best league's cap; the other four stop 20 lower. The week's focus skills are what a match tests."],
     ["cash", "Cash", "your bank", "money", 1, 8, "Money in from pay and prizes, out on living costs, staff wages and things you buy."],
@@ -212,7 +212,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["burnout", "Burnout", "Calm hits 0", "stats", 2, 3, "Training is only 20% effective until Calm is back to 35."],
     ["injury", "Injury", "Gym locked 3–5 days", "stats", 2, 4, "−5 to −10 Health and the Gym locked for 3–5 days. Never stops you playing a match."],
     ["coaches", "Skill coaches", "Lv1–5, hired weekly", "money", 2, 5, "One coach per skill. Without a coach a skill stops at 50; a coach raises that ceiling (+10 to +50) and speeds training (+5% to +30%). Contracts are weekly and end after each match. Half price in preseason."],
-    ["caps", "Skill caps", "league cap · coach ceiling", "career", 2, 6, "A skill's limit is the lower of two: your best league's cap (⭐ 60/70/80/90/100 from League 5 to 1, others 20 lower) and your coach's ceiling (50 with no coach)."],
+    ["caps", "Skill caps", "league cap or coach cap", "career", 2, 6, "A skill's limit is the lower of two: your best league's cap (⭐ 60/70/80/90/100 from League 5 to 1, others 20 lower) and your coach's ceiling (50 with no coach)."],
     ["leave", "Annual leave", "all preseason", "career", 2, 8, "Preseason is paid annual leave: no Work or Pro Duties needed, and skill coaches are half price. Job Search carries on if you're unemployed."],
 
     ["perf", "Performance", "0–100", "match", 3, 2, "Your match form: the average of all 7 skills 55%, Health 25%, Calm 15%, Rest 5%, minus 5% for each unmastered technique. A rival's is their 7 skills plus 80 for the rest. The week's focus skills count separately, in the focus-skill edge."],
@@ -223,17 +223,17 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
     ["luck", "Luck", "random, both sides", "match", 4, 1, "Each side gets a random luck draw. It's sized so you win exactly as often as the win chance says; upsets always stay possible."],
     ["matchday", "Match-day rating", "performance × 8 + edge", "match", 4, 3, "Performance × 8 + the focus-skill edge, plus luck for each side. The higher total wins. Rating isn't part of it."],
-    ["rival", "Rival", "league & rating set skills", "match", 4, 5, "Each rival has 3 fixed specialisations. A mid-table rival's ⭐ skills sit 10 under their league's cap, higher or lower with their rating."],
+    ["rival", "Rival", "skills set by league", "match", 4, 5, "Each rival has 3 fixed specialisations. A mid-table rival's ⭐ skills sit 10 under their league's cap, higher or lower with their rating."],
 
     ["rating", "Rating", "Elo, up to ±24 a match", "career", 5, 1, "Rises with wins and falls with losses, on the rating gap (an unlikely result moves it more). A record of how you've done: it decides prize size, breaks table ties and places rivals within their league. It isn't part of the match itself."],
     ["result", "Win, draw or loss", "one match a week", "match", 5, 3, "Finishing within 30 of each other is a draw (about 1 even game in 7). The outcome feeds your rating, cash and the league table."],
-    ["table", "League table", "wins, head-to-head, rating", "career", 5, 5, "40 players per league (fewer in shorter games): 3 points a win, 1 a draw. Level on points: head-to-head (a draw counts half), then rating. Shows W–D–L, points and form."],
+    ["table", "League table", "3 a win · 1 a draw", "career", 5, 5, "40 players per league (fewer in shorter games): 3 points a win, 1 a draw. Level on points: head-to-head (a draw counts half), then rating. Shows W–D–L, points and form."],
     ["league", "League", "5 tiers · best league", "career", 5, 7, "The league you play in sets your rivals; the best league you've ever reached sets skill caps, coach and staff levels, and the pro requirement."],
 
     ["calendar", "Season calendar", "preseason → season → camp", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → training camp until the Final. The Final ends the year."],
     ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination: no draws — a dead heat goes to the better focus skills. The champion wins +$1,000 and +40 rating, and is promoted."],
-    ["promo", "Promotion & relegation", "top 3 + champion · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
-    ["yearend", "New year", "raise · renewal · gear expires", "career", 6, 9, "When the Final's day ends: a pay rise (+$10/day a year, up to 5 years), the pro renewal check, and equipment wears out."],
+    ["promo", "Up & down a league", "top 3 + champ · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
+    ["yearend", "New year", "pay rise · pro renewal", "career", 6, 9, "When the Final's day ends: a pay rise (+$10/day a year, up to 5 years), the pro renewal check, and equipment wears out."],
   ];
   // [from, to, label, kind, dash]
   const E = [
@@ -242,6 +242,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["nutrition", "hours", "sets tomorrow's length", "decides"],
     ["food", "hours", "carb-load +1–3h", "helps"],
     ["sleep", "rest", "builds", "helps"],
+    ["sleep", "calm", "+1.5 at 7h · +3 at 8h+", "helps"],
     ["relax", "calm", "builds", "helps"],
     ["gym", "health", "builds", "helps"],
     ["gym", "injury", "2.5% risk per hour", "hurts"],
@@ -282,7 +283,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["focus", "edge", "skills compared", "decides"],
     ["skills", "perf", "all 7 averaged: 55%", "helps"],
     ["health", "perf", "25%", "helps"],
-    ["calm", "perf", "15%", "helps"],
+    ["calm", "perf", "15% · under 20 cuts skills", "helps"],
     ["rest", "perf", "5%", "helps"],
     ["techniques", "perf", "−5% each", "hurts"],
     ["skills", "edge", "your focus average", "helps"],
@@ -408,11 +409,11 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
   Object.values(byId).forEach((n) => {
     const g = el("g", { class: "node", tabindex: "0", role: "button", "aria-label": `${n.title}: ${n.sub}`, "data-id": n.id }, gN);
     const x = cx(n) - BW / 2, y = cy(n) - BH / 2;
-    el("rect", { class: "box", x, y, width: BW, height: BH, rx: 8 }, g);
-    el("rect", { class: "tab", x, y, width: 5, height: BH, rx: 2, style: `fill:${CAT[n.cat].c}` }, g);
-    const t = el("text", { class: "t", x: x + 14, y: y + 22 }, g); t.textContent = n.title;
-    const s = el("text", { class: "s", x: x + 14, y: y + 40 }, g); s.textContent = n.sub;
-    const r = el("text", { class: "r", x: x + BW - 8, y: y + 15, "text-anchor": "end" }, g); r.textContent = ref(n);
+    el("rect", { class: "box", x, y, width: BW, height: BH, rx: 6 }, g);
+    el("rect", { class: "tab", x, y, width: 4, height: BH, rx: 2, style: `fill:${CAT[n.cat].c}` }, g);
+    const t = el("text", { class: "t", x: x + 11, y: y + 17 }, g); t.textContent = n.title;
+    const s = el("text", { class: "s", x: x + 11, y: y + 31 }, g); s.textContent = n.sub;
+    const r = el("text", { class: "r", x: x + BW - 6, y: y + 12, "text-anchor": "end" }, g); r.textContent = ref(n);
     n.g = g;
     g.addEventListener("click", () => select(n.id));
     g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(n.id); } });
