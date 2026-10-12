@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.76.1";
+const APP_VERSION = "4.76.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -130,9 +130,8 @@ const BAL = {
   matchLuckScale: 250,
   // A dead heat — the two match-day totals within this much after luck —
   // is shown as level scores and settled on finish time: the faster
-  // submission wins. No draws. (15 is about a quarter of the matches that
-  // finish within 60 — roughly 1 even game in 15.)
-  deadHeatBand: 15,
+  // submission wins. No draws. About 1 even game in 4.
+  deadHeatBand: 60,
   winPoints: 3, // league table: a win (drawPoints only for draws in older saves)
   drawPoints: 1,
   // Finish time: nobody takes longer than finishLimit minutes. Every
@@ -1912,12 +1911,19 @@ function resolveMatch(opponent) {
   let yourLuckShown = Math.round(yourLuck * LUCK_SHOWN);
   let oppLuckShown = Math.round(oppLuck * LUCK_SHOWN);
   const shownGap = baseGap + yourLuckShown - oppLuckShown; // your total − theirs
-  // A dead heat (settled on time) shows level totals; otherwise the winner
-  // is ahead.
+  // A dead heat (settled on time) shows level totals. When luck carried the
+  // winner past the dead-heat band, the margin shown is how far past it they
+  // got, on the same fifth scale as the luck (61–67 → by 1, 110 → by 10) —
+  // so the luck shown is never more than a fifth of the real draw, beyond
+  // what an upset needs. Otherwise the winner is simply ahead.
   const band = BAL.deadHeatBand;
-  const wantOk = decidedOnTime ? shownGap === 0 : win ? shownGap >= 1 : shownGap <= -1;
+  const sgn = win ? 1 : -1;
+  let target = null;
+  if (decidedOnTime) target = 0;
+  else if (sgn * (yourLuck - oppLuck) > 0) target = sgn * Math.max(1, Math.round((Math.abs(yourFinal - oppFinal) - band) * LUCK_SHOWN), sgn * baseGap);
+  const wantOk = target != null ? shownGap === target : win ? shownGap >= 1 : shownGap <= -1;
   if (!wantOk) {
-    const target = decidedOnTime ? 0 : (win ? 1 : -1) * randInt(1, 12);
+    if (target == null) target = sgn * randInt(1, 12);
     const fix = target - shownGap; // your luck − theirs must rise by this
     const yourPart = Math.round(fix * (0.3 + Math.random() * 0.4));
     yourLuckShown += yourPart;
@@ -1934,6 +1940,7 @@ function resolveMatch(opponent) {
     // week's focus skills, theirs by league.
     finish: { you: yourTime, opp: oppTime, youXp: Math.round(mu.youXp * 10) / 10, oppXp: Math.round(mu.oppXp * 10) / 10 },
     deadHeatBand: band,
+    realMargin: Math.round(Math.abs(yourFinal - oppFinal)), // before the display's scaling
     perf,
     breakdown,
     matchRating: Math.round(matchRating),
@@ -5247,9 +5254,9 @@ function openHowTo() {
     `Each side's <b>match-day rating</b> = performance × ${B.perfWeight} + focus-skill edge + luck. Higher wins. Rating isn't part of it — it rises and falls with your results as a record.`,
     `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Skills means all 7, averaged — the week's focus skills count separately, in the edge. A rival's comes from their 7 skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
     `<b>🎯 Focus-skill edge:</b> whoever has the better average in the week's focus skills gets <b>${B.skillEdgeWeight}</b> match-day rating for every point they're ahead.`,
-    `<b>⏱ Dead heats:</b> if the two match-day totals end up level, the <b>faster finish</b> wins — about 1 even game in 15. No draws, league or playoffs.`,
+    `<b>⏱ Dead heats:</b> if the two match-day totals end up level, the <b>faster finish</b> wins — about 1 even game in 4. No draws, league or playoffs.`,
     `<b>Finish time:</b> nobody takes longer than ${B.finishLimit}:00. Every ${B.xpPerMinute} XP (your focus skills' average) finishes a minute sooner, and the day's form takes off another 0–${B.finishFormSpread} minutes. Rivals' experience comes with their league (League 5: ${B.rivalXpByTier[5]}, 4: ${B.rivalXpByTier[4]}, 3: ${B.rivalXpByTier[3]}, 2: ${B.rivalXpByTier[2]}, 1: ${B.rivalXpByTier[1]}).`,
-    "Luck is random for both sides and is drawn so you win exactly as often as the win chance says. It's usually a small nudge; upsets always stay possible.",
+    "Luck is random for both sides and is drawn so you win exactly as often as the win chance says. It's usually a small nudge; upsets always stay possible. A win by just a point or two means it was only just clear of a dead heat.",
     "The result screen explains every number; the next-match preview shows both sides' focus skills.",
   ]));
 

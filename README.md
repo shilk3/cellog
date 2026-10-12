@@ -157,8 +157,9 @@ over 30:00. Rivals' experience comes with their league (League 5: 0, 4: ~10,
 
 **Match day**: both sides get a match-day rating = performance × 8 +
 focus-skill edge + luck, and the higher one wins — unless the scores end up
-level: a ⏱ dead heat (real totals within 15 — about 1 even game in 15), won
-by the faster finish. No draws, league or playoffs. Rating isn't part of it:
+level: a ⏱ dead heat (real totals within 60 — about 1 even game in 4), won
+by the faster finish. When luck carried the winner past that line, the margin
+shown is how far past it they got, on the luck's ⅕ scale (61–67 → by 1). No draws, league or playoffs. Rating isn't part of it:
 it rises and falls with results (on rating-vs-rating Elo maths, a 300 gap =
 10-to-1) as a record of how you've done, and sets prize money. Your
 performance comes from your stats — all 7 skills averaged (55%), Health
