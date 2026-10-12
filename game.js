@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.76.2";
+const APP_VERSION = "4.77.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -377,9 +377,9 @@ Object.assign(UPGRADES, {
     name: "Sleep Coach App",
     icon: "💤",
     levels: [
-      { sleepDebtMult: 0.85, desc: "-15% Rest lost from poor sleep" },
-      { sleepDebtMult: 0.75, desc: "-25% Rest lost from poor sleep" },
-      { sleepDebtMult: 0.6, desc: "-40% Rest lost from poor sleep" },
+      { sleepDebtMult: 0.85, restBonus: 1, desc: "-15% Rest lost from poor sleep, +1 Rest a night of 7h+" },
+      { sleepDebtMult: 0.75, restBonus: 2, desc: "-25% Rest lost from poor sleep, +2 Rest a night of 7h+" },
+      { sleepDebtMult: 0.6, restBonus: 3, desc: "-40% Rest lost from poor sleep, +3 Rest a night of 7h+" },
     ],
   },
   nutritionist: {
@@ -1283,8 +1283,10 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
 
   // ---- Rest (renamed/inverted Sleep Debt: higher = better) ----
   const sleepAppMult = sleepAppEff ? sleepAppEff.sleepDebtMult : 1.0;
+  // The Sleep App also tops Rest up after a full night (7h+).
+  const sleepAppBonus = sleepAppEff && sleepH >= BAL.idealSleep ? sleepAppEff.restBonus || 0 : 0;
   const restDelta =
-    sleepH < BAL.idealSleep ? -((BAL.idealSleep - sleepH) * 1.3 * sleepAppMult * gear.sleepDebtMult) : Math.min(sleepH - BAL.idealSleep, 3) * 1.4;
+    sleepH < BAL.idealSleep ? -((BAL.idealSleep - sleepH) * 1.3 * sleepAppMult * gear.sleepDebtMult) : Math.min(sleepH - BAL.idealSleep, 3) * 1.4 + sleepAppBonus;
   // An energy item's crash lands on the day after it's used.
   const crash = (state.items && state.items.crash) || { rest: 0, composure: 0 };
   const rest = clamp(s.rest + restDelta - crash.rest, 0, 100);
