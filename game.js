@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.76.0";
+const APP_VERSION = "4.76.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -128,9 +128,11 @@ const BAL = {
   skillEdgeWeight: 10,
   // Match-day luck: the match-day gap that makes one side a 10-to-1 favourite.
   matchLuckScale: 250,
-  // A dead heat — the two match-day totals within this much after luck — is
-  // settled on finish time: the faster submission wins. No draws.
-  deadHeatBand: 60,
+  // A dead heat — the two match-day totals within this much after luck —
+  // is shown as level scores and settled on finish time: the faster
+  // submission wins. No draws. (15 is about a quarter of the matches that
+  // finish within 60 — roughly 1 even game in 15.)
+  deadHeatBand: 15,
   winPoints: 3, // league table: a win (drawPoints only for draws in older saves)
   drawPoints: 1,
   // Finish time: nobody takes longer than finishLimit minutes. Every
@@ -1910,12 +1912,12 @@ function resolveMatch(opponent) {
   let yourLuckShown = Math.round(yourLuck * LUCK_SHOWN);
   let oppLuckShown = Math.round(oppLuck * LUCK_SHOWN);
   const shownGap = baseGap + yourLuckShown - oppLuckShown; // your total − theirs
-  // Settled on time: the totals inside the dead-heat band. Otherwise the
-  // winner clear of it, by at least the band.
+  // A dead heat (settled on time) shows level totals; otherwise the winner
+  // is ahead.
   const band = BAL.deadHeatBand;
-  const wantOk = decidedOnTime ? Math.abs(shownGap) < band : win ? shownGap >= band : shownGap <= -band;
+  const wantOk = decidedOnTime ? shownGap === 0 : win ? shownGap >= 1 : shownGap <= -1;
   if (!wantOk) {
-    const target = decidedOnTime ? randInt(-Math.round(band * 0.6), Math.round(band * 0.6)) : (win ? 1 : -1) * (band + randInt(1, 12));
+    const target = decidedOnTime ? 0 : (win ? 1 : -1) * randInt(1, 12);
     const fix = target - shownGap; // your luck − theirs must rise by this
     const yourPart = Math.round(fix * (0.3 + Math.random() * 0.4));
     yourLuckShown += yourPart;
@@ -3462,11 +3464,10 @@ function finishTimeHtml(result) {
   const f = result.finish;
   if (!f) return "";
   const row = (label, a, b, cls = "") => `<tr class="${cls}"><td>${label}</td><td>${a}</td><td>${b}</td></tr>`;
-  const band = result.deadHeatBand || BAL.deadHeatBand;
   const youFaster = f.you < f.opp;
   const note = result.decidedOnTime
-    ? `Within ${band} of each other — a dead heat, so the faster finish ${result.win ? "won it for you" : "won it for them"} (${fmtClock(Math.abs(f.opp - f.you))} ${youFaster ? "quicker" : "slower"}).`
-    : `Finish time only settles a dead heat (totals within ${band}).`;
+    ? `Level scores — a dead heat, so the faster finish ${result.win ? "won it for you" : "won it for them"} (${fmtClock(Math.abs(f.opp - f.you))} ${youFaster ? "quicker" : "slower"}).`
+    : "Finish time only settles a dead heat (level scores).";
   return `
     <table class="perf-table h2h-table finish-table${result.decidedOnTime ? " finish-decided" : ""}">
       <tbody>
@@ -3502,9 +3503,8 @@ function luckExplainerHtml(result) {
   const ladder = rows
     .map((r) => `<tr class="${r.you ? "ladder-you" : "perf-sub"}"><td>${r.you ? `👉 You: ${gapLabel(r.gap)}` : gapLabel(r.gap)}</td><td>${r.w}%</td>${withDraws ? `<td>${r.d}%</td>` : ""}</tr>`)
     .join("");
-  const band = result.deadHeatBand || BAL.deadHeatBand;
   const tail = result.finish
-    ? ` If the two totals finish within ${band} of each other it's a dead heat, settled by the faster finish — and experience makes you faster (your focus skills averaged ${fmt(result.finish.youXp)} XP, theirs ${fmt(result.finish.oppXp)}). The ladder counts that in.`
+    ? ` If the two totals end up level it's a dead heat, settled by the faster finish — and experience makes you faster (your focus skills averaged ${fmt(result.finish.youXp)} XP, theirs ${fmt(result.finish.oppXp)}). The ladder counts that in.`
     : result.drawProb != null ? " Finishing within 30 of each other was a draw in the league; in the playoffs it went to the better focus skills." : "";
   return `
     <div class="match-sub perf-note">Both sides get random luck every match, and the highest match-day rating wins. Luck is usually a small nudge; now and then the underdog has an inspired day and sneaks it.</div>
@@ -3536,7 +3536,7 @@ function nextMatchPreviewHtml() {
     .join("");
   const edgeRow = r ? row("🎯 Focus-skill edge", mu.yourEdge >= 0.5 ? signedNum(Math.round(mu.yourEdge)) : "–", mu.oppEdge >= 0.5 ? signedNum(Math.round(mu.oppEdge)) : "–") : "";
   // Experience (focus average) and the finish time it points to.
-  const timeRows = r ? row("🎓 Experience", fmt(mu.youXp), fmt(mu.oppXp)) + row("⏱ Usual finish", `~${fmtClock(expectedFinish(mu.youXp))}`, `~${fmtClock(expectedFinish(mu.oppXp))}`) : "";
+  const timeRows = r ? row("🎓 Experience", fmt(mu.youXp), fmt(mu.oppXp)) + row("⏱ Expected finish", `~${fmtClock(expectedFinish(mu.youXp))}`, `~${fmtClock(expectedFinish(mu.oppXp))}`) : "";
   return `
     <div class="next-match">
       <div class="next-match-title">⏭️ Next: ${what} · ${when}</div>
@@ -3551,7 +3551,7 @@ function nextMatchPreviewHtml() {
         <thead><tr><th>This week's focus</th><th>You</th><th class="h2h-opp">${info.opponentName}</th></tr></thead>
         <tbody>${focusRows}${edgeRow}${timeRows}</tbody>
       </table>
-      <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance. ${r ? `About ${Math.round(mu.deadHeatProb * 100)}% of the time it's a dead heat (within ${BAL.deadHeatBand}), settled on finish time — you're the faster finisher ${Math.round(fasterChance(mu.youXp - mu.oppXp) * 100)}% of the time.` : ""}</div>
+      <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance. ${r ? `About ${Math.round(mu.deadHeatProb * 100)}% of the time it's a dead heat (level scores), settled on finish time — you're the faster finisher ${Math.round(fasterChance(mu.youXp - mu.oppXp) * 100)}% of the time.` : ""}</div>
       <div class="match-sub perf-note">🎓 ${xpEarnsHere(tier) ? `Each focus skill earns <b>+${xpPerFocusMatch(info.kind === "playoff")} XP</b> from this match, win or lose.` : `Experience is earned from League ${BAL.xpFromTier} up.`}</div>
     </div>`;
 }
@@ -4774,7 +4774,7 @@ function openRival(id) {
     <div class="modal-section">
       <h3>Skills</h3>
       ${skillRows}
-      <div class="kv-row"><span>🎓 Experience</span><span>${fmt(rivalXp(r))} <span class="kv-dim">· usual finish ~${fmtClock(expectedFinish(rivalXp(r)))}</span></span></div>
+      <div class="kv-row"><span>🎓 Experience</span><span>${fmt(rivalXp(r))} <span class="kv-dim">· expected finish ~${fmtClock(expectedFinish(rivalXp(r)))}</span></span></div>
       <p class="modal-sub">⭐ = their specialisations (they never change). Levels move with their rating, and their experience comes with their league.${focusNow.length ? " 🟢 = this week's focus." : ""}</p>
     </div>
     ${sections}
@@ -5247,7 +5247,7 @@ function openHowTo() {
     `Each side's <b>match-day rating</b> = performance × ${B.perfWeight} + focus-skill edge + luck. Higher wins. Rating isn't part of it — it rises and falls with your results as a record.`,
     `Performance comes from your stats (skills ${Math.round(PERF_WEIGHTS.skill * 100)}%, Health ${Math.round(PERF_WEIGHTS.phys * 100)}%, Calm ${Math.round(PERF_WEIGHTS.composure * 100)}%, Rest ${Math.round(PERF_WEIGHTS.rest * 100)}%). Skills means all 7, averaged — the week's focus skills count separately, in the edge. A rival's comes from their 7 skills, with Health, Calm and Rest at ${B.rivalCondition}.`,
     `<b>🎯 Focus-skill edge:</b> whoever has the better average in the week's focus skills gets <b>${B.skillEdgeWeight}</b> match-day rating for every point they're ahead.`,
-    `<b>⏱ Dead heats:</b> if the two match-day totals finish within ${B.deadHeatBand} of each other, the <b>faster finish</b> wins — about 1 even game in 4. No draws, league or playoffs.`,
+    `<b>⏱ Dead heats:</b> if the two match-day totals end up level, the <b>faster finish</b> wins — about 1 even game in 15. No draws, league or playoffs.`,
     `<b>Finish time:</b> nobody takes longer than ${B.finishLimit}:00. Every ${B.xpPerMinute} XP (your focus skills' average) finishes a minute sooner, and the day's form takes off another 0–${B.finishFormSpread} minutes. Rivals' experience comes with their league (League 5: ${B.rivalXpByTier[5]}, 4: ${B.rivalXpByTier[4]}, 3: ${B.rivalXpByTier[3]}, 2: ${B.rivalXpByTier[2]}, 1: ${B.rivalXpByTier[1]}).`,
     "Luck is random for both sides and is drawn so you win exactly as often as the win chance says. It's usually a small nudge; upsets always stay possible.",
     "The result screen explains every number; the next-match preview shows both sides' focus skills.",

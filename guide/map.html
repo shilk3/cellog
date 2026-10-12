@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.76.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.76.1</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -165,7 +165,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
   <figure>
     <div class="sheet" id="sheet"></div>
-    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.76.0).</figcaption>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.76.1).</figcaption>
   </figure>
 
   <section class="detail" id="detail" aria-live="polite"></section>
@@ -223,12 +223,12 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["pro", "Pro status", "League 2+ & skill average", "career", 3, 8, "Go pro automatically once you've reached League 2 and your 7 skills average 75+ (85+ once League 1 is your best). Lasts to year end; renewed only if the average still holds."],
 
     ["luck", "Luck", "random, both sides", "match", 4, 1, "Each side gets a random luck draw. It's sized so you win exactly as often as the win chance says; upsets always stay possible."],
-    ["matchday", "Match-day rating", "performance × 8 + edge", "match", 4, 3, "Performance × 8 + the focus-skill edge, plus luck for each side. The higher total wins — unless the two finish within 60 of each other, a dead heat that the faster finish settles. Rating isn't part of it."],
+    ["matchday", "Match-day rating", "performance × 8 + edge", "match", 4, 3, "Performance × 8 + the focus-skill edge, plus luck for each side. The higher total wins — unless the scores end up level, a dead heat that the faster finish settles. Rating isn't part of it."],
     ["rival", "Rival", "skills set by league", "match", 4, 5, "Each rival has 3 fixed specialisations. A mid-table rival's ⭐ skills sit 10 under their league's cap, higher or lower with their rating. Their experience comes with their league too: League 5: 0, 4: ~10, 3: ~25, 2: ~45, 1: ~65."],
 
-    ["finish", "Finish time", "never over 30:00", "match", 4, 7, "Both sides' finish time: 30:00, less a minute per 10 XP (the week's focus skills' average; a rival's by league), less 0–6 minutes of the day's form. It only counts in a dead heat — totals within 60 — where the faster finish wins."],
+    ["finish", "Finish time", "never over 30:00", "match", 4, 7, "Both sides' finish time: 30:00, less a minute per 10 XP (the week's focus skills' average; a rival's by league), less 0–6 minutes of the day's form. It only counts in a dead heat — level scores — where the faster finish wins."],
     ["rating", "Rating", "Elo, up to ±24 a match", "career", 5, 1, "Rises with wins and falls with losses, on the rating gap (an unlikely result moves it more). A record of how you've done: it decides prize size, breaks table ties and places rivals within their league. It isn't part of the match itself."],
-    ["result", "Win or loss", "no draws", "match", 5, 3, "The higher match-day total wins. Within 60 of each other it's a dead heat (about 1 even game in 4), won by the faster finish. The outcome feeds your rating, cash and the league table."],
+    ["result", "Win or loss", "no draws", "match", 5, 3, "The higher match-day total wins. Level scores are a dead heat (about 1 even game in 15), won by the faster finish. The outcome feeds your rating, cash and the league table."],
     ["table", "League table", "most wins first", "career", 5, 5, "40 players per league (fewer in shorter games), ranked by wins. Level: head-to-head between them, then rating. Shows W–L and form (the last 5)."],
     ["league", "League", "5 tiers · best league", "career", 5, 7, "The league you play in sets your rivals; the best league you've ever reached sets skill caps, coach and staff levels, and the pro requirement."],
 
@@ -330,7 +330,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["rating", "table", "breaks ties", "decides"],
     ["experience", "finish", "1 min sooner per 10 XP", "helps"],
     ["rival", "finish", "their XP, by league", "hurts"],
-    ["finish", "result", "faster wins a dead heat (within 60)", "decides"],
+    ["finish", "result", "faster wins a dead heat (level scores)", "decides"],
     ["yearend", "jobsearch", "pro not renewed", "hurts"],
   ];
   const byId = {};
