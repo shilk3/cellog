@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.80.0";
+const APP_VERSION = "4.80.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -324,13 +324,15 @@ const TOP_RIVALS = [
   { name: "TheEarlyBird", rating: 2600, skills: { single: 96, lambda: 93, speed: 94 }, xp: 85, moves: 5 },
   { name: "NgaiLander", rating: 2560, skills: { single: 94, lambda: 96, speed: 90 }, xp: 85, moves: 5 },
   { name: "AirJarman", rating: 2500, skills: { single: 92, lambda: 90, speed: 93 }, xp: 80, moves: 4 },
-  { name: "WrapRowsWolleh", rating: 2440, skills: { single: 90, lambda: 92, speed: 88 }, xp: 75, moves: 4 },
-  { name: "DangDynamic", rating: 2380, skills: { single: 89, lambda: 87, speed: 90 }, xp: 70, moves: 3 },
-  { name: "JackOfAllTabs", rating: 2320, skills: { single: 86, lambda: 88, speed: 86 }, xp: 65, moves: 3 },
-  { name: "HarryUp", rating: 2260, skills: { single: 84, lambda: 83, speed: 93 }, xp: 60, moves: 2 },
-  { name: "BenDiagram", rating: 2200, skills: { single: 86, lambda: 85, speed: 82 }, xp: 60, moves: 2 },
-  { name: "NickOfTime", rating: 2140, skills: { single: 82, lambda: 81, speed: 91 }, xp: 55, moves: 2 },
+  { name: "DangDynamic", rating: 2440, skills: { single: 90, lambda: 88, speed: 91 }, xp: 75, moves: 4 },
+  { name: "BenDiagram", rating: 2380, skills: { single: 89, lambda: 88, speed: 86 }, xp: 70, moves: 3 },
+  { name: "HarryUp", rating: 2320, skills: { single: 86, lambda: 85, speed: 93 }, xp: 65, moves: 3 },
+  { name: "TopBoberg", rating: 2260, skills: { single: 85, lambda: 84, speed: 86 }, xp: 60, moves: 2 },
+  { name: "ThaiBreaker", rating: 2200, skills: { single: 84, lambda: 85, speed: 84 }, xp: 60, moves: 2 },
+  { name: "Dupreecision", rating: 2140, skills: { single: 84, lambda: 82, speed: 83 }, xp: 55, moves: 2 },
 ];
+// Earlier names, renamed in saves that already have them.
+const TOP_RENAMED = { WrapRowsWolleh: "ThaiBreaker", JackOfAllTabs: "Dupreecision", NickOfTime: "TopBoberg" };
 function inTop(s) {
   // Safe while a new career's state is still being built.
   try {
@@ -1222,6 +1224,9 @@ function migrateSave(parsed) {
     fresh.logEntries.push({ html: `🏖️ Annual leave has moved: it's now the whole ${BAL.preseasonDays}-day preseason, which starts the day after the Final. Work is back in your plan for the rest of camp.`, cls: "event-season" });
   }
   fresh.rivals.forEach(ensureRivalProfile); // v7: rivals' skill profiles
+  fresh.rivals.forEach((r) => {
+    if (r.top && TOP_RENAMED[r.name]) r.name = TOP_RENAMED[r.name];
+  });
   fresh.saveVersion = SAVE_VERSION;
   // Slider maxes can drop between versions — never load a plan past them.
   const a = fresh.allocation;
