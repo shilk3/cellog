@@ -914,3 +914,9 @@ details.match-more[open] { padding-bottom: 8px; }
    dead heat. */
 .finish-table { margin-top: 6px; }
 .finish-table .finish-row td { color: var(--warn); font-weight: 700; }
+
+/* A faint, unlabeled dot ahead of the league tabs. */
+.league-tab-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); opacity: 0.25; align-self: center; margin: 0 2px 0 0; flex: none; }
+/* XP at 100: the strip turns gold. */
+.bar-xp.xp-max { background: #ffd166; box-shadow: 0 0 5px rgba(255, 209, 102, 0.8); }
+.mastered-tag { color: #ffd166; font-weight: 700; }

@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.79.0";
+const APP_VERSION = "4.80.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -217,15 +217,20 @@ const BAL = {
 // Game lengths, chosen when a game starts (state.gameLength). Each has its
 // own save slot. A year ends on the day of the Final either way.
 const GAME_LENGTHS = {
-  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4, techniqueDays: 10, techniqueHours: [8, 12] },
-  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2, techniqueDays: 19, techniqueHours: [15, 23] },
-  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1, techniqueDays: 38, techniqueHours: [30, 45] },
+  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4, techniqueDays: 10, techniqueHours: [8, 12], topRoundRobins: 1 },
+  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2, techniqueDays: 19, techniqueHours: [15, 23], topRoundRobins: 2 },
+  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1, techniqueDays: 38, techniqueHours: [30, 45], topRoundRobins: 4 },
 };
 const GAME_LENGTH_KEYS = ["short", "half", "full"];
 const ALL_PLAYOFF_STAGES = ["r16", "qf", "sf", "f"];
-// This game length's playoff rounds: 16 → R16 to Final, 8 → QF on, 4 → SF on.
-function playoffStages() {
-  return ALL_PLAYOFF_STAGES.slice(ALL_PLAYOFF_STAGES.length - Math.log2(BAL.playoffSize));
+// A league's playoff rounds: 16 → R16 to Final, 8 → QF on, 4 → SF on. No
+// tier: the game length's leagues (1–5).
+function playoffStages(tier) {
+  return ALL_PLAYOFF_STAGES.slice(ALL_PLAYOFF_STAGES.length - Math.log2(playoffSizeFor(tier)));
+}
+// The player's own league's playoff rounds.
+function playerStages() {
+  return playoffStages(state.leagueTier);
 }
 function gameLengthInfo(key) {
   return GAME_LENGTHS[key] || GAME_LENGTHS.full;
@@ -244,6 +249,7 @@ function applyGameLength(key) {
   BAL.xpPerMatch = g.xpPerMatch;
   BAL.techniqueIntervalDays = g.techniqueDays;
   [BAL.techniqueMinHours, BAL.techniqueMaxHours] = g.techniqueHours;
+  BAL.topRoundRobins = g.topRoundRobins;
   BAL.trainingCampDays = playoffStages().length * BAL.roundIntervalDays;
 }
 // A game length's numbers in one line, for the pickers.
@@ -267,15 +273,133 @@ const EXCEL_TECHNIQUES = [
 function pickTechniqueName() {
   const emp = state.employment;
   const known = new Set([...(emp.techniquesMastered || []), ...emp.techniqueQueue.map((t) => t.name)]);
-  const pool = EXCEL_TECHNIQUES.filter((n) => !known.has(n));
+  let pool = EXCEL_TECHNIQUES.filter((n) => !known.has(n));
+  if (!pool.length && inTop()) pool = TOP_TECHNIQUE_NAMES.filter((n) => !known.has(n));
   return pool.length ? pool[randInt(0, pool.length - 1)] : null;
 }
 function techniquesMasteredCount(emp = state.employment) {
-  return (emp.techniquesMastered || []).length;
+  const m = emp.techniquesMastered || [];
+  return EXCEL_TECHNIQUES.filter((n) => m.includes(n)).length;
+}
+// Queued entries that cost performance while unmastered (signature moves don't).
+function penaltyQueueLength(emp = state.employment) {
+  return emp.techniqueQueue.filter((t) => !TOP_TECHNIQUE_NAMES.includes(t.name)).length;
 }
 
 // Skill cap granted by the highest league tier ever reached (1 = top).
-const LEAGUE_SKILL_CAP = { 1: 100, 2: 90, 3: 80, 4: 70, 5: 60 };
+const LEAGUE_SKILL_CAP = { 0: 100, 1: 100, 2: 90, 3: 80, 4: 70, 5: 60 };
+
+// ---- Tier 0 ----
+// A small invitation-only league above League 1, kept quiet until reached.
+// Its own rules: TOP_SIZE players, TOP_PLAYOFF_SIZE playoffs, no relegation,
+// and three skills of its own in place of the seven (which by then are
+// mastered and held at 100 by their XP).
+const TOP_TIER = 0;
+const TOP_SIZE = 10;
+const TOP_PLAYOFF_SIZE = 4;
+const TOP_LEAGUE_NAME = "Titan League";
+const TOP_SKILLS = [
+  { key: "single", name: "Single-Cell Solutions", icon: "🧬" },
+  { key: "lambda", name: "LAMBDA Craft", icon: "🌀" },
+  { key: "speed", name: "Speed & Shortcuts", icon: "⌨️" },
+];
+const TOP_SKILL_KEYS = TOP_SKILLS.map((s) => s.key);
+const TOP_SKILL_START = 50; // where yours start on arrival (no XP yet)
+const TOP_SPEED_MAX_SECONDS = 120; // Speed & Shortcuts at 100 → finishes 2 minutes sooner
+const TOP_EDGE_WEIGHT = { single: 2, lambda: 1, speed: 1 }; // Single-Cell counts double in the edge
+// Signature moves: mastered like techniques (Pro Duties hours past the
+// minimum), but each one is a bonus rather than a penalty while missing.
+const TOP_TECHNIQUES = [
+  { name: "REDUCE & SCAN", desc: "+2 LAMBDA Craft in the focus-skill edge", edge: { lambda: 2 } },
+  { name: "MAKEARRAY Grids", desc: "+2 Single-Cell Solutions in the focus-skill edge", edge: { single: 2 } },
+  { name: "Recursive LAMBDA", desc: "finish 30s sooner", seconds: 30 },
+  { name: "GROUPBY & PIVOTBY", desc: "+1 performance", perf: 1 },
+  { name: "REGEX Functions", desc: "finish 30s sooner", seconds: 30 },
+  { name: "Mouse-free Mastery", desc: "finish 45s sooner", seconds: 45 },
+  { name: "Formula Golf", desc: "wins a dead heat that's level to the second", golf: true },
+];
+const TOP_TECHNIQUE_NAMES = TOP_TECHNIQUES.map((t) => t.name);
+// The nine already there.
+const TOP_RIVALS = [
+  { name: "TheEarlyBird", rating: 2600, skills: { single: 96, lambda: 93, speed: 94 }, xp: 85, moves: 5 },
+  { name: "NgaiLander", rating: 2560, skills: { single: 94, lambda: 96, speed: 90 }, xp: 85, moves: 5 },
+  { name: "AirJarman", rating: 2500, skills: { single: 92, lambda: 90, speed: 93 }, xp: 80, moves: 4 },
+  { name: "WrapRowsWolleh", rating: 2440, skills: { single: 90, lambda: 92, speed: 88 }, xp: 75, moves: 4 },
+  { name: "DangDynamic", rating: 2380, skills: { single: 89, lambda: 87, speed: 90 }, xp: 70, moves: 3 },
+  { name: "JackOfAllTabs", rating: 2320, skills: { single: 86, lambda: 88, speed: 86 }, xp: 65, moves: 3 },
+  { name: "HarryUp", rating: 2260, skills: { single: 84, lambda: 83, speed: 93 }, xp: 60, moves: 2 },
+  { name: "BenDiagram", rating: 2200, skills: { single: 86, lambda: 85, speed: 82 }, xp: 60, moves: 2 },
+  { name: "NickOfTime", rating: 2140, skills: { single: 82, lambda: 81, speed: 91 }, xp: 55, moves: 2 },
+];
+function inTop(s) {
+  // Safe while a new career's state is still being built.
+  try {
+    s = s || state;
+  } catch (e) {
+    return false;
+  }
+  return !!s && s.leagueTier === TOP_TIER;
+}
+function isTopSkill(key) {
+  return TOP_SKILL_KEYS.includes(key);
+}
+// "League 3" — or the top tier's own name.
+function lg(tier) {
+  return Number(tier) === TOP_TIER ? TOP_LEAGUE_NAME : `League ${tier}`;
+}
+// Leagues the tabs show: 1–5, and the top tier once you've been there.
+function tabTiers() {
+  return state.peakLeagueTier === TOP_TIER ? [TOP_TIER, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5];
+}
+function tabLabel(t) {
+  return t === TOP_TIER ? "Titan" : `L${t}`;
+}
+function leagueSizeFor(tier) {
+  return tier === TOP_TIER ? TOP_SIZE : BAL.leagueSize;
+}
+function roundsFor(tier) {
+  return tier === TOP_TIER ? (TOP_SIZE - 1) * (BAL.topRoundRobins || 1) : BAL.seasonRounds;
+}
+function playoffSizeFor(tier) {
+  return tier === TOP_TIER ? TOP_PLAYOFF_SIZE : BAL.playoffSize;
+}
+// Every league running this season: 1–5, plus the top tier once you're in it.
+function leagueTiers(playerTier = state.leagueTier) {
+  return playerTier === TOP_TIER ? [TOP_TIER, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5];
+}
+// Training camp: the player's playoff window, a week a round.
+function campDays() {
+  return playerStages().length * BAL.roundIntervalDays;
+}
+// The skills a match is about: the seven — or, at the top, its three.
+function playSkillKeys() {
+  return inTop() ? TOP_SKILL_KEYS : SKILL_KEYS;
+}
+// Every skill you have a value for.
+function allSkillKeys() {
+  return SKILL_KEYS.concat(TOP_SKILL_KEYS.filter((k) => state.stats.skills[k] != null));
+}
+function topMovesFor(names) {
+  return TOP_TECHNIQUES.filter((t) => names.includes(t.name));
+}
+function playerTopMoves() {
+  return topMovesFor(state.employment.techniquesMastered || []);
+}
+function rivalTopMoves(r) {
+  return r && r.top ? topMovesFor(r.top.moves) : [];
+}
+function movesEdge(moves, key) {
+  return moves.reduce((a, m) => a + ((m.edge && m.edge[key]) || 0), 0);
+}
+function movesSeconds(moves) {
+  return moves.reduce((a, m) => a + (m.seconds || 0), 0);
+}
+function movesPerf(moves) {
+  return moves.reduce((a, m) => a + (m.perf || 0), 0);
+}
+function movesGolf(moves) {
+  return moves.some((m) => m.golf);
+}
 
 /* ---------------------------------------------------------------------- */
 /* The 7 case specialties                                                 */
@@ -291,7 +415,7 @@ const SKILLS = [
 ];
 const SKILL_KEYS = SKILLS.map((s) => s.key);
 function skillMeta(key) {
-  return SKILLS.find((s) => s.key === key);
+  return SKILLS.find((s) => s.key === key) || TOP_SKILLS.find((s) => s.key === key);
 }
 function coachKey(key) {
   return `coach_${key}`;
@@ -302,7 +426,8 @@ function coachKey(key) {
 function rollActiveSkills() {
   let n = 1;
   for (let r = Math.random(); n < 3 && r >= BAL.focusSkillOdds[n]; n++) r -= BAL.focusSkillOdds[n];
-  const pool = SKILL_KEYS.slice();
+  const pool = playSkillKeys().slice();
+  n = Math.min(n, pool.length);
   const picked = [];
   for (let i = 0; i < n; i++) {
     const idx = randInt(0, pool.length - 1);
@@ -321,12 +446,13 @@ function inSeason() {
 // training to that week's revealed 1-3 active skills. Preseason and the
 // off-season (including training camp) open all 7.
 function trainableSkills() {
-  return inSeason() ? state.activeSkills : SKILL_KEYS;
+  return inSeason() ? state.activeSkills : playSkillKeys();
 }
 
 // Initial rating bands per league tier (1 = top, 5 = bottom) — only used to
 // seed a fresh roster. Ratings drift from there via real simulated results.
 const LEAGUE_RATING_BANDS = {
+  0: [2100, 2650],
   1: [1350, 1900],
   2: [1000, 1400],
   3: [750, 1050],
@@ -632,6 +758,7 @@ function leagueSkillCap(key = null, s = state) {
   return key && !isSpecialisation(key, s) ? top - BAL.otherSkillCapGap : top;
 }
 function skillCap(key) {
+  if (isTopSkill(key)) return 100; // no coaches, no league caps at the top
   return Math.min(skillShopCap(key), leagueSkillCap(key));
 }
 // A skill's experience: also its floor — it never rusts below it, and
@@ -662,12 +789,13 @@ function setSpecialisations(keys, s = state) {
 // Which gate is holding a skill's ceiling down — tells the player whether
 // the fix is hiring a coach (Staff) or a promotion (peak league).
 function skillCapCause(key) {
+  if (isTopSkill(key)) return null;
   const shop = skillShopCap(key);
   const league = leagueSkillCap(key);
   if (Math.min(shop, league) >= 100) return null;
   const lvl = hiredLevel(coachKey(key));
   const coachText = lvl > 0 ? `Coach Lv${lvl}` : "no coach";
-  const leagueText = `League ${state.peakLeagueTier}${isSpecialisation(key) ? "" : ", not a ⭐"}`;
+  const leagueText = `${lg(state.peakLeagueTier)}${isSpecialisation(key) ? "" : ", not a ⭐"}`;
   if (shop < league) return coachText;
   if (league < shop) return leagueText;
   return `${coachText} + ${leagueText}`;
@@ -931,10 +1059,13 @@ function generateRoundRobinSchedule(memberIds) {
 function buildSeasonLeagueData(rivals, leagueTier) {
   const roundRobins = {};
   const points = {};
-  for (let tier = 1; tier <= BAL.leagueCount; tier++) {
+  for (const tier of leagueTiers(leagueTier)) {
     const memberIds = rivals.filter((r) => r.league === tier).map((r) => r.id);
     if (tier === leagueTier) memberIds.push("player");
-    roundRobins[tier] = generateRoundRobinSchedule(memberIds);
+    let rr = generateRoundRobinSchedule(memberIds);
+    // The top tier plays its round robin several times over (by game length).
+    if (tier === TOP_TIER) rr = Array.from({ length: BAL.topRoundRobins || 1 }, () => rr).flat();
+    roundRobins[tier] = rr;
     points[tier] = {};
     memberIds.forEach((id) => {
       points[tier][id] = 0;
@@ -986,6 +1117,7 @@ function freshState() {
     specialisations: null, // the 3 ⭐ skills that can reach the full league cap — chosen after naming the player
     pendingSplash: null, // phase splashes not yet dismissed (a list: a season can end and a new year start on one day)
     tutorialSeen: false,
+    topReveal: false, // just arrived somewhere new — the next year's splash explains it
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
     leaguePoints: leagueData.points, // this season's live running points per tier, updated every round
@@ -1249,7 +1381,7 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
   const trainable = trainableSkills();
   const skills = {};
   const skillWasAtCap = {};
-  SKILL_KEYS.forEach((key) => {
+  allSkillKeys().forEach((key) => {
     const isActive = trainable.includes(key);
     const hours = isActive ? a.skills[key] || 0 : 0;
     const cap = skillCap(key);
@@ -1373,7 +1505,7 @@ function resolveDay() {
   const trainable = trainableSkills();
 
   // ---- The 7 case specialties ----
-  SKILL_KEYS.forEach((key) => {
+  allSkillKeys().forEach((key) => {
     const meta = skillMeta(key);
     const isActive = trainable.includes(key);
     const hours = isActive ? a.skills[key] || 0 : 0;
@@ -1605,7 +1737,7 @@ function resolveEmploymentDay() {
         if (name) {
           const hoursNeeded = randInt(BAL.techniqueMinHours, BAL.techniqueMaxHours);
           emp.techniqueQueue.push({ name, hoursNeeded, hoursDone: 0 });
-          events.push({ type: "neutral", text: `📘 New technique to master: ${name} (${hoursNeeded}h).` });
+          events.push({ type: "neutral", text: TOP_TECHNIQUE_NAMES.includes(name) ? `✨ New signature move to master: ${name} (${hoursNeeded}h) — ${TOP_TECHNIQUES.find((t) => t.name === name).desc} once mastered.` : `📘 New technique to master: ${name} (${hoursNeeded}h).` });
         }
       }
     }
@@ -1634,8 +1766,23 @@ function resolveEmploymentDay() {
 function activeSkillAverage(keys = state.activeSkills) {
   const active = keys;
   if (!active.length) return 0;
-  const sum = active.reduce((acc, k) => acc + state.stats.skills[k], 0);
+  const sum = active.reduce((acc, k) => acc + (state.stats.skills[k] || 0), 0);
   return sum / active.length;
+}
+// The focus-skill edge's average: plain for the seven; at the top,
+// Single-Cell Solutions counts double and signature moves add their bonus.
+function weightedFocus(keys, valueOf, moves) {
+  if (!keys.length) return 0;
+  let sum = 0, w = 0;
+  keys.forEach((k) => {
+    const wk = TOP_EDGE_WEIGHT[k] || 1;
+    sum += wk * (valueOf(k) + movesEdge(moves, k));
+    w += wk;
+  });
+  return sum / w;
+}
+function focusAverage(keys = state.activeSkills) {
+  return weightedFocus(keys, (k) => state.stats.skills[k] || 0, playerTopMoves());
 }
 
 // Single source of truth for what a match performance score is made of, so
@@ -1653,6 +1800,7 @@ function performanceBreakdown(keys = state.activeSkills) {
   // stacks on top of (doesn't replace) Calm's own weighted contribution
   // below, same as before.
   const composureMult = composureMatchMultiplier(s.composure);
+  keys = playSkillKeys();
   const skillAvg = activeSkillAverage(keys);
   const skillComponent = skillAvg * composureMult;
   const weighted = {
@@ -1675,12 +1823,15 @@ function performanceBreakdown(keys = state.activeSkills) {
   // — every not-yet-mastered entry in the queue costs match performance,
   // not training. Capped so a long backlog can't go negative.
   let techniquePenaltyMult = 1;
-  if (state.employment.status === "pro" && state.employment.techniqueQueue.length > 0) {
-    const penalty = Math.min(1, state.employment.techniqueQueue.length * BAL.techniquePenaltyPerUnmastered);
+  if (state.employment.status === "pro" && penaltyQueueLength() > 0) {
+    const penalty = Math.min(1, penaltyQueueLength() * BAL.techniquePenaltyPerUnmastered);
     techniquePenaltyMult = 1 - penalty;
     score *= techniquePenaltyMult;
   }
-  return { weighted, raw, composureMult, techniquePenaltyMult, score };
+  // Signature moves (top tier) can add a little on top.
+  const movesBonus = inTop() ? movesPerf(playerTopMoves()) : 0;
+  score = clamp(score + movesBonus, 0, 100);
+  return { weighted, raw, composureMult, techniquePenaltyMult, movesBonus, score };
 }
 
 function performanceScore(keys) {
@@ -1694,6 +1845,7 @@ function performanceScore(keys) {
 // same caps as yours (their league's cap for a specialisation,
 // otherSkillCapGap lower for the rest).
 function ensureRivalProfile(r) {
+  if (r.top) return r; // top-tier players have their own fixed profile
   if (Array.isArray(r.specs) && r.specs.length === BAL.specialisationCount && r.skillOffsets) return r;
   const pool = SKILL_KEYS.slice();
   r.specs = [];
@@ -1702,6 +1854,8 @@ function ensureRivalProfile(r) {
   return r;
 }
 function rivalSkill(r, key) {
+  if (r.top) return isTopSkill(key) ? r.top.skills[key] : 100;
+  if (isTopSkill(key)) return 0;
   ensureRivalProfile(r);
   const spec = r.specs.includes(key);
   const top = LEAGUE_SKILL_CAP[r.league] || LEAGUE_SKILL_CAP[5];
@@ -1716,12 +1870,23 @@ function leagueRatingMid(tier) {
   return (lo + hi) / 2;
 }
 function rivalFocusAverage(r, keys = state.activeSkills) {
-  return keys.length ? keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length : 0;
+  return weightedFocus(keys, (k) => rivalSkill(r, k), rivalTopMoves(r));
 }
-// A rival's match-day performance: all 7 of their skills plus a steady
-// rivalCondition for Health / Calm / Rest, on your weights.
+// A rival's match-day performance: all their skills (the seven, or at the
+// top its three) plus a steady rivalCondition for Health / Calm / Rest, on
+// your weights.
 function rivalPerformance(r) {
-  return PERF_WEIGHTS.skill * rivalFocusAverage(r, SKILL_KEYS) + (1 - PERF_WEIGHTS.skill) * BAL.rivalCondition;
+  const keys = r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
+  const avg = keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length;
+  return clamp(PERF_WEIGHTS.skill * avg + (1 - PERF_WEIGHTS.skill) * BAL.rivalCondition + movesPerf(rivalTopMoves(r)), 0, 100);
+}
+// The week's focus keys for a rival-vs-rival match: the top tier's three
+// for its players; the seven for everyone else (the week's own focus,
+// unless you're at the top, when theirs is the whole seven).
+function npcFocusKeys(r) {
+  if (r && r.top) return state.activeSkills.filter(isTopSkill).length ? state.activeSkills.filter(isTopSkill) : TOP_SKILL_KEYS;
+  const keys = state.activeSkills.filter((k) => !isTopSkill(k));
+  return keys.length ? keys : SKILL_KEYS;
 }
 
 // Match day: performance × perfWeight + the focus-skill edge + luck.
@@ -1736,13 +1901,24 @@ function matchBase(perf) {
 }
 // Finish time, in seconds: finishLimit minutes, less a minute per
 // xpPerMinute XP, less the day's form (0–finishFormSpread minutes).
-function finishTime(xp) {
-  const minutes = BAL.finishLimit - xp / BAL.xpPerMinute - Math.random() * BAL.finishFormSpread;
+// bonusSec: seconds off from Speed & Shortcuts and signature moves (top tier).
+function finishTime(xp, bonusSec = 0) {
+  const minutes = BAL.finishLimit - xp / BAL.xpPerMinute - bonusSec / 60 - Math.random() * BAL.finishFormSpread;
   return Math.round(clamp(minutes, 0, BAL.finishLimit) * 60);
 }
 // The average finish for this much XP (the middle of the day's form).
-function expectedFinish(xp) {
-  return Math.round((BAL.finishLimit - xp / BAL.xpPerMinute - BAL.finishFormSpread / 2) * 60);
+function expectedFinish(xp, bonusSec = 0) {
+  return Math.round(clamp(BAL.finishLimit - xp / BAL.xpPerMinute - bonusSec / 60 - BAL.finishFormSpread / 2, 0, BAL.finishLimit) * 60);
+}
+// Seconds off your finish: Speed & Shortcuts (up to 2 minutes at 100) and
+// signature moves — only at the top.
+function playerFinishBonus() {
+  if (!inTop()) return 0;
+  return ((state.stats.skills.speed || 0) / 100) * TOP_SPEED_MAX_SECONDS + movesSeconds(playerTopMoves());
+}
+function rivalFinishBonus(r) {
+  if (!r || !r.top) return 0;
+  return (r.top.skills.speed / 100) * TOP_SPEED_MAX_SECONDS + movesSeconds(rivalTopMoves(r));
 }
 // "24:18".
 function fmtClock(sec) {
@@ -1751,8 +1927,8 @@ function fmtClock(sec) {
 }
 // Chance of the faster finish with this XP lead (yours − theirs): the two
 // form draws differ by a triangular spread of ± finishFormSpread minutes.
-function fasterChance(xpLead) {
-  const L = xpLead / BAL.xpPerMinute, S = BAL.finishFormSpread;
+function fasterChance(xpLead, secLead = 0) {
+  const L = xpLead / BAL.xpPerMinute + secLead / 60, S = BAL.finishFormSpread;
   if (L >= S) return 1;
   if (L <= -S) return 0;
   return L >= 0 ? 1 - (S - L) ** 2 / (2 * S * S) : (S + L) ** 2 / (2 * S * S);
@@ -1760,18 +1936,21 @@ function fasterChance(xpLead) {
 // Win / loss odds for a match-day gap (yours − theirs) before luck. The
 // luck difference is logistic, so each part is a closed form: clear of the
 // dead-heat band the higher total wins; inside it, the faster finish.
-function outcomeOdds(gap, { xpLead = 0 } = {}) {
+function outcomeOdds(gap, { xpLead = 0, secLead = 0 } = {}) {
   const s = matchWeights().luck / Math.LN10, b = BAL.deadHeatBand;
   const sig = (x) => 1 / (1 + Math.exp(-x));
   const clearWin = sig((gap - b) / s), clearLoss = 1 - sig((gap + b) / s);
   const deadHeat = Math.max(0, 1 - clearWin - clearLoss);
-  const p = fasterChance(xpLead);
+  const p = fasterChance(xpLead, secLead);
   return { win: clearWin + deadHeat * p, loss: clearLoss + deadHeat * (1 - p), deadHeat };
 }
 // The outcome of a final gap after luck: "W" or "L". Inside the dead-heat
 // band the faster finish wins (an exact tie in seconds: the higher total).
-function decideOutcome(diff, yourTime, oppTime) {
-  if (Math.abs(diff) >= BAL.deadHeatBand || yourTime === oppTime) return diff >= 0 ? "W" : "L";
+// golf: +1 if only you have Formula Golf, −1 if only they do — it settles
+// a dead heat that's level to the second.
+function decideOutcome(diff, yourTime, oppTime, golf = 0) {
+  if (Math.abs(diff) >= BAL.deadHeatBand) return diff >= 0 ? "W" : "L";
+  if (yourTime === oppTime) return golf ? (golf > 0 ? "W" : "L") : diff >= 0 ? "W" : "L";
   return yourTime < oppTime ? "W" : "L";
 }
 // Average XP across these skills (the week's focus).
@@ -1782,6 +1961,7 @@ function focusXpAverage(keys = state.activeSkills) {
 // A rival's experience — the same in every skill: their league's, a little
 // higher or lower with their rating.
 function rivalXp(r) {
+  if (r.top) return r.top.xp;
   const base = BAL.rivalXpByTier[r.league] != null ? BAL.rivalXpByTier[r.league] : 0;
   if (base <= 0) return 0; // nobody earns experience in League 5
   return clamp(base + (r.rating - leagueRatingMid(r.league)) * BAL.rivalXpSpread, 0, BAL.xpMax);
@@ -1804,7 +1984,7 @@ function matchup(entry, keys = state.activeSkills) {
   const oppRating = rival ? rival.rating : entry && entry.rating != null ? entry.rating : Number(entry) || 0;
   const yourPerf = performanceScore(keys);
   const yourBase = matchBase(yourPerf);
-  const youFocus = activeSkillAverage(keys);
+  const youFocus = focusAverage(keys);
   const oppFocus = rival ? rivalFocusAverage(rival, keys) : null;
   const oppPerf = rival ? rivalPerformance(rival, keys) : 70;
   const oppBase = matchBase(oppPerf);
@@ -1813,9 +1993,11 @@ function matchup(entry, keys = state.activeSkills) {
   const yourMatch = yourBase + yourEdge, oppMatch = oppBase + oppEdge;
   const knockout = playerKnockout();
   const youXp = focusXpAverage(keys), oppXp = rival ? rivalXp(rival) : 0;
-  const odds = outcomeOdds(yourMatch - oppMatch, { xpLead: youXp - oppXp });
+  const youBonus = playerFinishBonus(), oppBonus = rivalFinishBonus(rival);
+  const odds = outcomeOdds(yourMatch - oppMatch, { xpLead: youXp - oppXp, secLead: youBonus - oppBonus });
   const winProb = odds.win, deadHeatProb = odds.deadHeat;
-  return { rival, oppRating, yourPerf, oppPerf, youFocus, oppFocus, yourEdge, oppEdge, yourMatch, oppMatch, winProb, deadHeatProb, youXp, oppXp, knockout };
+  const golf = (movesGolf(playerTopMoves()) ? 1 : 0) - (movesGolf(rivalTopMoves(rival)) ? 1 : 0);
+  return { rival, oppRating, yourPerf, oppPerf, youFocus, oppFocus, yourEdge, oppEdge, yourMatch, oppMatch, winProb, deadHeatProb, youXp, oppXp, youBonus, oppBonus, golf, knockout };
 }
 
 // Resolves one real match for the player against a specific opponent rating.
@@ -1854,8 +2036,8 @@ function recordRivalResultVsPlayer(rivalId, outcome, playerRating) {
 // xpPerMatch (double in a knockout), but only while you play in League
 // xpFromTier or higher. Returns what moved, for the result screen.
 // All 7 skills' experience added up — for the progress tables.
-function xpTotal(s = state) {
-  return SKILL_KEYS.reduce((sum, k) => sum + ((s.stats.xp && s.stats.xp[k]) || 0), 0);
+function xpTotal(s = state, keys = playSkillKeys()) {
+  return keys.reduce((sum, k) => sum + ((s.stats.xp && s.stats.xp[k]) || 0), 0);
 }
 function xpEarnsHere(tier = state.leagueTier) {
   return tier <= BAL.xpFromTier;
@@ -1897,11 +2079,11 @@ function resolveMatch(opponent) {
   const yourFinal = matchRating + yourLuck;
   const oppFinal = opponentMatchRating + oppLuck;
   // Both finish times (your XP is what you had going in).
-  const yourTime = finishTime(mu.youXp), oppTime = finishTime(mu.oppXp);
-  const outcome = decideOutcome(yourFinal - oppFinal, yourTime, oppTime);
+  const yourTime = finishTime(mu.youXp, mu.youBonus), oppTime = finishTime(mu.oppXp, mu.oppBonus);
+  const outcome = decideOutcome(yourFinal - oppFinal, yourTime, oppTime, mu.golf);
   const win = outcome === "W", draw = false;
   // A dead heat on match-day rating, settled by the faster finish.
-  const decidedOnTime = Math.abs(yourFinal - oppFinal) < BAL.deadHeatBand && yourTime !== oppTime;
+  const decidedOnTime = Math.abs(yourFinal - oppFinal) < BAL.deadHeatBand && (yourTime !== oppTime || !!mu.golf);
   const oppPerf = Math.round(mu.oppPerf * 10) / 10;
   const K = BAL.ratingK;
   const actual = win ? 1 : 0;
@@ -1971,7 +2153,7 @@ function resolveMatch(opponent) {
     decidedOnTime, // a dead heat settled by the faster finish
     // Finish times (seconds) and the XP behind them: yours across the
     // week's focus skills, theirs by league.
-    finish: { you: yourTime, opp: oppTime, youXp: Math.round(mu.youXp * 10) / 10, oppXp: Math.round(mu.oppXp * 10) / 10 },
+    finish: { you: yourTime, opp: oppTime, youXp: Math.round(mu.youXp * 10) / 10, oppXp: Math.round(mu.oppXp * 10) / 10, youBonus: Math.round(mu.youBonus), oppBonus: Math.round(mu.oppBonus) },
     deadHeatBand: band,
     realMargin: Math.round(Math.abs(yourFinal - oppFinal)), // before the display's scaling
     perf,
@@ -1990,7 +2172,7 @@ function resolveMatch(opponent) {
         you: Math.round(state.stats.skills[k]),
         youSpec: isSpecialisation(k),
         opp: mu.rival ? Math.round(rivalSkill(mu.rival, k)) : null,
-        oppSpec: mu.rival ? mu.rival.specs.includes(k) : false,
+        oppSpec: mu.rival && mu.rival.specs ? mu.rival.specs.includes(k) : false,
       })),
     },
     winProb: Math.round(winProb * 100),
@@ -2111,14 +2293,15 @@ function recordMyMatch(result) {
 function resolveNpcMatch(rivalA, rivalB) {
   // Same match-day maths as yours: performance, + the focus-skill
   // edge for whoever has the better focus skills this week.
-  const keys = state.activeSkills;
+  const keys = npcFocusKeys(rivalA);
   const focusLead = rivalFocusAverage(rivalA, keys) - rivalFocusAverage(rivalB, keys);
   const edge = focusLead * matchWeights().edge;
   const mA = matchBase(rivalPerformance(rivalA)) + Math.max(0, edge);
   const mB = matchBase(rivalPerformance(rivalB)) + Math.max(0, -edge);
   const u = clamp(Math.random(), 1e-9, 1 - 1e-9);
   const luckDiff = (matchWeights().luck / Math.LN10) * Math.log(u / (1 - u)); // logistic, like yours
-  const out = decideOutcome(mA - mB + luckDiff, finishTime(rivalXp(rivalA)), finishTime(rivalXp(rivalB)));
+  const golf = (movesGolf(rivalTopMoves(rivalA)) ? 1 : 0) - (movesGolf(rivalTopMoves(rivalB)) ? 1 : 0);
+  const out = decideOutcome(mA - mB + luckDiff, finishTime(rivalXp(rivalA), rivalFinishBonus(rivalA)), finishTime(rivalXp(rivalB), rivalFinishBonus(rivalB)), golf);
   const change = eloChange(rivalA.rating, rivalB.rating, out === "W" ? 1 : 0);
   rivalA.rating = clamp(rivalA.rating + change, BAL.ratingMin, BAL.ratingMax);
   rivalB.rating = clamp(rivalB.rating - change, BAL.ratingMin, BAL.ratingMax);
@@ -2263,8 +2446,10 @@ function applyPromotionRelegation(allStandings, champions) {
     stayed[tier] = standings.filter((e) => !movedIds.has(e.rivalId));
   }
 
+  // The top tier has no promotion or relegation.
   let playerNewTier = state.leagueTier;
-  if (promoted[state.leagueTier].some((e) => e.isPlayer)) playerNewTier = state.leagueTier - 1;
+  if (state.leagueTier === TOP_TIER) playerNewTier = TOP_TIER;
+  else if (promoted[state.leagueTier].some((e) => e.isPlayer)) playerNewTier = state.leagueTier - 1;
   else if (relegated[state.leagueTier].some((e) => e.isPlayer)) playerNewTier = state.leagueTier + 1;
 
   for (let tier = 1; tier <= BAL.leagueCount; tier++) {
@@ -2300,7 +2485,7 @@ function applyPromotionRelegation(allStandings, champions) {
 // the playoffs (see finalizeSeasonMovement), since the champion goes up too.
 function processLeagueSeasonEnd() {
   const allStandings = {};
-  for (let tier = 1; tier <= BAL.leagueCount; tier++) {
+  for (const tier of leagueTiers()) {
     allStandings[tier] = buildStandingsFromPoints(tier);
     state.leagueStandings[tier] = allStandings[tier];
   }
@@ -2309,7 +2494,7 @@ function processLeagueSeasonEnd() {
 
   const playerStandings = allStandings[state.leagueTier];
   const playerPosition = playerStandings.findIndex((s) => s.isPlayer) + 1;
-  const qualified = playerPosition <= BAL.playoffSize;
+  const qualified = playerPosition <= playoffSizeFor(state.leagueTier);
   return { standings: playerStandings, playerPosition, qualified };
 }
 
@@ -2321,18 +2506,18 @@ const SEED_PAIRS = {
   4: [[1, 4], [2, 3]],
 };
 
-function seedBracket(standings) {
-  const top = standings.slice(0, BAL.playoffSize);
+function seedBracket(standings, size = BAL.playoffSize) {
+  const top = standings.slice(0, size);
   const round = [];
-  SEED_PAIRS[BAL.playoffSize].forEach(([a, b]) => {
+  SEED_PAIRS[size].forEach(([a, b]) => {
     round.push(top[a - 1], top[b - 1]);
   });
   return round;
 }
 
 function buildPlayoffBracket(standings, tier) {
-  const playerSeed = standings.slice(0, BAL.playoffSize).findIndex((t) => t.isPlayer) + 1;
-  return { stage: playoffStages()[0], currentRound: seedBracket(standings), eliminated: false, champion: false, playerSeed, tier };
+  const playerSeed = standings.slice(0, playoffSizeFor(tier)).findIndex((t) => t.isPlayer) + 1;
+  return { stage: playoffStages(tier)[0], currentRound: seedBracket(standings, playoffSizeFor(tier)), eliminated: false, champion: false, playerSeed, tier };
 }
 
 // Plays an all-rival knockout from the given round (teams in bracket order)
@@ -2349,7 +2534,7 @@ function finishNpcBracket(teams, tier) {
       const rb = findRival(b.rivalId);
       const ratingA = ra ? ra.rating : a.rating, ratingB = rb ? rb.rating : b.rating;
       const aWins = ra && rb ? resolveNpcMatch(ra, rb) === "W" : simulateNpcMatch(a.rating, b.rating);
-      if (tier && stage) {
+      if (tier != null && stage) {
         const w = aWins ? a : b, l = aWins ? b : a;
         recordLeagueResult(tier, stage, w.isPlayer ? HISTORY_PLAYER_ID : w.rivalId, l.isPlayer ? HISTORY_PLAYER_ID : l.rivalId, aWins ? ratingA : ratingB, aWins ? ratingB : ratingA);
       }
@@ -2368,10 +2553,10 @@ function finishNpcBracket(teams, tier) {
 function finalizeSeasonMovement(playerTierChampion) {
   const playedTier = state.lastStandingsTier;
   const champions = {};
-  for (let tier = 1; tier <= BAL.leagueCount; tier++) {
+  for (const tier of leagueTiers(playedTier)) {
     const standings = state.leagueStandings[tier];
     if (!standings) continue;
-    const champ = tier === playedTier && playerTierChampion ? playerTierChampion : finishNpcBracket(seedBracket(standings), tier);
+    const champ = tier === playedTier && playerTierChampion ? playerTierChampion : finishNpcBracket(seedBracket(standings, playoffSizeFor(tier)), tier);
     champions[tier] = { name: champ.name, rivalId: champ.rivalId, isPlayer: !!champ.isPlayer };
   }
   state.playoffChampions = champions;
@@ -2380,14 +2565,53 @@ function finalizeSeasonMovement(playerTierChampion) {
   if (state.seasonMovementApplied) return "";
   state.seasonMovementApplied = true;
 
-  const newTier = applyPromotionRelegation(state.leagueStandings, champions);
+  let newTier = applyPromotionRelegation(state.leagueStandings, champions);
+  // Everything at once, in one season: top of the League 1 table, its
+  // playoff champion, all seven skills and their XP at 100, and every
+  // technique mastered — an invitation upstairs.
+  const invited = playedTier === 1 && topEntryMet(champions[1]);
+  if (invited) newTier = enterTop();
   state.leagueTier = newTier;
   state.peakLeagueTier = Math.min(state.peakLeagueTier, newTier);
 
   const champ = champions[playedTier];
-  const champText = champ && !champ.isPlayer ? ` ${champ.name} won the League ${playedTier} playoffs.` : "";
-  const moveText = newTier < playedTier ? ` ⬆️ Promoted to League ${newTier}!` : newTier > playedTier ? ` ⬇️ Relegated to League ${newTier}.` : "";
+  const champText = champ && !champ.isPlayer ? ` ${champ.name} won the ${lg(playedTier)} playoffs.` : "";
+  const moveText = invited ? " ✉️ An invitation has arrived." : newTier < playedTier ? ` ⬆️ Promoted to ${lg(newTier)}!` : newTier > playedTier ? ` ⬇️ Relegated to ${lg(newTier)}.` : "";
   return champText + moveText;
+}
+
+function topEntryMet(l1Champ) {
+  const s = state.stats;
+  const tableTop = state.lastStandingsTier === 1 && state.lastStandings && state.lastStandings[0] && state.lastStandings[0].isPlayer;
+  const maxed = SKILL_KEYS.every((k) => s.skills[k] >= 99.95 && (s.xp[k] || 0) >= BAL.xpMax);
+  return !!(l1Champ && l1Champ.isPlayer && tableTop && maxed && techniquesMasteredCount() >= EXCEL_TECHNIQUES.length);
+}
+// The top tier's nine, created the first time anyone gets there.
+function ensureTopRivals() {
+  if (state.rivals.some((r) => r.top)) return;
+  let id = Math.max(...state.rivals.map((r) => r.id)) + 1;
+  TOP_RIVALS.forEach((t, i) => {
+    const order = TOP_TECHNIQUE_NAMES.slice(i % TOP_TECHNIQUE_NAMES.length).concat(TOP_TECHNIQUE_NAMES.slice(0, i % TOP_TECHNIQUE_NAMES.length));
+    state.rivals.push({
+      id: id++, name: t.name, rating: t.rating, league: TOP_TIER, wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0,
+      top: { skills: { ...t.skills }, xp: t.xp, moves: order.slice(0, t.moves) },
+    });
+  });
+}
+// Moves you up: the nine appear, a new face takes your League 1 place, and
+// the top tier's three skills start for you. Returns the new tier.
+function enterTop() {
+  ensureTopRivals();
+  const used = new Set(state.rivals.map((r) => r.name));
+  const name = RIVAL_NAMES.find((n) => !used.has(n)) || `Rookie${state.year}`;
+  const [lo, hi] = LEAGUE_RATING_BANDS[1];
+  state.rivals.push(ensureRivalProfile({ id: Math.max(...state.rivals.map((r) => r.id)) + 1, name, rating: randInt(lo, hi), league: 1, wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0 }));
+  TOP_SKILL_KEYS.forEach((k) => {
+    if (state.stats.skills[k] == null) state.stats.skills[k] = TOP_SKILL_START;
+    if (state.stats.xp[k] == null) state.stats.xp[k] = 0;
+  });
+  state.topReveal = true; // the next year's splash says where you are
+  return TOP_TIER;
 }
 
 const PLAYOFF_ROUND_NAMES = { r16: "Round of 16", qf: "Quarterfinal", sf: "Semifinal", f: "Final" };
@@ -2396,7 +2620,7 @@ const PLAYOFF_NEXT_STAGE = { r16: "qf", qf: "sf", sf: "f" };
 // Knocked out in `stage`: camp covers the playoff rounds still to come, up
 // to the Final's day. R16 exit → 21 days, QF → 14, SF → 7, Final → none.
 function eliminatedCampDays(stage) {
-  const roundsLeft = playoffStages().length - 1 - Math.max(0, playoffStages().indexOf(stage));
+  const roundsLeft = playerStages().length - 1 - Math.max(0, playerStages().indexOf(stage));
   return roundsLeft * BAL.roundIntervalDays;
 }
 
@@ -2461,7 +2685,7 @@ function resolvePlayoffRound() {
     seasonOver = true;
     champion = winners[0];
     const bonus = { cash: BAL.championCash, rating: BAL.championRating };
-    summary = `👑 CHAMPION! You won the Year ${state.year} League ${p.tier} Final! +$${bonus.cash} and +${bonus.rating} rating.`;
+    summary = `👑 CHAMPION! You won the Year ${state.year} ${lg(p.tier)} Final! +$${bonus.cash} and +${bonus.rating} rating.`;
     state.cash += bonus.cash;
     state.yearCashFlow.matchCash += bonus.cash;
     state.rank = Math.min(BAL.ratingMax, state.rank + bonus.rating);
@@ -2533,7 +2757,7 @@ function startNewYear() {
   state.leagueRoundRobins = newLeagueData.roundRobins;
   state.leaguePoints = newLeagueData.points;
   state.playoff = null;
-  let phaseEvent = `🎉 Year ${state.year} begins! A fresh ${BAL.seasonRounds}-round season has been scheduled — good luck.`;
+  let phaseEvent = `🎉 Year ${state.year} begins! A fresh ${roundsFor(state.leagueTier)}-round season has been scheduled — good luck.`;
   if (yearSummary.proEnded) phaseEvent += ` 📉 Sponsorship not renewed — your skill average was ${yearSummary.proEnded.avg}, under the ${yearSummary.proEnded.bar} needed. Time to find a job: ${yearSummary.proEnded.searchHours}h of Job Search.`;
   else if (yearSummary.proRenewed) phaseEvent += ` 🏆 Sponsorship renewed for Year ${state.year}.`;
   if (worn.length) phaseEvent += ` Last year's equipment has worn out (${worn.map((e) => e.name).join(", ")}).`;
@@ -2561,11 +2785,11 @@ function processDayEnd() {
       state.roundIndex = 0;
       state.skillCycleDay = 0;
       state.activeSkills = rollActiveSkills();
-      SKILL_KEYS.forEach((k) => {
+      allSkillKeys().forEach((k) => {
         state.allocation.skills[k] = 0;
       });
       const focus = state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join(", ");
-      phaseEvent = `🏁 Preseason over — the ${BAL.seasonRounds}-round regular season begins. This week's focus: ${focus}.`;
+      phaseEvent = `🏁 Preseason over — the ${roundsFor(state.leagueTier)}-round regular season begins. This week's focus: ${focus}.`;
     }
     return { matchResult, phaseEvent, yearSummary, newYearNow };
   }
@@ -2582,7 +2806,7 @@ function processDayEnd() {
       matchResult = resolveMatch(fixture);
       matchResult.opponentName = fixture.name;
       matchResult.opponentRivalId = fixture.rivalId;
-      matchResult.roundLabel = `Round ${state.roundIndex + 1}/${BAL.seasonRounds}`;
+      matchResult.roundLabel = `Round ${state.roundIndex + 1}/${roundsFor(state.leagueTier)}`;
       matchResult.tier = state.leagueTier;
       const youFirst = matchResult.win || matchResult.draw;
       recordLeagueResult(state.leagueTier, String(state.roundIndex + 1), youFirst ? HISTORY_PLAYER_ID : fixture.rivalId, youFirst ? fixture.rivalId : HISTORY_PLAYER_ID, youFirst ? matchResult.rankBefore : matchResult.opponentRating, youFirst ? matchResult.opponentRating : matchResult.rankBefore, !!matchResult.draw);
@@ -2600,7 +2824,7 @@ function processDayEnd() {
         pointsTier.player = (pointsTier.player || 0) + BAL.drawPoints;
         pointsTier[fixture.rivalId] = (pointsTier[fixture.rivalId] || 0) + BAL.drawPoints;
       } else pointsTier[fixture.rivalId] = (pointsTier[fixture.rivalId] || 0) + BAL.winPoints;
-      for (let tier = 1; tier <= BAL.leagueCount; tier++) {
+      for (const tier of leagueTiers()) {
         resolveLeagueRoundForTier(tier, state.roundIndex);
       }
       const standingsAfter = buildStandingsFromPoints(state.leagueTier);
@@ -2612,8 +2836,13 @@ function processDayEnd() {
       matchResult.leagueSize = standingsAfter.length;
       state.roundIndex += 1;
 
-      if (state.roundIndex >= BAL.seasonRounds) {
+      if (state.roundIndex >= roundsFor(state.leagueTier)) {
         const playedTier = state.leagueTier;
+        // A shorter top-tier season: every other league plays out its
+        // remaining rounds now, so all tables finish together.
+        for (let r = state.roundIndex; r < BAL.seasonRounds; r++) {
+          for (const tier of leagueTiers()) if (tier !== playedTier) resolveLeagueRoundForTier(tier, r);
+        }
         const result = processLeagueSeasonEnd();
         state.lastStandings = result.standings;
         state.lastPlayerPosition = result.playerPosition;
@@ -2629,13 +2858,13 @@ function processDayEnd() {
               : playedTier > 1
               ? " Win the playoffs to earn promotion."
               : "";
-          phaseEvent = `🏆 Regular season complete! Finished #${pos} of ${size} in League ${playedTier} — through to the playoffs as seed ${state.playoff.playerSeed}.${stakes}`;
+          phaseEvent = `🏆 Regular season complete! Finished #${pos} of ${size} in ${lg(playedTier)} — through to the playoffs as seed ${state.playoff.playerSeed}.${stakes}`;
         } else {
           state.seasonPhase = "offseason";
-          state.offseasonDays = BAL.trainingCampDays;
+          state.offseasonDays = campDays();
           state.offseasonReason = "missed";
           const outcome = finalizeSeasonMovement(null);
-          phaseEvent = `📋 Regular season complete. Finished #${pos} of ${size} in League ${playedTier} — missed the top ${BAL.playoffSize} playoff cutoff.${outcome} ${BAL.trainingCampDays}-day training camp starts now to get ready for next season.`;
+          phaseEvent = `📋 Regular season complete. Finished #${pos} of ${size} in ${lg(playedTier)} — missed the top ${playoffSizeFor(playedTier)} playoff cutoff.${outcome} ${state.offseasonDays}-day training camp starts now to get ready for next season.`;
         }
       }
     }
@@ -2731,10 +2960,10 @@ function getNextMatchInfo() {
       winPct,
       label: daysUntil <= 0
         ? `Rd ${roundNum} TODAY vs ${fixture.name} · ${winPct}%`
-        : `Rd ${roundNum}/${BAL.seasonRounds} vs ${fixture.name} · ${winPct}% · ${daysUntilPhrase(daysUntil)}`,
+        : `Rd ${roundNum}/${roundsFor(state.leagueTier)} vs ${fixture.name} · ${winPct}% · ${daysUntilPhrase(daysUntil)}`,
       labelLine1: daysUntil <= 0
         ? `Rd ${roundNum} TODAY vs ${fixture.name} (${oppRating})`
-        : `Rd ${roundNum}/${BAL.seasonRounds} vs ${fixture.name} (${oppRating})`,
+        : `Rd ${roundNum}/${roundsFor(state.leagueTier)} vs ${fixture.name} (${oppRating})`,
       labelLine2: matchOddsLine(winPct, daysUntil),
     };
   }
@@ -2791,7 +3020,7 @@ function advanceSkillCycle(wasInSeason) {
   if (state.skillCycleDay < 7) return null;
   state.skillCycleDay = 0;
   state.activeSkills = rollActiveSkills();
-  SKILL_KEYS.forEach((k) => {
+  allSkillKeys().forEach((k) => {
     state.allocation.skills[k] = 0;
   });
   const names = state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join(", ");
@@ -2800,13 +3029,13 @@ function advanceSkillCycle(wasInSeason) {
 
 function phaseLabelText() {
   const s = state;
-  const league = `League ${s.leagueTier} · `;
+  const league = `${lg(s.leagueTier)} · `;
   if (s.seasonPhase === "preseason") return league + "Preseason";
   if (s.seasonPhase === "regular") return league + "Regular";
   if (s.seasonPhase === "playoffs") return league + "Playoffs";
   // The offseason label right after this already names it (Training camp,
   // 🏆 Champion!, …), so don't say "Camp" twice.
-  if (s.seasonPhase === "offseason") return `League ${s.leagueTier}`;
+  if (s.seasonPhase === "offseason") return `${lg(s.leagueTier)}`;
   return "";
 }
 
@@ -2832,12 +3061,12 @@ function renderTopbar() {
   if (tp) {
     const zone =
       tp.tier > 1 && tp.pos <= BAL.promotionTablePlaces ? "pos-promo"
-      : tp.tier < BAL.leagueCount && tp.pos > tp.size - BAL.relegationCount ? "pos-releg"
-      : tp.pos > BAL.playoffSize ? "pos-out"
+      : tp.tier !== TOP_TIER && tp.tier < BAL.leagueCount && tp.pos > tp.size - BAL.relegationCount ? "pos-releg"
+      : tp.pos > playoffSizeFor(tp.tier) ? "pos-out"
       : "";
     lb.innerHTML = `🏅<span class="leagues-pos ${zone}">#${tp.pos}</span>`;
     lb.classList.add("has-pos");
-    lb.title = `${tp.final ? "Final regular-season" : "Current"} position: #${tp.pos} of ${tp.size} in League ${tp.tier}`;
+    lb.title = `${tp.final ? "Final regular-season" : "Current"} position: #${tp.pos} of ${tp.size} in ${lg(tp.tier)}`;
   } else {
     lb.textContent = "🏅";
     lb.classList.remove("has-pos");
@@ -2963,7 +3192,11 @@ function xpStripHtml(key, { preview = false } = {}) {
   if (xp < 0.5 && next < 0.5) return "";
   const now = clamp((xp / BAL.xpMax) * 100, 0, 100);
   const to = clamp((next / BAL.xpMax) * 100, 0, 100);
-  return `<div class="bar-xp" style="width:${now}%"></div>${to > now + 0.1 ? `<div class="bar-xp bar-xp-gain" style="left:${now}%;width:${to - now}%"></div>` : ""}`;
+  return `<div class="bar-xp${xp >= BAL.xpMax ? " xp-max" : ""}" style="width:${now}%"></div>${to > now + 0.1 ? `<div class="bar-xp bar-xp-gain" style="left:${now}%;width:${to - now}%"></div>` : ""}`;
+}
+// Every one of the seven at 100 XP.
+function allSevenMastered() {
+  return SKILL_KEYS.every((k) => skillXp(k) >= BAL.xpMax);
 }
 // "XP 12" beside a skill once experience can be (or has been) earned.
 function xpText(key) {
@@ -3054,7 +3287,9 @@ function renderPlannerRows() {
     const cap = skillCap(key);
     const lvl = hiredLevel(coachKey(key));
     // Tap it to go straight to this skill's coach in Staff.
-    const shopTag = lvl > 0
+    const shopTag = isTopSkill(key)
+      ? `<span class="skill-shop-tag skill-shop-tag-none">solo</span>`
+      : lvl > 0
       ? `<button class="skill-shop-tag coach-link" data-coach="${key}">🧑‍🏫 Lv${lvl}</button>`
       : `<button class="skill-shop-tag skill-shop-tag-none coach-link" data-coach="${key}">no coach</button>`;
     rows.push(
@@ -3350,8 +3585,9 @@ function performanceTableHtml(b) {
   const subtotal = b.weighted.skill + b.weighted.phys + b.weighted.composure + b.weighted.rest;
   const techRow =
     b.techniquePenaltyMult < 1
-      ? `<tr class="perf-main perf-warn"><td>📘 Unmastered techniques</td><td>×${b.techniquePenaltyMult.toFixed(2)}</td><td></td><td>−${one(subtotal - b.score)}</td></tr>`
+      ? `<tr class="perf-main perf-warn"><td>📘 Unmastered techniques</td><td>×${b.techniquePenaltyMult.toFixed(2)}</td><td></td><td>−${one(subtotal * (1 - b.techniquePenaltyMult))}</td></tr>`
       : "";
+  const movesRow = b.movesBonus ? `<tr class="perf-main"><td>✨ Signature moves</td><td></td><td></td><td>+${one(b.movesBonus)}</td></tr>` : "";
   return `
     <table class="perf-table">
       <thead><tr><th>Performance</th><th>Value</th><th>Weight</th><th>Points</th></tr></thead>
@@ -3362,10 +3598,11 @@ function performanceTableHtml(b) {
         ${row("🎮 Calm", raw ? fmt(raw.composure) : "", PERF_WEIGHTS.composure, b.weighted.composure)}
         ${row("🌙 Rest", raw ? fmt(raw.rest) : "", PERF_WEIGHTS.rest, b.weighted.rest)}
         ${techRow}
+        ${movesRow}
       </tbody>
       <tfoot><tr><td>Total</td><td></td><td></td><td>${one(b.score)}<span class="perf-of">/100</span></td></tr></tfoot>
     </table>
-    <div class="match-sub perf-note">Values are out of 100; points = value × weight. Skill is ${raw && raw.skills.length > 3 ? "all 7 skills" : "this round's focus skills"}, averaged${raw && raw.skills.length > 3 ? "; the week's focus skills count again in the focus-skill edge" : ""}.</div>`;
+    <div class="match-sub perf-note">Values are out of 100; points = value × weight. Skill is ${raw && raw.skills.length > 3 ? "all 7 skills" : raw && raw.skills.length && isTopSkill(raw.skills[0].key) ? `all ${raw.skills.length} skills` : "this round's focus skills"}, averaged${raw && (raw.skills.length > 3 || (raw.skills.length && isTopSkill(raw.skills[0].key))) ? "; the week's focus skills count again in the focus-skill edge" : ""}.</div>`;
 }
 
 // Match result screen, top to bottom: what changed (Result), why (You vs
@@ -3565,7 +3802,7 @@ function nextMatchPreviewHtml() {
   const tier = info.kind === "playoff" ? state.playoff.tier : state.leagueTier;
   const pos = currentTablePositions(tier);
   const youPos = pos.get(HISTORY_PLAYER_ID), oppPos = pos.get(info.opponentRivalId);
-  const what = info.kind === "playoff" ? PLAYOFF_ROUND_NAMES[state.playoff.stage] : `Round ${state.roundIndex + 1}/${BAL.seasonRounds}`;
+  const what = info.kind === "playoff" ? PLAYOFF_ROUND_NAMES[state.playoff.stage] : `Round ${state.roundIndex + 1}/${roundsFor(state.leagueTier)}`;
   const when = info.daysUntil <= 0 ? "today" : daysUntilPhrase(info.daysUntil);
   const row = (label, a, b) => `<tr><td>${label}</td><td>${a}</td><td>${b}</td></tr>`;
   // One row per focus skill, you against them, then the edge they add up to.
@@ -3573,11 +3810,11 @@ function nextMatchPreviewHtml() {
   const r = mu.rival;
   const star = (on) => (on ? " ⭐" : "");
   const focusRows = state.activeSkills
-    .map((k) => row(`${skillMeta(k).icon} ${skillMeta(k).name}`, `${fmt(state.stats.skills[k])}${star(isSpecialisation(k))}`, r ? `${fmt(rivalSkill(r, k))}${star(r.specs.includes(k))}` : "?"))
+    .map((k) => row(`${skillMeta(k).icon} ${skillMeta(k).name}`, `${fmt(state.stats.skills[k])}${star(isSpecialisation(k))}`, r ? `${fmt(rivalSkill(r, k))}${star((r.specs || []).includes(k))}` : "?"))
     .join("");
   const edgeRow = r ? row("🎯 Focus-skill edge", mu.yourEdge >= 0.5 ? signedNum(Math.round(mu.yourEdge)) : "–", mu.oppEdge >= 0.5 ? signedNum(Math.round(mu.oppEdge)) : "–") : "";
   // Experience (focus average) and the finish time it points to.
-  const timeRows = r ? row("🎓 Experience", fmt(mu.youXp), fmt(mu.oppXp)) + row("⏱ Expected finish", `~${fmtClock(expectedFinish(mu.youXp))}`, `~${fmtClock(expectedFinish(mu.oppXp))}`) : "";
+  const timeRows = r ? row("🎓 Experience", fmt(mu.youXp), fmt(mu.oppXp)) + row("⏱ Expected finish", `~${fmtClock(expectedFinish(mu.youXp, mu.youBonus))}`, `~${fmtClock(expectedFinish(mu.oppXp, mu.oppBonus))}`) : "";
   return `
     <div class="next-match">
       <div class="next-match-title">⏭️ Next: ${what} · ${when}</div>
@@ -3592,7 +3829,7 @@ function nextMatchPreviewHtml() {
         <thead><tr><th>This week's focus</th><th>You</th><th class="h2h-opp">${info.opponentName}</th></tr></thead>
         <tbody>${focusRows}${edgeRow}${timeRows}</tbody>
       </table>
-      <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance. ${r ? `About ${Math.round(mu.deadHeatProb * 100)}% of the time it's a dead heat (level scores), settled on finish time — you're the faster finisher ${Math.round(fasterChance(mu.youXp - mu.oppXp) * 100)}% of the time.` : ""}</div>
+      <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance. ${r ? `About ${Math.round(mu.deadHeatProb * 100)}% of the time it's a dead heat (level scores), settled on finish time — you're the faster finisher ${Math.round(fasterChance(mu.youXp - mu.oppXp, mu.youBonus - mu.oppBonus) * 100)}% of the time.` : ""}</div>
       <div class="match-sub perf-note">🎓 ${xpEarnsHere(tier) ? `Each focus skill earns <b>+${xpPerFocusMatch(info.kind === "playoff")} XP</b> from this match, win or lose.` : `Experience is earned from League ${BAL.xpFromTier} up.`}</div>
     </div>`;
 }
@@ -3723,7 +3960,7 @@ function staffCardHtml(key, { focus = false, statNote = "" } = {}) {
 // session so reopening lands where you left off.
 let shopTab = "staff";
 function shopHtml(tab = shopTab) {
-  const focusKeys = inSeason() ? state.activeSkills : [];
+  const focusKeys = inSeason() ? state.activeSkills.filter((k) => !isTopSkill(k)) : [];
   // This week's focus first, in the same order as the main screen's rows,
   // then the rest.
   const order = [...focusKeys, ...SKILL_KEYS.filter((k) => !focusKeys.includes(k))];
@@ -3951,7 +4188,7 @@ function gameCardHtml(len, { first = false } = {}) {
     buttons = `<button class="staff-chip" data-game-new="${len}">Start ${g.name} game</button>`;
   } else if (s) {
     const phase = PHASE_NAMES[s.seasonPhase] || s.seasonPhase;
-    status = `<div class="staff-line staff-stat">${s.playerName ? escapeHtml(s.playerName) + " · " : ""}Year ${s.year} · League ${s.leagueTier} · ${phase} · Day ${s.day}</div>`;
+    status = `<div class="staff-line staff-stat">${s.playerName ? escapeHtml(s.playerName) + " · " : ""}Year ${s.year} · ${lg(s.leagueTier)} · ${phase} · Day ${s.day}</div>`;
     buttons = `${current ? `<span class="staff-hired">▶ Playing now</span>` : `<button class="staff-chip" data-game-play="${len}">Continue</button>`}<button class="staff-chip staff-unlock" data-game-restart="${len}">Restart</button>`;
   } else {
     buttons = `<button class="staff-chip" data-game-new="${len}">New ${g.name} game</button>`;
@@ -4028,7 +4265,7 @@ function openSpecialisations({ required = false, onDone = null } = {}, picked = 
   const ready = picked.length === n;
   const html = `
     ${required ? `<h2>⭐ Choose ${n} specialisations</h2>` : stickyHeadHtml("⭐ Specialisations")}
-    <p class="modal-sub">Your ${n} specialisations can reach your best league's skill cap (<b>${top}</b> now, League ${state.peakLeagueTier}); the other skills stop at <b>${other}</b>. Coaches still set each skill's own ceiling. You can change them any time — but a skill that stops being one <b>drops to ${other}</b> straight away, or only to its <b>XP</b> if that's higher.</p>
+    <p class="modal-sub">Your ${n} specialisations can reach your best league's skill cap (<b>${top}</b> now, ${lg(state.peakLeagueTier)}); the other skills stop at <b>${other}</b>. Coaches still set each skill's own ceiling. You can change them any time — but a skill that stops being one <b>drops to ${other}</b> straight away, or only to its <b>XP</b> if that's higher.</p>
     ${required && state.day > 1 ? `<p class="modal-sub">Your career already has skills above ${other}: pick which ${n} to keep — the rest drop to ${other}.</p>` : ""}
     <div class="spec-list">${rows}</div>
     <p class="modal-sub">${picked.length}/${n} chosen.</p>
@@ -4107,7 +4344,7 @@ function employmentSectionHtml() {
   const leaveLine = onLeave() ? `<p>🏖️ <b>Annual leave</b> — no ${emp.status === "pro" ? "Pro Duties" : "Work"} until the season starts in ${leaveDaysLeft()} days, paid as normal.</p>` : "";
   if (emp.status === "pro") {
     const queue = emp.techniqueQueue;
-    const penalty = Math.round(Math.min(1, queue.length * BAL.techniquePenaltyPerUnmastered) * 100);
+    const penalty = Math.round(Math.min(1, penaltyQueueLength() * BAL.techniquePenaltyPerUnmastered) * 100);
     const all = techniquesMasteredCount() >= EXCEL_TECHNIQUES.length;
     const queueHtml = queue.length
       ? queue.map((t, i) => `${i === 0 ? "▶" : "⏸"} ${t.name}: ${fmt(t.hoursDone)}/${t.hoursNeeded}h`).join("<br>")
@@ -4115,12 +4352,12 @@ function employmentSectionHtml() {
     return `${expensesLine}${leaveLine}<p>🏆 <b>Pro</b> · Pro Duties ${BAL.proDutyHoursRequired}h/day required ($${fmt(emp.proPay)}/day) · ${fmt1(lives)}/${fmt1(BAL.strikesToFire)} chances</p>${strikeLines}
       <p class="modal-sub">Sponsored to the end of Year ${state.year}. Renewal needs a skill average of ${proAverageBar()}+ when the year ends: ${meetsProSkillBar() ? `on track ✓ (average ${skillAverage()})` : `⚠️ not yet — average ${skillAverage()}`}.</p>
       <p><b>Technique queue</b> (hours above ${BAL.proDutyHoursRequired}h/day go here)${penalty > 0 ? ` — currently <b>-${penalty}%</b> match performance` : ""}:<br>${queueHtml}</p>
-      <p class="modal-sub">📘 Mastered ${techniquesMasteredCount()} of ${EXCEL_TECHNIQUES.length} techniques.</p>`;
+      <p class="modal-sub">📘 Mastered ${techniquesMasteredCount()} of ${EXCEL_TECHNIQUES.length} techniques.</p>${inTop() ? `<p class="modal-sub">✨ Signature moves: ${playerTopMoves().length ? playerTopMoves().map((m) => `${m.name} (${m.desc})`).join("; ") : "none yet"} — ${playerTopMoves().length} of ${TOP_TECHNIQUES.length}.</p>` : ""}`;
   }
 
   const goProHint = checkGoProEligible()
     ? "Thresholds met — going pro next time a day resolves."
-    : `Go pro once you've reached League ${BAL.goProLeagueTier} and your 7 skills average ${BAL.goProAverage[2]}+ (${BAL.goProAverage[1]}+ once League 1 is your best) — now: ${state.peakLeagueTier <= BAL.goProLeagueTier ? `League ${state.peakLeagueTier} ✓` : `best so far League ${state.peakLeagueTier}`}, average ${skillAverage()}${state.peakLeagueTier <= BAL.goProLeagueTier ? ` of ${proAverageBar()} needed` : ""}.`;
+    : `Go pro once you've reached League ${BAL.goProLeagueTier} and your 7 skills average ${BAL.goProAverage[2]}+ (${BAL.goProAverage[1]}+ once League 1 is your best) — now: ${state.peakLeagueTier <= BAL.goProLeagueTier ? `${lg(state.peakLeagueTier)} ✓` : `best so far ${lg(state.peakLeagueTier)}`}, average ${skillAverage()}${state.peakLeagueTier <= BAL.goProLeagueTier ? ` of ${proAverageBar()} needed` : ""}.`;
   return `${expensesLine}${leaveLine}<p>💼 <b>Employed</b> · Work ${BAL.workHoursRequired}h/day required ($${fmt(emp.workPay)}/day) · ${fmt1(lives)}/${fmt1(BAL.strikesToFire)} chances</p>${strikeLines}
     <p class="modal-sub">${goProHint}</p>`;
 }
@@ -4156,7 +4393,7 @@ function openCareer() {
     // Their league is only worth saying if it isn't yours (it always is,
     // outside of edge cases) — the record is what tells you something.
     const opponentExtra = rival
-      ? `${rival.league !== state.leagueTier ? ` · League ${rival.league}` : ""} · ${wdl(rival.wins, rival.draws, rival.losses)}`
+      ? `${rival.league !== state.leagueTier ? ` · ${lg(rival.league)}` : ""} · ${wdl(rival.wins, rival.draws, rival.losses)}`
       : "";
     const skillsForMatch = state.activeSkills
       .map((k) => {
@@ -4164,7 +4401,7 @@ function openCareer() {
         return `<div class="kv-row"><span>${meta.icon} ${meta.name}</span><span>${fmt(state.stats.skills[k])}/${skillCap(k)}</span></div>`;
       })
       .join("");
-    const matchName = info.kind === "playoff" ? PLAYOFF_ROUND_NAMES[state.playoff.stage] : `Round ${state.roundIndex + 1}/${BAL.seasonRounds}`;
+    const matchName = info.kind === "playoff" ? PLAYOFF_ROUND_NAMES[state.playoff.stage] : `Round ${state.roundIndex + 1}/${roundsFor(state.leagueTier)}`;
     const when = info.daysUntil <= 0 ? "today" : daysUntilPhrase(info.daysUntil);
     nextSection = `
       <div class="kv-row"><span>Match</span><span>${matchName} · ${when}</span></div>
@@ -4188,7 +4425,7 @@ function openCareer() {
     const top5 = state.lastStandings.slice(0, 5);
     standingsSection = `
     <div class="modal-section">
-      <h3>${state.seasonPhase === "playoffs" || state.seasonPhase === "offseason" ? "This Season" : "Last Season"} — League ${state.lastStandingsTier} Final Standings</h3>
+      <h3>${state.seasonPhase === "playoffs" || state.seasonPhase === "offseason" ? "This Season" : "Last Season"} — ${lg(state.lastStandingsTier)} Final Standings</h3>
       <p>You finished <b>#${state.lastPlayerPosition}</b> of ${state.lastStandings.length}.</p>
       <ol class="standings-list">
         ${top5.map((t) => `<li class="${t.isPlayer ? "standings-you" : ""}">${t.name}${t.isPlayer ? " (You)" : ""} — ${t.points} pts</li>`).join("")}
@@ -4202,7 +4439,7 @@ function openCareer() {
     playoffSection = `
     <div class="modal-section">
       <h3>Playoffs</h3>
-      <p>League ${state.playoff.tier} · Seed #${state.playoff.playerSeed} of ${BAL.playoffSize} · ${statusText}</p>
+      <p>${lg(state.playoff.tier)} · Seed #${state.playoff.playerSeed} of ${playoffSizeFor(state.playoff.tier)} · ${statusText}</p>
     </div>`;
   }
 
@@ -4214,9 +4451,9 @@ function openCareer() {
     </div>
     <div class="modal-section">
       <h3>This Season</h3>
-      <div class="kv-row"><span>Year ${state.year} · League ${state.leagueTier}</span><span>Played ${seasonPlayed}/${BAL.seasonRounds}</span></div>
+      <div class="kv-row"><span>Year ${state.year} · ${lg(state.leagueTier)}</span><span>Played ${seasonPlayed}/${roundsFor(state.leagueTier)}</span></div>
       <div class="kv-row"><span>Record</span><span>${wdl(seasonWins, seasonDraws, seasonPlayed - seasonWins - seasonDraws)}${tablePos ? ` · #${tablePos.pos} of ${tablePos.size}` : ""}</span></div>
-      ${state.peakLeagueTier !== state.leagueTier ? `<div class="kv-row"><span>Highest league reached</span><span>League ${state.peakLeagueTier}</span></div>` : ""}
+      ${state.peakLeagueTier !== state.leagueTier ? `<div class="kv-row"><span>Highest league reached</span><span>${lg(state.peakLeagueTier)}</span></div>` : ""}
       <div class="menu-row" id="viewLeaguesLink"><span>📊 View League Standings</span><span class="arrow">›</span></div>
       <div class="menu-row" id="viewHistoryLink"><span>📜 Match History</span><span class="arrow">›</span></div>
     </div>
@@ -4232,11 +4469,11 @@ function openCareer() {
       ${employmentSectionHtml()}
     </div>
     <div class="modal-section">
-      <h3>Skills${!inSeason() ? ` — ${isPreseason() ? "preseason" : "off-season"}: train anything` : ""}</h3>
-      <div class="menu-row" id="careerSpecs"><span>⭐ Specialisations <span class="menu-note">${(state.specialisations || []).map((k) => skillMeta(k).icon).join(" ")} · change</span></span><span class="arrow">›</span></div>
-      <p class="modal-sub">⭐ skills can reach ${leagueSkillCap()}, the rest ${leagueSkillCap() - BAL.otherSkillCapGap} (League ${state.peakLeagueTier} best). Average ${skillAverage()}.</p>
+      <h3>Skills${!inSeason() ? ` — ${isPreseason() ? "preseason" : "off-season"}: train anything` : ""}${!inTop() && allSevenMastered() ? ` <span class="mastered-tag">· Mastered</span>` : ""}</h3>
+      ${inTop() ? `<p class="modal-sub">Your seven case skills are mastered, held at 100 by their experience. Up here it's these three — no coaches, no caps.</p>` : `<div class="menu-row" id="careerSpecs"><span>⭐ Specialisations <span class="menu-note">${(state.specialisations || []).map((k) => skillMeta(k).icon).join(" ")} · change</span></span><span class="arrow">›</span></div>
+      <p class="modal-sub">⭐ skills can reach ${leagueSkillCap()}, the rest ${leagueSkillCap() - BAL.otherSkillCapGap} (${lg(state.peakLeagueTier)} best). Average ${skillAverage()}.</p>`}
       ${inSeason() ? `<p class="modal-sub skills-legend">🟢 = this week's focus, the only skills you can train and the ones tested in the next match.</p>` : ""}
-      ${SKILLS.map((sk) => {
+      ${(inTop() ? TOP_SKILLS : SKILLS).map((sk) => {
         const cap = skillCap(sk.key);
         const val = state.stats.skills[sk.key];
         const pct = clamp(val, 0, 100);
@@ -4254,7 +4491,7 @@ function openCareer() {
       ${currentStatsHtml()}
     </div>`;
   openModal(html, { ownClose: true, page: { key: "career", reopen: openCareer } });
-  $("careerSpecs").addEventListener("click", () => openSpecialisations());
+  if ($("careerSpecs")) $("careerSpecs").addEventListener("click", () => openSpecialisations());
   $("viewLeaguesLink").addEventListener("click", () => openLeagues(state.leagueTier));
   $("viewHistoryLink").addEventListener("click", () => openHistory());
 }
@@ -4263,7 +4500,7 @@ function leagueTableHtml(tier) {
   let standings;
   let noteText;
   let isSnapshot = false;
-  if (state.roundIndex >= BAL.seasonRounds && state.leagueStandings[tier]) {
+  if (state.roundIndex >= roundsFor(tier) && state.leagueStandings[tier]) {
     // Season over: read the snapshot taken at round 39. Rebuilding from the
     // rivals' live league field would be wrong once promotion has moved them.
     standings = state.leagueStandings[tier];
@@ -4273,7 +4510,7 @@ function leagueTableHtml(tier) {
     // Live: every league's round-robin resolves in lockstep every week, so
     // this is a real "right now" snapshot, not just a post-season report.
     standings = buildStandingsFromPoints(tier);
-    noteText = `Live — through round ${state.roundIndex}/${BAL.seasonRounds}`;
+    noteText = `Live — through round ${state.roundIndex}/${roundsFor(tier)}`;
   } else if (state.leagueStandings[tier]) {
     standings = state.leagueStandings[tier];
     noteText = "Last season's final standings";
@@ -4286,11 +4523,12 @@ function leagueTableHtml(tier) {
   // own tier > 1 / tier < leagueCount gating exactly. Only the top 3 are
   // guaranteed; the 4th spot goes to the playoff champion, marked once known.
   const showPromo = tier > 1;
-  const showReleg = tier < BAL.leagueCount;
+  const showReleg = tier !== TOP_TIER && tier < BAL.leagueCount;
   const champ = isSnapshot && state.playoffChampions ? state.playoffChampions[tier] : null;
   // Each row's W–D–L and form come from the stored results; an older
   // snapshot without them falls back to W = points ÷ 3 (no draws then).
-  const played = isSnapshot ? BAL.seasonRounds : state.roundIndex;
+  const played = isSnapshot ? roundsFor(tier) : Math.min(state.roundIndex, roundsFor(tier));
+  const pSize = playoffSizeFor(tier);
   const recFor = (t) => t.rec || { w: Math.floor(t.points / BAL.winPoints), d: 0, l: played - Math.floor(t.points / BAL.winPoints), form: [] };
   const formHtml = (f) => f.map((x) => `<i class="f-${x.toLowerCase()}" title="${x === "W" ? "Win" : x === "D" ? "Draw" : "Loss"}"></i>`).join("");
   const rows = standings
@@ -4303,9 +4541,9 @@ function leagueTableHtml(tier) {
           : showReleg && pos > standings.length - BAL.relegationCount
           ? "zone-releg"
           : "";
-      const playoff = pos <= BAL.playoffSize ? "zone-playoff" : "";
+      const playoff = pos <= pSize ? "zone-playoff" : "";
       // Dashed divider straight after the last qualifying place.
-      const cutLine = pos === BAL.playoffSize ? `<div class="league-cutline">Playoff line — top ${BAL.playoffSize} qualify</div>` : "";
+      const cutLine = pos === pSize ? `<div class="league-cutline">Playoff line — top ${pSize} qualify</div>` : "";
       return `
       <div class="league-row ${zone} ${playoff} ${t.isPlayer ? "league-row-you" : ""}" ${!t.isPlayer && t.rivalId != null ? `data-rival="${t.rivalId}"` : ""}>
         <span class="league-pos">${pos}</span>
@@ -4317,7 +4555,7 @@ function leagueTableHtml(tier) {
     .join("");
   // Each dot and its label are one unit, so a wrap never strands a dot.
   const legendItem = (cls, text) => `<span class="legend-item"><span class="legend-dot ${cls}"></span>${text}</span>`;
-  const legendParts = [legendItem("legend-playoff", `Playoffs (top ${BAL.playoffSize})`)];
+  const legendParts = [legendItem("legend-playoff", `Playoffs (top ${pSize})`)];
   if (showPromo) legendParts.push(legendItem("legend-promo", `Promoted (top ${BAL.promotionTablePlaces} + 🏆 champion)`));
   if (showReleg) legendParts.push(legendItem("legend-releg", `Relegated (bottom ${BAL.relegationCount})`));
   // Above the table (which scrolls on its own), so it's never cut off.
@@ -4339,10 +4577,10 @@ function openLeagues(startTier) {
   const html = `
     <h2>Leagues</h2>
     <div class="league-tabs" id="leagueTabs">
-      ${[1, 2, 3, 4, 5]
+      ${state.peakLeagueTier === TOP_TIER ? "" : `<span class="league-tab-dot" aria-hidden="true"></span>`}${tabTiers()
         .map(
           (t) =>
-            `<button class="league-tab ${t === startTier ? "active" : ""}" data-tier="${t}">L${t}${t === state.leagueTier ? " (You)" : ""}</button>`
+            `<button class="league-tab ${t === startTier ? "active" : ""}" data-tier="${t}">${tabLabel(t)}${t === state.leagueTier ? " (You)" : ""}</button>`
         )
         .join("")}
     </div>
@@ -4383,7 +4621,7 @@ function historyNameLink(id) {
 }
 // "R16 → QF → SF → Final" for this game length.
 function playoffFormatText() {
-  return playoffStages().map((k) => (k === "f" ? "Final" : roundShort(PLAYOFF_ROUND_NAMES[k]))).join(" → ");
+  return playerStages().map((k) => (k === "f" ? "Final" : roundShort(PLAYOFF_ROUND_NAMES[k]))).join(" → ");
 }
 function roundKeyLabel(key) {
   return PLAYOFF_ROUND_NAMES[key] || `Round ${key}`;
@@ -4416,7 +4654,7 @@ function resultsListHtml(rows) {
 const RESULTS_NOTE = `<p class="modal-sub">#N and Pos = table positions going into the match (playoffs: the final table). Rating = the opponent's going in; +/− = the rating change from the match.</p>`;
 function resultsSummaryHtml({ league, rating, season, pos, allTime }) {
   return `<div class="modal-section">
-      <div class="kv-row"><span>League</span><span>League ${league}</span></div>
+      <div class="kv-row"><span>League</span><span>${lg(league)}</span></div>
       <div class="kv-row"><span>Rating</span><span>${fmt(rating)}</span></div>
       <div class="kv-row"><span>This season</span><span>${season}${pos ? ` · #${pos} in the table` : ""}</span></div>
       <div class="kv-row"><span>All-time record</span><span>${allTime}</span></div>
@@ -4480,7 +4718,7 @@ function myMatchesHtml() {
       });
       const legacyNote = list.some((x) => x.m.legacy) ? `<p class="modal-sub">Matches without details were played before full results were saved.</p>` : "";
       return `<div class="modal-section">
-        <h3>Year ${y}${tiers.length ? ` · League ${tiers.join(" → ")}` : ""} · ${wdl(w, d, list.length - w - d)}</h3>
+        <h3>Year ${y}${tiers.length ? ` · ${tiers.map(lg).join(" → ")}` : ""} · ${wdl(w, d, list.length - w - d)}</h3>
         ${resultsListHtml(rows)}${legacyNote}
       </div>`;
     })
@@ -4526,8 +4764,8 @@ function leagueResultsHtml(view) {
   const yearPills = v.years.length > 1
     ? `<div class="league-tabs">${v.years.map((y) => `<button class="league-tab ${y === v.year ? "active" : ""}" data-hyear="${y}">Year ${y}${y === state.year ? " (now)" : ""}</button>`).join("")}</div>`
     : "";
-  const tierTabs = `<div class="league-tabs">${[1, 2, 3, 4, 5]
-    .map((t) => `<button class="league-tab ${t === v.tier ? "active" : ""}" data-htier="${t}" ${league[v.year][t] ? "" : "disabled"}>L${t}</button>`)
+  const tierTabs = `<div class="league-tabs">${tabTiers()
+    .map((t) => `<button class="league-tab ${t === v.tier ? "active" : ""}" data-htier="${t}" ${league[v.year][t] ? "" : "disabled"}>${tabLabel(t)}</button>`)
     .join("")}</div>`;
   const stepper = `<div class="round-stepper">
       <button class="icon-btn" data-hround="${idx > 0 ? v.keys[idx - 1] : ""}" ${idx > 0 ? "" : "disabled"} aria-label="Previous round">◀</button>
@@ -4555,7 +4793,7 @@ function upcomingHtml() {
   const s = state;
   // This week's match is judged on this week's focus skills; later ones,
   // whose focus isn't revealed yet, on all 7.
-  const winPct = (entry, known) => Math.round(winProbabilityAgainst(entry, known ? state.activeSkills : SKILL_KEYS) * 100);
+  const winPct = (entry, known) => Math.round(winProbabilityAgainst(entry, known ? state.activeSkills : playSkillKeys()) * 100);
   const row = (round, name, rivalId, rating, pos, next, entry = null) => `
     <div class="hist-row up-row${next ? " up-next" : ""}" ${rivalId != null ? `data-rival="${rivalId}"` : ""}>
       <span class="hist-round">${round}</span>
@@ -4575,8 +4813,8 @@ function upcomingHtml() {
     const days = s.seasonPhase === "regular" ? BAL.roundIntervalDays - s.phaseDay : BAL.preseasonDays - s.phaseDay + BAL.roundIntervalDays;
     const rows = left.map((f, i) => row(`R${from + i + 1}`, f.name, f.rivalId, liveOpponentRating(f), positions[f.rivalId], s.seasonPhase === "regular" && i === 0, f)).join("");
     return `<div class="modal-section">
-      <h3>Year ${s.year} · League ${s.leagueTier} · ${left.length} to play</h3>
-      <p class="modal-sub">Next match ${days <= 0 ? "today" : daysUntilPhrase(days)}. Top ${BAL.playoffSize} reach the playoffs.</p>
+      <h3>Year ${s.year} · ${lg(s.leagueTier)} · ${left.length} to play</h3>
+      <p class="modal-sub">Next match ${days <= 0 ? "today" : daysUntilPhrase(days)}. Top ${playoffSizeFor(state.leagueTier)} reach the playoffs.</p>
       <div class="hist-list">${head}${rows}</div>
       <p class="modal-sub">Win chances use everyone's rating and skills today, so they'll move as the season goes. Each week's focus skills are revealed when that week starts — until then a match is judged on all 7.</p>
     </div>${s.seasonPhase === "preseason" && s.lastStandingsTier ? playoffBracketHtml(s.lastStandingsTier, s.year - 1) : ""}`;
@@ -4584,7 +4822,7 @@ function upcomingHtml() {
 
   if (s.seasonPhase === "playoffs" && s.playoff && !s.playoff.eliminated && !s.playoff.champion) {
     const p = s.playoff;
-    const stages = playoffStages();
+    const stages = playerStages();
     const at = stages.indexOf(p.stage);
     const teams = p.currentRound;
     const idx = teams.findIndex((t) => t.isPlayer);
@@ -4611,7 +4849,7 @@ function upcomingHtml() {
       }
     }
     return `<div class="modal-section">
-      <h3>Year ${s.year} · League ${p.tier} playoffs · seed #${p.playerSeed}</h3>
+      <h3>Year ${s.year} · ${lg(p.tier)} playoffs · seed #${p.playerSeed}</h3>
       <p class="modal-sub">${PLAYOFF_ROUND_NAMES[p.stage]} ${days <= 0 ? "today" : daysUntilPhrase(days)}. Single elimination — lose and you're out.</p>
       <div class="hist-list">${head}${rows.join("")}</div>
       <p class="modal-sub">Table = where each finished the regular season. Later rounds depend on who wins in the rest of the bracket.</p>
@@ -4633,14 +4871,14 @@ function upcomingHtml() {
 // and the recorded playoff results — nothing extra is saved for it.
 function playoffBracket(tier, year) {
   const standings = state.leagueStandings && state.leagueStandings[tier];
-  if (!standings || standings.length < BAL.playoffSize) return null;
+  if (!standings || standings.length < playoffSizeFor(tier)) return null;
   const results = ((ensureHistory().league[year] || {})[tier]) || {};
   const idOf = (t) => (t.isPlayer ? HISTORY_PLAYER_ID : t.rivalId);
   const seeded = (t) => t && { ...t, seed: standings.indexOf(t) + 1 };
   let teams = seedBracket(standings).map(seeded);
   const rounds = [];
   let prev = null;
-  playoffStages().forEach((stage) => {
+  playoffStages(tier).forEach((stage) => {
     const played = results[stage] || [];
     const matches = [];
     for (let i = 0; i < teams.length; i += 2) {
@@ -4685,7 +4923,7 @@ function playoffBracketHtml(tier, year) {
     )
     .join("");
   return `<div class="modal-section">
-    <h3>Year ${year} · League ${tier} playoff bracket</h3>
+    <h3>Year ${year} · ${lg(tier)} playoff bracket</h3>
     ${champ ? `<p class="modal-sub">🏆 Champion: <b>${champ.isPlayer ? "You!" : champ.name}</b></p>` : ""}
     ${roundsHtml}
     <p class="modal-sub"># = seed (final table position). Tap a name for their season.</p>
@@ -4799,7 +5037,7 @@ function openRival(id) {
         cls: g.opp === HISTORY_PLAYER_ID ? "res2-you" : "",
       }));
       return `<div class="modal-section">
-        <h3>Year ${year} · League ${tiers.join(" → ")} · ${wdl(w, d, list.length - w - d)}</h3>
+        <h3>Year ${year} · ${tiers.map(lg).join(" → ")} · ${wdl(w, d, list.length - w - d)}</h3>
         ${resultsListHtml(rows)}
       </div>`;
     })
@@ -4808,18 +5046,19 @@ function openRival(id) {
   const tw = thisYear.filter((g) => g.win).length, td = thisYear.filter((g) => g.draw).length;
   // Their skills: 3 fixed ⭐ specialisations, levels following their rating.
   const focusNow = inSeason() ? state.activeSkills : [];
-  const skillRows = SKILL_KEYS.map((k) => {
+  const specs = r.specs || [];
+  const skillRows = (r.top ? TOP_SKILL_KEYS : SKILL_KEYS).map((k) => {
     const m = skillMeta(k);
-    return `<div class="kv-row"><span>${m.icon} ${m.name}${r.specs.includes(k) ? " ⭐" : ""}${focusNow.includes(k) ? " 🟢" : ""}</span><span>${fmt(rivalSkill(r, k))} <span class="kv-dim">· you ${fmt(state.stats.skills[k])}</span></span></div>`;
-  }).join("");
+    return `<div class="kv-row"><span>${m.icon} ${m.name}${specs.includes(k) ? " ⭐" : ""}${focusNow.includes(k) ? " 🟢" : ""}</span><span>${fmt(rivalSkill(r, k))} <span class="kv-dim">· you ${fmt(state.stats.skills[k] || 0)}</span></span></div>`;
+  }).join("") + (r.top ? `<div class="kv-row"><span>✨ Signature moves</span><span>${r.top.moves.length ? r.top.moves.join(", ") : "none yet"}</span></div>` : "");
   const html = `
     ${stickyHeadHtml(r.name)}
     ${resultsSummaryHtml({ league: r.league, rating: r.rating, season: wdl(tw, td, thisYear.length - tw - td), pos: currentTablePositions(r.league).get(id), allTime: wdl(r.wins, r.draws, r.losses) })}
     <div class="modal-section">
       <h3>Skills</h3>
       ${skillRows}
-      <div class="kv-row"><span>🎓 Experience</span><span>${fmt(rivalXp(r))} <span class="kv-dim">· expected finish ~${fmtClock(expectedFinish(rivalXp(r)))}</span></span></div>
-      <p class="modal-sub">⭐ = their specialisations (they never change). Levels move with their rating, and their experience comes with their league.${focusNow.length ? " 🟢 = this week's focus." : ""}</p>
+      <div class="kv-row"><span>🎓 Experience</span><span>${fmt(rivalXp(r))} <span class="kv-dim">· expected finish ~${fmtClock(expectedFinish(rivalXp(r), rivalFinishBonus(r)))}</span></span></div>
+      <p class="modal-sub">${r.top ? "Everything else long since mastered." : `⭐ = their specialisations (they never change). Levels move with their rating, and their experience comes with their league.`}${focusNow.length ? " 🟢 = this week's focus." : ""}</p>
     </div>
     ${sections}
     ${games.length ? RESULTS_NOTE : ""}`;
@@ -4849,7 +5088,7 @@ function phaseSnapshot() {
     composure: state.stats.composure,
     nutrition: state.stats.nutrition,
     skills: { ...state.stats.skills },
-    xp: xpTotal(),
+    xp: { ...state.stats.xp },
   };
 }
 
@@ -4868,50 +5107,58 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   if (start && start.day !== state.day) progress = progressRows(start);
   const season = state.seasonResults || [];
   const w = season.filter((r) => r.win).length, dr = season.filter((r) => r.draw).length;
-  const moveText = (from2, to2) => (to2 < from2 ? `⬆️ Promoted to League ${to2}` : to2 > from2 ? `⬇️ Relegated to League ${to2}` : `Staying in League ${to2}`);
+  const moveText = (from2, to2) => (to2 === TOP_TIER && from2 !== TOP_TIER ? "✉️ An invitation upstairs" : to2 < from2 ? `⬆️ Promoted to ${lg(to2)}` : to2 > from2 ? `⬇️ Relegated to ${lg(to2)}` : `Staying in ${lg(to2)}`);
   const playedTier = state.lastStandingsTier || tierBefore;
   let icon = "📅", title = "", sub = "";
   let nextMatch = false; // show the next-match preview (drawn live when shown)
 
   if (from === "preseason" && to === "regular") {
-    icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · League ${state.leagueTier}`;
+    icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · ${lg(state.leagueTier)}`;
     const info = getNextMatchInfo();
-    next.push(["📅 Season", `${BAL.seasonRounds} rounds, one match a week`]);
+    next.push(["📅 Season", `${roundsFor(state.leagueTier)} rounds, one match a week`]);
     nextMatch = !!info.opponentName;
-    next.push(["🏆 Playoffs", `top ${BAL.playoffSize}`]);
+    next.push(["🏆 Playoffs", `top ${playoffSizeFor(state.leagueTier)}`]);
     if (state.leagueTier > 1) next.push(["⬆️ Promoted", `champion + next ${BAL.promotionTablePlaces} in table`]);
-    if (state.leagueTier < BAL.leagueCount) next.push(["⬇️ Relegated", `bottom ${BAL.relegationCount}`]);
+    if (state.leagueTier !== TOP_TIER && state.leagueTier < BAL.leagueCount) next.push(["⬇️ Relegated", `bottom ${BAL.relegationCount}`]);
     if (state.employment.status !== "unemployed") next.push([`💼 ${state.employment.status === "pro" ? "Pro Duties" : "Work"}`, `back to ${requiredWorkHours()}h/day`]);
-    notes.push("Only the week's focus skills can be trained now — hire their coaches in 🧑‍🏫 Staff. Contracts end after each match.");
+    notes.push(inTop() ? "Only the week's focus skills can be trained now — and up here there are no coaches." : "Only the week's focus skills can be trained now — hire their coaches in 🧑‍🏫 Staff. Contracts end after each match.");
   } else if (from === "regular" && to === "playoffs") {
-    icon = "🏆"; title = "Through to the playoffs!"; sub = `Year ${state.year} · League ${playedTier}`;
-    how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize}`]);
+    icon = "🏆"; title = "Through to the playoffs!"; sub = `Year ${state.year} · ${lg(playedTier)}`;
+    how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${leagueSizeFor(state.lastStandingsTier)}`]);
     how.push(["📋 Record", wdl(w, dr, season.length - w - dr)]);
     if (playedTier > 1 && state.lastPlayerPosition <= BAL.promotionTablePlaces) how.push(["⬆️ Promotion", `secured (top ${BAL.promotionTablePlaces})`]);
     const info = getNextMatchInfo();
-    next.push(["🌱 Your seed", `#${state.playoff.playerSeed} of ${BAL.playoffSize}`]);
+    next.push(["🌱 Your seed", `#${state.playoff.playerSeed} of ${playoffSizeFor(state.playoff.tier)}`]);
     nextMatch = !!info.opponentName;
     next.push(["📅 Rounds", playoffFormatText()]);
     next.push(["👑 Champion", `+$${BAL.championCash.toLocaleString()} · +${BAL.championRating} rating${playedTier > 1 ? " · promoted" : ""}`]);
     next.push(["💔 Knocked out", "training camp to the Final"]);
   } else if (from === "regular" && to === "offseason") {
-    icon = "📋"; title = "Regular season over"; sub = `Year ${state.year} · League ${playedTier}`;
-    how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${BAL.leagueSize}`]);
+    icon = "📋"; title = "Regular season over"; sub = `Year ${state.year} · ${lg(playedTier)}`;
+    how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${leagueSizeFor(state.lastStandingsTier)}`]);
     how.push(["📋 Record", wdl(w, dr, season.length - w - dr)]);
-    how.push(["🏆 Playoffs", `missed (top ${BAL.playoffSize} only)`]);
+    how.push(["🏆 Playoffs", `missed (top ${playoffSizeFor(state.lastStandingsTier)} only)`]);
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
     next.push(...campAndNextYearRows());
   } else if (from === "playoffs" && to === "offseason") {
     const p = state.playoff || {};
     const champ = !!p.champion;
-    icon = champ ? "👑" : "💔"; title = champ ? "Champions!" : "Knocked out"; sub = `Year ${state.year} · League ${playedTier} playoffs`;
+    icon = champ ? "👑" : "💔"; title = champ ? "Champions!" : "Knocked out"; sub = `Year ${state.year} · ${lg(playedTier)} playoffs`;
     how.push(["🏆 Playoff run", champ ? "won the Final" : `out in the ${PLAYOFF_ROUND_NAMES[p.stage] || "playoffs"}`]);
     const c = state.playoffChampions && state.playoffChampions[playedTier];
     if (c && !c.isPlayer) how.push(["👑 League champion", c.name]);
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
     next.push(...campAndNextYearRows());
+    if (champ && playedTier === 1 && state.leagueTier !== TOP_TIER) notes.push("There's always another level.");
   } else if (from === "offseason" && to === "preseason") {
-    icon = "🎉"; title = `Year ${state.year} begins`; sub = `League ${state.leagueTier}`;
+    icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
+    if (state.topReveal) {
+      icon = "🏛️"; title = `Welcome to the ${TOP_LEAGUE_NAME}`;
+      state.topReveal = false;
+      notes.push(`Top of League 1, its champion, all seven skills mastered and every technique learned — all in one season. That earns a seat at the very top: <b>${TOP_SIZE} players</b>, including you.`);
+      notes.push(`Your seven case skills are done — held at 100 by their experience. Up here there are three new ones: ${TOP_SKILLS.map((k) => `${k.icon} <b>${k.name}</b>`).join(", ")}. No coaches can teach them; you start at ${TOP_SKILL_START}. Single-Cell Solutions counts double in the focus-skill edge, and Speed &amp; Shortcuts makes you finish up to 2 minutes sooner.`);
+      notes.push(`New techniques here are <b>signature moves</b>: each one you master is a lasting bonus, never a penalty. The season is ${roundsFor(TOP_TIER)} rounds, then a top-${TOP_PLAYOFF_SIZE} playoff. No one is relegated. The goal: <b>${TOP_LEAGUE_NAME} Champion</b>.`);
+    }
     if (yearSummary) {
       money.push(["💼 Pay earned", `+${fmtMoney(yearSummary.workPay)}`]);
       money.push(["🏆 Match winnings", `+${fmtMoney(yearSummary.matchCash)}`]);
@@ -4926,10 +5173,12 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       next.push(["🏆 Sponsorship", `renewed (average ${skillAverage()})`]);
     }
     next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
-    next.push(["🎯 Skills", "all 7 trainable"]);
+    next.push(["🎯 Skills", `all ${playSkillKeys().length} trainable`]);
     next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", "all preseason, paid"]);
-    next.push(["🧑‍🏫 Skill coaches", "half price"]);
-    next.push(["📈 Skill cap", `${leagueSkillCap()} ⭐ · ${leagueSkillCap() - BAL.otherSkillCapGap} others`]);
+    if (!inTop()) {
+      next.push(["🧑‍🏫 Skill coaches", "half price"]);
+      next.push(["📈 Skill cap", `${leagueSkillCap()} ⭐ · ${leagueSkillCap() - BAL.otherSkillCapGap} others`]);
+    }
     const unlockable = [];
     if (SKILL_COACH_LEVELS.some((l, i) => l.unlock === state.peakLeagueTier && i > 0)) unlockable.push(`Coach Lv${SKILL_COACH_LEVELS.findIndex((l) => l.unlock === state.peakLeagueTier) + 1}`);
     const supIdx = SUPPORT_LEVEL_UNLOCK.indexOf(state.peakLeagueTier);
@@ -4949,11 +5198,11 @@ function campAndNextYearRows() {
   const rows = [];
   if (state.offseasonDays > 0) {
     rows.push(["🏋️ Training camp", `${state.offseasonDays} days, to the Final`]);
-    rows.push(["🎯 Skills", "all 7 trainable, no matches"]);
+    rows.push(["🎯 Skills", `all ${playSkillKeys().length} trainable, no matches`]);
   }
   rows.push([`📅 Year ${state.year + 1}`, state.offseasonDays > 0 ? `${BAL.preseasonDays}-day preseason` : "starts now"]);
   if (state.offseasonDays <= 0) rows.push(["🏋️ Preseason", `${BAL.preseasonDays} days`]);
-  rows.push(["🏅 League", `League ${state.leagueTier}`]);
+  rows.push(["🏅 League", `${lg(state.leagueTier)}`]);
   if (state.employment.status !== "unemployed") rows.push(["🏖️ Annual leave", "all preseason"]);
   return rows;
 }
@@ -4962,11 +5211,18 @@ function campAndNextYearRows() {
 // the four condition stats, cash and rating. Older snapshots may lack some.
 function progressRows(start) {
   const s = state.stats;
-  const rows = SKILL_KEYS.map((k) => [`${skillMeta(k).icon} ${skillMeta(k).name}`, start.skills[k] || 0, s.skills[k]]);
+  // The skills that were in play when this stretch started (a stretch that
+  // began before a move upstairs still shows the seven).
+  const keys = playSkillKeys().some((k) => start.skills[k] != null) ? playSkillKeys() : SKILL_KEYS;
+  const rows = keys.map((k) => [`${skillMeta(k).icon} ${skillMeta(k).name}`, start.skills[k] || 0, s.skills[k] || 0]);
   [["phys", "🏃 Health"], ["rest", "🌙 Rest"], ["composure", "🎮 Calm"], ["nutrition", "🥗 Nutrition"]].forEach(([k, label]) => {
     if (start[k] != null) rows.push([label, start[k], s[k]]);
   });
-  if (start.xp != null) rows.push(["🎓 Experience", start.xp, xpTotal()]);
+  if (start.xp != null) {
+    // Snapshots keep each skill's XP (older ones only a total).
+    const was = typeof start.xp === "number" ? start.xp : keys.reduce((a, k) => a + (start.xp[k] || 0), 0);
+    rows.push(["🎓 Experience", was, xpTotal(state, keys)]);
+  }
   rows.push(["💰 Cash", start.cash, state.cash, "money"]);
   rows.push(["🏆 Rating", start.rank, state.rank]);
   return rows;
@@ -5299,6 +5555,14 @@ function openHowTo() {
     "The result screen explains every number; the next-match preview shows both sides' focus skills.",
   ]));
 
+  // Only once you're there.
+  if (inTop()) sec("top", "🏛️", TOP_LEAGUE_NAME, ul([
+    `<b>${TOP_SIZE} players</b>, you included. ${roundsFor(TOP_TIER)} rounds (the round robin ${BAL.topRoundRobins === 1 ? "once" : `${BAL.topRoundRobins} times over`}), then a top-${TOP_PLAYOFF_SIZE} playoff. Nobody is relegated. The goal: <b>${TOP_LEAGUE_NAME} Champion</b>.`,
+    `Your seven case skills are mastered and held at 100 by their XP. Matches here are about three skills: ${TOP_SKILLS.map((k) => `${k.icon} ${k.name}`).join(", ")} — no coaches, no caps. They earn XP like any other.`,
+    `<b>🧬 Single-Cell Solutions</b> counts double in the focus-skill edge. <b>⌨️ Speed &amp; Shortcuts</b> makes you finish up to ${TOP_SPEED_MAX_SECONDS / 60} minutes sooner (at 100).`,
+    `<b>✨ Signature moves</b> arrive like techniques (Pro Duties hours past ${B.proDutyHoursRequired}h master them), but each is a lasting bonus, never a penalty: ${TOP_TECHNIQUES.map((t) => `${t.name} (${t.desc})`).join("; ")}.`,
+  ]));
+
   sec("season", "📅", "Season & leagues", `
     ${ul([
       `<b>Game length:</b> this is a <b>${gameLengthInfo(state.gameLength).name}</b> game — ${gameLengthSummary(state.gameLength)}. Each length (Short, Half, Full) has its own save: ☰ → 🎮 Games.`,
@@ -5513,7 +5777,7 @@ function openSaveTransfer(tab = saveTransferTab || state.gameLength) {
   const canShare = typeof navigator.share === "function";
   const tabs = `<div class="league-tabs">${GAME_LENGTH_KEYS.map((k) => `<button class="league-tab ${k === tab ? "active" : ""}" data-xfer-tab="${k}">${gameLengthInfo(k).icon} ${gameLengthInfo(k).name}${k === state.gameLength ? " (playing)" : ""}</button>`).join("")}</div>`;
   const exportHtml = saved
-    ? `<p class="save-transfer-note">${saved.playerName ? escapeHtml(saved.playerName) + " · " : ""}Year ${saved.year} · League ${saved.leagueTier} · Day ${saved.day} · ${fmtMoney(saved.cash)} · Rating ${saved.rank}</p>
+    ? `<p class="save-transfer-note">${saved.playerName ? escapeHtml(saved.playerName) + " · " : ""}Year ${saved.year} · ${lg(saved.leagueTier)} · Day ${saved.day} · ${fmtMoney(saved.cash)} · Rating ${saved.rank}</p>
       <button class="primary-btn" id="saveExportCopy">📋 Copy ${g.name} save code</button>
       ${canShare ? `<button class="ghost-btn" id="saveExportShare">📤 Share / Save to Files</button>` : `<button class="ghost-btn" id="saveExportDownload">⬇️ Download save file</button>`}
       <div class="save-transfer-status" id="saveExportStatus"></div>`
@@ -5843,7 +6107,7 @@ function weekSnapshot() {
   const s = state.stats;
   return {
     skills: { ...s.skills },
-    xp: xpTotal(),
+    xp: { ...s.xp },
     phys: s.phys,
     rest: s.rest,
     composure: s.composure,
@@ -5928,7 +6192,7 @@ function showWeekSummaryModal(summaryHtml, daysRun) {
 /* Input wiring                                                           */
 /* ---------------------------------------------------------------------- */
 function isSkillKey(key) {
-  return SKILL_KEYS.includes(key);
+  return SKILL_KEYS.includes(key) || isTopSkill(key);
 }
 function getAllocHours(key) {
   return isSkillKey(key) ? state.allocation.skills[key] || 0 : state.allocation[key];
