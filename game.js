@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.78.0";
+const APP_VERSION = "4.79.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -197,9 +197,12 @@ const BAL = {
   // the front of the queue is "in progress" at once, taking hours above
   // the Pro Duties minimum. Falling behind never loses progress, but every
   // not-yet-mastered technique costs match performance.
-  techniqueIntervalDays: 30,
-  techniqueMinHours: 25,
-  techniqueMaxHours: 40,
+  // There are EXCEL_TECHNIQUES.length techniques in all, each turning up
+  // once (an unmastered one each time) — about 2.5 years as a pro to master
+  // the lot in every game length. (length)
+  techniqueIntervalDays: 38,
+  techniqueMinHours: 30,
+  techniqueMaxHours: 45,
   techniquePenaltyPerUnmastered: 0.05,
   // Experience: every match a skill is in focus earns it XP (0–100, never
   // rusts) — only while you play in League xpFromTier or higher, playoff
@@ -214,9 +217,9 @@ const BAL = {
 // Game lengths, chosen when a game starts (state.gameLength). Each has its
 // own save slot. A year ends on the day of the Final either way.
 const GAME_LENGTHS = {
-  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4 },
-  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2 },
-  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1 },
+  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4, techniqueDays: 10, techniqueHours: [8, 12] },
+  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2, techniqueDays: 19, techniqueHours: [15, 23] },
+  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1, techniqueDays: 38, techniqueHours: [30, 45] },
 };
 const GAME_LENGTH_KEYS = ["short", "half", "full"];
 const ALL_PLAYOFF_STAGES = ["r16", "qf", "sf", "f"];
@@ -239,6 +242,8 @@ function applyGameLength(key) {
   BAL.promotionTablePlaces = g.moveCount - 1;
   BAL.preseasonDays = g.preseasonDays;
   BAL.xpPerMatch = g.xpPerMatch;
+  BAL.techniqueIntervalDays = g.techniqueDays;
+  [BAL.techniqueMinHours, BAL.techniqueMaxHours] = g.techniqueHours;
   BAL.trainingCampDays = playoffStages().length * BAL.roundIntervalDays;
 }
 // A game length's numbers in one line, for the pickers.
@@ -257,11 +262,16 @@ const EXCEL_TECHNIQUES = [
   "What-If Analysis", "Macros & VBA Basics", "Named Ranges", "INDEX-MATCH Mastery",
   "TEXTSPLIT & TEXTJOIN", "XMATCH", "Structured Table References", "Power Automate Flows",
 ];
+// The next technique: one not yet mastered and not already queued — or
+// null once every technique has been mastered (or is on its way).
 function pickTechniqueName() {
-  const inQueue = new Set(state.employment.techniqueQueue.map((t) => t.name));
-  const pool = EXCEL_TECHNIQUES.filter((n) => !inQueue.has(n));
-  const choices = pool.length ? pool : EXCEL_TECHNIQUES;
-  return choices[randInt(0, choices.length - 1)];
+  const emp = state.employment;
+  const known = new Set([...(emp.techniquesMastered || []), ...emp.techniqueQueue.map((t) => t.name)]);
+  const pool = EXCEL_TECHNIQUES.filter((n) => !known.has(n));
+  return pool.length ? pool[randInt(0, pool.length - 1)] : null;
+}
+function techniquesMasteredCount(emp = state.employment) {
+  return (emp.techniquesMastered || []).length;
 }
 
 // Skill cap granted by the highest league tier ever reached (1 = top).
@@ -1019,6 +1029,7 @@ function freshState() {
       jobSearchHoursNeeded: null, // Unemployed: this search's target, rolled from jobSearchHoursRange when the job is lost
       techniqueQueue: [], // Pro: [{name, hoursNeeded, hoursDone}], FIFO — only the front is "in progress"
       techniqueDayCounter: 0, // days elapsed toward the next technique; only ticks while Pro
+      techniquesMastered: [], // names mastered so far — kept for good, even if pro status lapses
       workPay: BAL.workPayMin, // current Employed daily pay — rises with tenure, resets on firing
       proPay: BAL.proPayMin, // current Pro daily pay — rises with tenure, resets on being dropped
     },
@@ -1551,6 +1562,8 @@ function resolveEmploymentDay() {
           left -= used;
           if (current.hoursDone >= current.hoursNeeded) {
             emp.techniqueQueue.shift();
+            emp.techniquesMastered = emp.techniquesMastered || [];
+            if (!emp.techniquesMastered.includes(current.name)) emp.techniquesMastered.push(current.name);
             events.push({
               type: "good",
               text: `📘 Mastered ${current.name}!${emp.techniqueQueue.length ? " Next up: " + emp.techniqueQueue[0].name + "." : " You're fully caught up."}`,
@@ -1589,9 +1602,11 @@ function resolveEmploymentDay() {
       if (emp.techniqueDayCounter >= BAL.techniqueIntervalDays) {
         emp.techniqueDayCounter = 0;
         const name = pickTechniqueName();
-        const hoursNeeded = randInt(BAL.techniqueMinHours, BAL.techniqueMaxHours);
-        emp.techniqueQueue.push({ name, hoursNeeded, hoursDone: 0 });
-        events.push({ type: "neutral", text: `📘 New technique to master: ${name} (${hoursNeeded}h).` });
+        if (name) {
+          const hoursNeeded = randInt(BAL.techniqueMinHours, BAL.techniqueMaxHours);
+          emp.techniqueQueue.push({ name, hoursNeeded, hoursDone: 0 });
+          events.push({ type: "neutral", text: `📘 New technique to master: ${name} (${hoursNeeded}h).` });
+        }
       }
     }
   }
@@ -4093,12 +4108,14 @@ function employmentSectionHtml() {
   if (emp.status === "pro") {
     const queue = emp.techniqueQueue;
     const penalty = Math.round(Math.min(1, queue.length * BAL.techniquePenaltyPerUnmastered) * 100);
+    const all = techniquesMasteredCount() >= EXCEL_TECHNIQUES.length;
     const queueHtml = queue.length
       ? queue.map((t, i) => `${i === 0 ? "▶" : "⏸"} ${t.name}: ${fmt(t.hoursDone)}/${t.hoursNeeded}h`).join("<br>")
-      : "Fully caught up — no match penalty.";
+      : all ? "Every technique mastered — nothing new to learn." : "Fully caught up — no match penalty.";
     return `${expensesLine}${leaveLine}<p>🏆 <b>Pro</b> · Pro Duties ${BAL.proDutyHoursRequired}h/day required ($${fmt(emp.proPay)}/day) · ${fmt1(lives)}/${fmt1(BAL.strikesToFire)} chances</p>${strikeLines}
       <p class="modal-sub">Sponsored to the end of Year ${state.year}. Renewal needs a skill average of ${proAverageBar()}+ when the year ends: ${meetsProSkillBar() ? `on track ✓ (average ${skillAverage()})` : `⚠️ not yet — average ${skillAverage()}`}.</p>
-      <p><b>Technique queue</b> (hours above ${BAL.proDutyHoursRequired}h/day go here)${penalty > 0 ? ` — currently <b>-${penalty}%</b> match performance` : ""}:<br>${queueHtml}</p>`;
+      <p><b>Technique queue</b> (hours above ${BAL.proDutyHoursRequired}h/day go here)${penalty > 0 ? ` — currently <b>-${penalty}%</b> match performance` : ""}:<br>${queueHtml}</p>
+      <p class="modal-sub">📘 Mastered ${techniquesMasteredCount()} of ${EXCEL_TECHNIQUES.length} techniques.</p>`;
   }
 
   const goProHint = checkGoProEligible()
@@ -5328,7 +5345,7 @@ function openHowTo() {
     ${tbl(["Item", "Effect"], EQUIPMENT.map((e) => [`${e.icon} ${e.name} $${fmt(e.price)}`, e.desc]))}`);
 
   sec("pro", "📘", "Pro techniques", ul([
-    `About every ${B.techniqueIntervalDays} days a new technique appears, needing ${B.techniqueMinHours}–${B.techniqueMaxHours}h. Pro Duties hours beyond ${B.proDutyHoursRequired}h go towards it.`,
+    `About every ${B.techniqueIntervalDays} days a new technique appears (one you haven't mastered — ${EXCEL_TECHNIQUES.length} in all), needing ${B.techniqueMinHours}–${B.techniqueMaxHours}h. Pro Duties hours beyond ${B.proDutyHoursRequired}h go towards it. Once you've mastered all ${EXCEL_TECHNIQUES.length}, no more arrive.`,
     `Each one still unmastered costs <b>${Math.round(B.techniquePenaltyPerUnmastered * 100)}%</b> match performance, stacking.`,
   ]));
 

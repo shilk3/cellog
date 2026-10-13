@@ -111,10 +111,13 @@ Relax, and Food. Everything is connected:
   ends; if not, the new-year screen
   says so and you're unemployed, back to a Job Search. As a pro: Work
   drops to 5h/day of Pro Duties, same chances rule. Pros also have to stay
-  current — a new Excel technique appears roughly every 30 days needing
-  25-40h to master (any Pro Duties hours beyond the 5h minimum go toward
-  it); falling behind never costs you progress, but every not-yet-mastered
-  technique costs 5% match performance.
+  current — there are 20 Excel techniques, and one you haven't mastered
+  appears roughly every 38 days as a pro (Half 19, Short 10) needing 30–45h
+  (Half 15–23, Short 8–12) to master — any Pro Duties hours beyond the 5h
+  minimum go toward it. That's about 2.5 years as a pro to master all 20,
+  after which no more arrive; masteries are kept for good. Falling behind
+  never costs you progress, but every not-yet-mastered technique costs 5%
+  match performance.
 - **Cost of living**: $50/day, charged no matter what — employed or not,
   every phase. Pay isn't flat: Work starts at $70/day and Pro Duties at
   $100/day, each rising $10/year for your first 5 years in that role before
