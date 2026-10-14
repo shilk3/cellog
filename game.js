@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.84.0";
+const APP_VERSION = "4.85.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1253,7 +1253,7 @@ function freshState() {
     gameComplete: null, // { year } once everything's been won in one year
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
-    completion: { best: {}, feats: {}, shownPct: null, shownStage: null }, // see completionGoals; shown*: the last year splash's figures
+    completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
     leaguePoints: leagueData.points, // this season's live running points per tier, updated every round
@@ -5464,7 +5464,6 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   const playedTier = state.lastStandingsTier || tierBefore;
   let icon = "📅", title = "", sub = "";
   let nextMatch = false; // show the next-match preview (drawn live when shown)
-  let completion = null; // { pct, was, widened } on a new year's splash
 
   if (from === "preseason" && to === "regular") {
     icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · ${lg(state.leagueTier)}`;
@@ -5525,14 +5524,6 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     }
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
-    // Completion: since the last year splash — or, the year more goals come
-    // into view, from everything that was in view before.
-    updateCompletion();
-    const stage = completionStage(), pct = completionPct();
-    const widened = state.completion.shownStage != null && stage > state.completion.shownStage;
-    completion = { pct, was: widened ? completionPct(stage - 1) : state.completion.shownPct, widened };
-    state.completion.shownPct = pct;
-    state.completion.shownStage = stage;
     if (state.topReveal) {
       icon = "🏛️"; title = `Welcome to the ${TOP_LEAGUE_NAME}`;
       state.topReveal = false;
@@ -5578,7 +5569,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     title = `${PHASE_NAMES[to] || to}`;
   }
   const moneyTitle = yearSummary ? `Year ${yearSummary.year} money` : "";
-  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes, completion };
+  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes };
 }
 
 // What's next once your season is over: training camp to the Final (if any
@@ -5636,15 +5627,6 @@ function progressTableHtml(rows, firstHead = "Stat") {
   return `<table class="perf-table week-table"><thead><tr><th>${firstHead}</th><th>Start</th><th>Now</th><th>Change</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 
-function completionSplashHtml(c) {
-  const change = c.was == null || c.was === c.pct ? "" : ` <span class="completion-was">(was ${c.was}%)</span>`;
-  return `<div class="modal-section splash-section"><h3>📈 Completion</h3>
-    <div class="completion-head"><b>${c.pct}%</b>${change}</div>
-    ${completionBarHtml(c.pct)}
-    ${c.widened ? `<p class="modal-sub">New goals have come into view, so there's more to complete. See 📈 Completion in Career.</p>` : ""}
-  </div>`;
-}
-
 function showPhaseSplash(sp, extraHtml = "", onDone = null) {
   const rows = (list) => list.map(([k, v]) => `<div class="kv-row"><span>${k}</span><span>${v}</span></div>`).join("");
   const html = `
@@ -5655,7 +5637,6 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       ${sp.how.length ? `<div class="modal-section splash-section"><h3>How the ${sp.fromName.toLowerCase()} went</h3>${rows(sp.how)}</div>` : ""}
       ${sp.progress ? `<div class="modal-section splash-section"><h3>Progress over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.progress)}</div>` : ""}
       ${sp.skills ? `<div class="modal-section splash-section"><h3>Skills over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.skills, "Skill")}</div>` : ""}
-      ${sp.completion ? completionSplashHtml(sp.completion) : ""}
       ${sp.money && sp.money.length ? `<div class="modal-section splash-section"><h3>${sp.moneyTitle}</h3>${rows(sp.money)}</div>` : ""}
       ${sp.next.length ? `<div class="modal-section splash-section"><h3>What's next</h3>${rows(sp.next)}</div>` : ""}
       ${sp.nextMatch ? `<div class="splash-section">${nextMatchPreviewHtml()}</div>` : ""}
@@ -5985,7 +5966,7 @@ function openHowTo() {
     ])}`);
 
   sec("completion", "📈", "Completion", ul([
-    `<b>Completion</b> (in Career, and on each new year's splash) is how much of CELLOG you've done: every goal listed there counts — partly done counts partly. It never goes back down while a goal slips (rust, a lost title); each goal keeps its best.`,
+    `<b>Completion</b> (in Career) is how much of CELLOG you've done: every goal listed there counts — partly done counts partly. It never goes back down while a goal slips (rust, a lost title); each goal keeps its best.`,
     `Each pro technique${inTop() ? " and signature move" : ""} counts half a goal.`,
   ]));
 

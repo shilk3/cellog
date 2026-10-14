@@ -242,12 +242,11 @@ rating, cash and biggest skill gains — and says what's coming next. A new
 career starts with a five-page quick tutorial right after you name your
 player; replay it any time from the menu (📖 Quick Tutorial).
 
-**Completion** (📈 in Career, and on each new year's screen with last
-year's figure) is one percentage of how much of CELLOG you've done. Every
-goal counts: each league climbed, each of the 7 skills at 100 and its XP at
-100, every pro technique (half a goal each), and top of the League 1 table
-and its playoffs. Partly done counts partly, and each goal keeps its best,
-so rust or a lost title never takes it back down.
+**Completion** (📈 in Career) is one percentage of how much of CELLOG
+you've done. Every goal counts: each league climbed, each of the 7 skills at
+100 and its XP at 100, every pro technique (half a goal each), and top of
+the League 1 table and its playoffs. Partly done counts partly, and each
+goal keeps its best, so rust or a lost title never takes it back down.
 
 **Match History** (menu, the Log header, Leagues and Career) has an
 **Upcoming** tab — the rest of the regular season with each opponent's rating,
