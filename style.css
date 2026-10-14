@@ -920,3 +920,10 @@ details.match-more[open] { padding-bottom: 8px; }
 /* XP at 100: the strip turns gold. */
 .bar-xp.xp-max { background: #ffd166; box-shadow: 0 0 5px rgba(255, 209, 102, 0.8); }
 .mastered-tag { color: #ffd166; font-weight: 700; }
+
+/* Completion: Career section and the new year's splash */
+.completion-bar { height: 10px; border-radius: 999px; background: var(--bg-elev-2); border: 1px solid var(--border); overflow: hidden; margin: 6px 0 8px; }
+.completion-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+.completion-head { font-size: 1.15rem; }
+.completion-was { font-size: 0.85rem; opacity: 0.7; }
+.kv-row.completion-done span:last-child { color: var(--accent); }

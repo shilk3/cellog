@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.83.0";
+const APP_VERSION = "4.84.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -22,7 +22,7 @@ const SAVE_VERSION = 7;
 // new career's defaults, keeping everything the save already has.
 const SAVE_DEFAULT_PATHS = [
   "stats", "stats.skills", "stats.xp", "allocation", "allocation.skills", "employment", "staff", "items", "items.crash",
-  "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades",
+  "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades", "completion",
 ];
 
 /* ---------------------------------------------------------------------- */
@@ -392,6 +392,72 @@ function pyCurrent() {
 }
 function pyRival() {
   return state.rivals.find((r) => r.py);
+}
+
+// ---- Completion: one percentage over every goal you know about so far.
+// More come into view twice (at the top, then with Python), so it drops.
+// Each goal counts its weight (partly done counts partly); each one keeps its
+// best, so the percentage never slips back.
+const COMPLETION_PART = 0.5; // weight of each technique / signature move
+function completionStage() {
+  return !inTop() ? 0 : pyUnlocked() ? 2 : 1;
+}
+function completionGoals(stage = completionStage()) {
+  const s = state.stats, feats = state.completion.feats, emp = state.employment.techniquesMastered || [];
+  const unit = (v) => ((v || 0) >= 99.95 ? 1 : Math.max(0, Math.min(1, (v || 0) / 100)));
+  const all = (keys, src) => keys.reduce((a, k) => a + unit(src[k]), 0);
+  const full = (keys, src) => keys.filter((k) => unit(src[k]) >= 1).length;
+  const goal = (id, icon, name, w, got, done, of) => ({ id, icon, name, w, got, done, of });
+  const flag = (id, icon, name, on) => goal(id, icon, name, 1, on ? 1 : 0, on ? 1 : 0, 1);
+  const climbed = 5 - Math.max(1, state.peakLeagueTier);
+  const tech = techniquesMasteredCount();
+  const goals = [
+    goal("leagues", "🪜", "Leagues climbed", 4, climbed, climbed, 4),
+    goal("skills", "📊", "Skills at 100", SKILL_KEYS.length, all(SKILL_KEYS, s.skills), full(SKILL_KEYS, s.skills), SKILL_KEYS.length),
+    goal("xp", "🎓", "Skill XP at 100", SKILL_KEYS.length, all(SKILL_KEYS, s.xp), full(SKILL_KEYS, s.xp), SKILL_KEYS.length),
+    goal("techniques", "📚", "Pro techniques", EXCEL_TECHNIQUES.length * COMPLETION_PART, tech * COMPLETION_PART, tech, EXCEL_TECHNIQUES.length),
+    flag("l1Table", "🥇", "Top of the League 1 table", feats.l1Table),
+    flag("l1Champ", "🏆", "League 1 playoff champion", feats.l1Champ),
+  ];
+  if (stage >= 1) {
+    const moves = TOP_TECHNIQUE_NAMES.filter((n) => emp.includes(n)).length;
+    goals.push(
+      goal("topSkills", "🧬", `${TOP_LEAGUE_NAME} skills at 100`, TOP_SKILL_KEYS.length, all(TOP_SKILL_KEYS, s.skills), full(TOP_SKILL_KEYS, s.skills), TOP_SKILL_KEYS.length),
+      goal("topXp", "🎓", `${TOP_LEAGUE_NAME} skill XP at 100`, TOP_SKILL_KEYS.length, all(TOP_SKILL_KEYS, s.xp), full(TOP_SKILL_KEYS, s.xp), TOP_SKILL_KEYS.length),
+      goal("moves", "✨", "Signature moves", TOP_TECHNIQUE_NAMES.length * COMPLETION_PART, moves * COMPLETION_PART, moves, TOP_TECHNIQUE_NAMES.length),
+      flag("topTable", "🥇", `Top of the ${TOP_LEAGUE_NAME} table`, feats.topTable),
+      flag("topChamp", "👑", `${TOP_LEAGUE_NAME} Champion`, feats.topChamp),
+      flag("unbeaten", "🛡️", "Unbeaten regular season", state.trophies.unbeaten.length > 0),
+    );
+  }
+  if (stage >= 2 && state.python) {
+    const course = PY_COURSE.reduce((a, t, i) => a + (pyMastered().includes(t.name) ? 1 : Math.min(1, (state.python.course[i] || 0) / pyCourseHours(i))), 0);
+    goals.push(
+      goal("python", "🐍", "Python at 100", 1, unit(s.skills.python), unit(s.skills.python) >= 1 ? 1 : 0, 1),
+      goal("course", "📚", "Python course", PY_COURSE.length, course, pyMastered().length, PY_COURSE.length),
+      flag("invitational", "🐍", PY_EVENT_NAME, state.python.wonYears.length > 0),
+      flag("sweep", "🧹", "Clean sweep (3–0)", state.trophies.sweeps.length > 0),
+      flag("finished", "🌟", "Game complete", !!state.gameComplete),
+    );
+  }
+  // Never below the best each goal has reached.
+  const best = state.completion.best;
+  goals.forEach((g) => (g.got = Math.max(g.got, Math.min(g.w, best[g.id] || 0))));
+  return goals;
+}
+// Records each goal's best so far (once a day, and whenever it's shown).
+function updateCompletion() {
+  const best = state.completion.best;
+  completionGoals().forEach((g) => (best[g.id] = Math.max(best[g.id] || 0, g.got)));
+}
+// Whole percent, rounded down: 100 only when everything in view is done.
+function completionPct(stage = completionStage()) {
+  const goals = completionGoals(stage);
+  const w = goals.reduce((a, g) => a + g.w, 0), got = goals.reduce((a, g) => a + g.got, 0);
+  return Math.floor((100 * got) / w + 1e-9);
+}
+function completionBarHtml(pct) {
+  return `<div class="completion-bar"><div class="completion-fill" style="width:${pct}%"></div></div>`;
 }
 // Sets it all up the first time it's needed.
 function initPython() {
@@ -1187,6 +1253,7 @@ function freshState() {
     gameComplete: null, // { year } once everything's been won in one year
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
+    completion: { best: {}, feats: {}, shownPct: null, shownStage: null }, // see completionGoals; shown*: the last year splash's figures
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
     leaguePoints: leagueData.points, // this season's live running points per tier, updated every round
@@ -1296,6 +1363,10 @@ function migrateSave(parsed) {
     if (r.top && TOP_RENAMED[r.name]) r.name = TOP_RENAMED[r.name];
   });
   if (fresh.leagueTier === TOP_TIER && fresh.topSince == null) fresh.topSince = fresh.year;
+  // Completion goals already met before it was tracked.
+  const feats = fresh.completion.feats;
+  if (fresh.leagueTier === TOP_TIER) feats.l1Table = feats.l1Champ = true;
+  if (fresh.gameComplete) feats.topTable = feats.topChamp = true;
   fresh.saveVersion = SAVE_VERSION;
   // Slider maxes can drop between versions — never load a plan past them.
   const a = fresh.allocation;
@@ -2666,6 +2737,11 @@ function finalizeSeasonMovement(playerTierChampion) {
     champions[tier] = { name: champ.name, rivalId: champ.rivalId, isPlayer: !!champ.isPlayer };
   }
   state.playoffChampions = champions;
+  noteTableTop();
+  if (champions[playedTier] && champions[playedTier].isPlayer) {
+    if (playedTier === 1) state.completion.feats.l1Champ = true;
+    if (playedTier === TOP_TIER) state.completion.feats.topChamp = true;
+  }
 
   // Promotion/relegation runs once per season, never twice.
   if (state.seasonMovementApplied) return "";
@@ -2749,6 +2825,13 @@ function playPyGame() {
     event += " 🧹 Clean sweep — a new trophy!";
   }
   return { result: res, event };
+}
+
+// Completion: first in the League 1 or top table, as soon as it's final.
+function noteTableTop() {
+  const top = state.lastStandings && state.lastStandings[0] && state.lastStandings[0].isPlayer;
+  if (top && state.lastStandingsTier === 1) state.completion.feats.l1Table = true;
+  if (top && state.lastStandingsTier === TOP_TIER) state.completion.feats.topTable = true;
 }
 
 function topEntryMet(l1Champ) {
@@ -3035,6 +3118,7 @@ function processDayEnd() {
         state.lastStandings = result.standings;
         state.lastPlayerPosition = result.playerPosition;
         state.lastStandingsTier = playedTier;
+        noteTableTop();
         const pos = result.playerPosition;
         const size = result.standings.length;
         if (result.qualified) {
@@ -4608,6 +4692,25 @@ function currentStatsHtml() {
     .join("");
 }
 
+// Every goal in view, how far along each is, and the total.
+function completionSectionHtml() {
+  updateCompletion();
+  const pct = completionPct();
+  const rows = completionGoals()
+    .map((g) => {
+      const doneAll = g.got >= g.w - 1e-9;
+      const part = g.of > 1 ? `${g.done}/${g.of}` : doneAll ? "" : "not yet";
+      const tail = doneAll ? " ✓" : g.of > 1 && g.got > 0 ? ` · ${Math.floor((100 * g.got) / g.w)}%` : "";
+      return `<div class="kv-row${doneAll ? " completion-done" : ""}"><span>${g.icon} ${g.name}</span><span>${part}${tail}</span></div>`;
+    })
+    .join("");
+  return `<div class="modal-section">
+      <h3>📈 Completion · ${pct}%</h3>
+      ${completionBarHtml(pct)}
+      ${rows}
+    </div>`;
+}
+
 // Trophies won at the top (and the finish), once there's something in it.
 function trophyCabinetHtml() {
   const t = state.trophies || { sweeps: [], unbeaten: [] };
@@ -4693,6 +4796,7 @@ function openCareer() {
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
     ${trophyCabinetHtml()}
+    ${completionSectionHtml()}
     <div class="modal-section">
       <h3>Next Up</h3>
       ${nextSection}
@@ -5360,6 +5464,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   const playedTier = state.lastStandingsTier || tierBefore;
   let icon = "📅", title = "", sub = "";
   let nextMatch = false; // show the next-match preview (drawn live when shown)
+  let completion = null; // { pct, was, widened } on a new year's splash
 
   if (from === "preseason" && to === "regular") {
     icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · ${lg(state.leagueTier)}`;
@@ -5420,6 +5525,14 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     }
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
+    // Completion: since the last year splash — or, the year more goals come
+    // into view, from everything that was in view before.
+    updateCompletion();
+    const stage = completionStage(), pct = completionPct();
+    const widened = state.completion.shownStage != null && stage > state.completion.shownStage;
+    completion = { pct, was: widened ? completionPct(stage - 1) : state.completion.shownPct, widened };
+    state.completion.shownPct = pct;
+    state.completion.shownStage = stage;
     if (state.topReveal) {
       icon = "🏛️"; title = `Welcome to the ${TOP_LEAGUE_NAME}`;
       state.topReveal = false;
@@ -5465,7 +5578,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     title = `${PHASE_NAMES[to] || to}`;
   }
   const moneyTitle = yearSummary ? `Year ${yearSummary.year} money` : "";
-  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes };
+  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes, completion };
 }
 
 // What's next once your season is over: training camp to the Final (if any
@@ -5523,6 +5636,15 @@ function progressTableHtml(rows, firstHead = "Stat") {
   return `<table class="perf-table week-table"><thead><tr><th>${firstHead}</th><th>Start</th><th>Now</th><th>Change</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 
+function completionSplashHtml(c) {
+  const change = c.was == null || c.was === c.pct ? "" : ` <span class="completion-was">(was ${c.was}%)</span>`;
+  return `<div class="modal-section splash-section"><h3>📈 Completion</h3>
+    <div class="completion-head"><b>${c.pct}%</b>${change}</div>
+    ${completionBarHtml(c.pct)}
+    ${c.widened ? `<p class="modal-sub">New goals have come into view, so there's more to complete. See 📈 Completion in Career.</p>` : ""}
+  </div>`;
+}
+
 function showPhaseSplash(sp, extraHtml = "", onDone = null) {
   const rows = (list) => list.map(([k, v]) => `<div class="kv-row"><span>${k}</span><span>${v}</span></div>`).join("");
   const html = `
@@ -5533,6 +5655,7 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       ${sp.how.length ? `<div class="modal-section splash-section"><h3>How the ${sp.fromName.toLowerCase()} went</h3>${rows(sp.how)}</div>` : ""}
       ${sp.progress ? `<div class="modal-section splash-section"><h3>Progress over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.progress)}</div>` : ""}
       ${sp.skills ? `<div class="modal-section splash-section"><h3>Skills over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.skills, "Skill")}</div>` : ""}
+      ${sp.completion ? completionSplashHtml(sp.completion) : ""}
       ${sp.money && sp.money.length ? `<div class="modal-section splash-section"><h3>${sp.moneyTitle}</h3>${rows(sp.money)}</div>` : ""}
       ${sp.next.length ? `<div class="modal-section splash-section"><h3>What's next</h3>${rows(sp.next)}</div>` : ""}
       ${sp.nextMatch ? `<div class="splash-section">${nextMatchPreviewHtml()}</div>` : ""}
@@ -5860,6 +5983,11 @@ function openHowTo() {
       `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b>: most wins first; players level are split by their games against each other, then by rating.`,
       "<b>Match History</b> shows your <b>upcoming</b> matches (the rest of the season, then your playoff path), your past matches, and every league result for this season and last.",
     ])}`);
+
+  sec("completion", "📈", "Completion", ul([
+    `<b>Completion</b> (in Career, and on each new year's splash) is how much of CELLOG you've done: every goal listed there counts — partly done counts partly. It never goes back down while a goal slips (rust, a lost title); each goal keeps its best.`,
+    `Each pro technique${inTop() ? " and signature move" : ""} counts half a goal.`,
+  ]));
 
   sec("money", "💼", "Work & money", `
     ${ul([
@@ -6270,6 +6398,7 @@ function runDay() {
   // rerolls — the match grades the skills actually trained this week, not
   // whatever gets revealed for the week ahead.
   const dayEnd = processDayEnd();
+  updateCompletion();
   const { matchResult, phaseEvent, newYearNow } = dayEnd;
   let { yearSummary } = dayEnd;
   if (matchResult) {

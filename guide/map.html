@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.83.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.84.0</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -165,7 +165,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
   <figure>
     <div class="sheet" id="sheet"></div>
-    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.83.0).</figcaption>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.84.0).</figcaption>
   </figure>
 
   <section class="detail" id="detail" aria-live="polite"></section>
@@ -235,11 +235,13 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["calendar", "Season calendar", "preseason → season → camp", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → training camp until the Final. The Final ends the year. Game length (Short, Half or Full) sets the league size, rounds, playoff size, how many go up and down, and preseason length."],
     ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination; a dead heat goes to the faster finish, as in the league. Playoff matches earn double experience. The champion wins +$1,000 and +40 rating, and is promoted."],
     ["promo", "Up & down a league", "top 3 + champ · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
+    ["completion", "Completion", "% of every goal", "career", 5, 8, "One percentage of how much of CELLOG you've done: leagues climbed (4), the 7 skills at 100 (7) and their XP at 100 (7), pro techniques (half a goal each, 10), top of the League 1 table (1) and its playoff champion (1). Partly done counts partly; each goal keeps its best, so rust never lowers it. Shown in Career and on each new year's splash."],
     ["yearend", "New year", "pay rise · pro renewal", "career", 6, 9, "When the Final's day ends: a pay rise (+$10/day a year, up to 5 years), the pro renewal check, and equipment wears out."],
   ];
   // [from, to, label, kind, dash]
   const E = [
     ["hours", "food", "", "decides"], ["hours", "sleep", "", "decides"], ["hours", "relax", "", "decides"], ["hours", "gym", "", "decides"], ["hours", "train", "", "decides"], ["hours", "work", "your hours", "decides"],
+    ["skills", "completion", "at 100", "helps"], ["experience", "completion", "XP at 100", "helps"], ["techniques", "completion", "½ a goal each", "helps"], ["league", "completion", "leagues climbed", "helps"], ["playoffs", "completion", "League 1 champion", "helps"],
     ["food", "nutrition", "builds", "helps"],
     ["nutrition", "hours", "sets tomorrow's length", "decides"],
     ["food", "hours", "carb-load +1–3h", "helps"],

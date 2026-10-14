@@ -34,7 +34,7 @@ a{color:var(--skill);}
 <style>.ig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.ig-wrap{min-width:1180px}.cellog-back button{font:600 13px inherit;color:#e7edf7;background:#131c2e;border:1px solid #263149;border-radius:8px;padding:4px 10px}</style>
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.83.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Map</a><button type="button" id="igFit">Fit width</button><span>v4.84.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
 
 <div style="width:100%;max-width:1320px;margin:0 auto;padding:56px 32px 140px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box;">
 
@@ -42,7 +42,7 @@ a{color:var(--skill);}
 <div style="display:flex;flex-direction:column;gap:14px;">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <div style="font-size:42px;font-weight:800;letter-spacing:0.3px;">CELLOG</div>
-    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.83.0</div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.84.0</div>
   </div>
   <div style="font-size:18px;color:var(--text-dim);max-width:920px;line-height:1.55;">Every mechanic, threshold and formula behind the Excel esports manager sim — exactly as implemented in <code>game.js</code>, laid out as one connected system.</div>
 </div>
@@ -426,6 +426,18 @@ a{color:var(--skill);}
     </div>
   </div>
   <div style="font-size:12.5px;color:var(--text-dim);">Skill cap tracks your <b>peak</b> league tier ever reached, not your current one — getting relegated doesn't lower it. Four go up from every league below League 1: the <b>playoff champion</b>, plus the <b>top 3</b> of the table other than the champion — so a top-3 finish is always promoted (if the champion is already top 3, 4th place takes the last spot). Bottom 4 go down. Every league plays out its own knockout, and movement is applied once the playoffs are over.</div>
+  <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px;">
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px;">📈 Completion <span style="font-size:12px;font-weight:600;color:var(--text-dim);">(new in v4.84)</span></div>
+    <table>
+      <tr><th>Goal</th><th>Counts</th></tr>
+      <tr><td>🪜 Leagues climbed (5 → 1)</td><td>4 — one per league</td></tr>
+      <tr><td>📊 Skills at 100</td><td>7 — one per skill, partly done counts partly</td></tr>
+      <tr><td>🎓 Skill XP at 100</td><td>7 — one per skill</td></tr>
+      <tr><td>📚 Pro techniques</td><td>10 — half a goal each (20)</td></tr>
+      <tr><td>🥇 Top of the League 1 table · 🏆 League 1 playoff champion</td><td>1 each</td></tr>
+    </table>
+    <div style="font-size:12.5px;color:var(--text-dim);margin-top:8px;">One percentage of how much of CELLOG you've done, in <b>Career</b> (every goal, how far along) and on each <b>new year's splash</b> (with last year's figure). Rounded down, so 100% only when every goal is done. Each goal keeps its <b>best</b>: rust or a lost title never takes it back down.</div>
+  </div>
 </div>
 
 <!-- ============ 10 STAFF ============ -->
