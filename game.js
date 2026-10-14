@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.80.1";
+const APP_VERSION = "4.81.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -317,8 +317,10 @@ const TOP_TECHNIQUES = [
   { name: "REGEX Functions", desc: "finish 30s sooner", seconds: 30 },
   { name: "Mouse-free Mastery", desc: "finish 45s sooner", seconds: 45 },
   { name: "Formula Golf", desc: "wins a dead heat that's level to the second", golf: true },
+  // Earned, not learned: the first time you win the preseason exhibition.
+  { name: "Python in Excel", desc: "+2 on every focus skill in the edge, finish 30s sooner", edge: { "*": 2 }, seconds: 30, granted: true },
 ];
-const TOP_TECHNIQUE_NAMES = TOP_TECHNIQUES.map((t) => t.name);
+const TOP_TECHNIQUE_NAMES = TOP_TECHNIQUES.filter((t) => !t.granted).map((t) => t.name);
 // The nine already there.
 const TOP_RIVALS = [
   { name: "TheEarlyBird", rating: 2600, skills: { single: 96, lambda: 93, speed: 94 }, xp: 85, moves: 5 },
@@ -333,6 +335,22 @@ const TOP_RIVALS = [
 ];
 // Earlier names, renamed in saves that already have them.
 const TOP_RENAMED = { WrapRowsWolleh: "ThaiBreaker", JackOfAllTabs: "Dupreecision", NickOfTime: "TopBoberg" };
+
+// ---- The preseason exhibition (from your second year at the top) ----
+// Each preseason there, everything else is set aside for Python: one skill
+// and a three-part course (two sliders), then a best-of-three exhibition
+// against its one master. Kept quiet until it starts.
+const PY_SKILL = { key: "python", name: "Python", icon: "🐍" };
+const PY_GAIN_MULT = { full: 1, half: 1.5, short: 3 }; // each length's preseason worth the same
+const PY_COURSE = [
+  { name: "Python Basics", icon: "🐍", hours: 20, desc: "+2 Python in the focus-skill edge", edge: { python: 2 } },
+  { name: "pandas DataFrames", icon: "🐼", hours: 30, desc: "+3 Python in the focus-skill edge", edge: { python: 3 } },
+  { name: "Advanced Python", icon: "🧠", hours: 40, desc: "finish 45s sooner", seconds: 45 },
+];
+const PY_COURSE_SCALE = { full: 1, half: 2 / 3, short: 1 / 3 }; // hours, by preseason length
+const PY_GAMES = 3; // best of three
+const PY_RIVAL = { name: "JasPy", rating: 2700, python: 100, xp: 20, condition: 95 };
+const PY_EVENT_NAME = "Python Invitational";
 function inTop(s) {
   // Safe while a new career's state is still being built.
   try {
@@ -344,6 +362,49 @@ function inTop(s) {
 }
 function isTopSkill(key) {
   return TOP_SKILL_KEYS.includes(key);
+}
+// From your second year at the top.
+function pyUnlocked(s) {
+  try {
+    s = s || state;
+  } catch (e) {
+    return false;
+  }
+  return inTop(s) && s.topSince != null && s.year > s.topSince;
+}
+// Its preseason: everything else set aside.
+function pyPreseason(s) {
+  return pyUnlocked(s) && (s || state).seasonPhase === "preseason";
+}
+function pyCourseHours(i) {
+  return Math.round(PY_COURSE[i].hours * (PY_COURSE_SCALE[BAL.gameLength] || 1));
+}
+function pyMastered() {
+  return (state.python && state.python.mastered) || [];
+}
+function pyMoves() {
+  return PY_COURSE.filter((t) => pyMastered().includes(t.name));
+}
+// The course's current part (in order), or null once all three are done.
+function pyCurrent() {
+  const i = PY_COURSE.findIndex((t) => !pyMastered().includes(t.name));
+  return i < 0 ? null : i;
+}
+function pyRival() {
+  return state.rivals.find((r) => r.py);
+}
+// Sets it all up the first time it's needed.
+function initPython() {
+  if (!state.python) state.python = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], revealed: false };
+  if (state.stats.skills.python == null) state.stats.skills.python = 0;
+  if (state.stats.xp.python == null) state.stats.xp.python = 0;
+  if (!pyRival()) {
+    state.rivals.push({
+      id: Math.max(...state.rivals.map((r) => r.id)) + 1, name: PY_RIVAL.name, rating: PY_RIVAL.rating, league: -1,
+      wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0,
+      py: { python: PY_RIVAL.python, xp: PY_RIVAL.xp, condition: PY_RIVAL.condition },
+    });
+  }
 }
 // "League 3" — or the top tier's own name.
 function lg(tier) {
@@ -375,23 +436,24 @@ function campDays() {
 }
 // The skills a match is about: the seven — or, at the top, its three.
 function playSkillKeys() {
-  return inTop() ? TOP_SKILL_KEYS : SKILL_KEYS;
+  return pyPreseason() ? [PY_SKILL.key] : inTop() ? TOP_SKILL_KEYS : SKILL_KEYS;
 }
 // Every skill you have a value for.
 function allSkillKeys() {
-  return SKILL_KEYS.concat(TOP_SKILL_KEYS.filter((k) => state.stats.skills[k] != null));
+  return SKILL_KEYS.concat(TOP_SKILL_KEYS.filter((k) => state.stats.skills[k] != null), state.stats.skills.python != null ? [PY_SKILL.key] : []);
 }
 function topMovesFor(names) {
   return TOP_TECHNIQUES.filter((t) => names.includes(t.name));
 }
 function playerTopMoves() {
-  return topMovesFor(state.employment.techniquesMastered || []);
+  // In the Python preseason, only the course counts.
+  return pyPreseason() ? pyMoves() : topMovesFor(state.employment.techniquesMastered || []);
 }
 function rivalTopMoves(r) {
   return r && r.top ? topMovesFor(r.top.moves) : [];
 }
 function movesEdge(moves, key) {
-  return moves.reduce((a, m) => a + ((m.edge && m.edge[key]) || 0), 0);
+  return moves.reduce((a, m) => a + ((m.edge && (m.edge[key] || m.edge["*"])) || 0), 0);
 }
 function movesSeconds(moves) {
   return moves.reduce((a, m) => a + (m.seconds || 0), 0);
@@ -417,7 +479,7 @@ const SKILLS = [
 ];
 const SKILL_KEYS = SKILLS.map((s) => s.key);
 function skillMeta(key) {
-  return SKILLS.find((s) => s.key === key) || TOP_SKILLS.find((s) => s.key === key);
+  return SKILLS.find((s) => s.key === key) || TOP_SKILLS.find((s) => s.key === key) || (key === PY_SKILL.key ? PY_SKILL : undefined);
 }
 function coachKey(key) {
   return `coach_${key}`;
@@ -760,7 +822,7 @@ function leagueSkillCap(key = null, s = state) {
   return key && !isSpecialisation(key, s) ? top - BAL.otherSkillCapGap : top;
 }
 function skillCap(key) {
-  if (isTopSkill(key)) return 100; // no coaches, no league caps at the top
+  if (isTopSkill(key) || key === PY_SKILL.key) return 100; // no coaches, no league caps at the top
   return Math.min(skillShopCap(key), leagueSkillCap(key));
 }
 // A skill's experience: also its floor — it never rusts below it, and
@@ -791,7 +853,7 @@ function setSpecialisations(keys, s = state) {
 // Which gate is holding a skill's ceiling down — tells the player whether
 // the fix is hiring a coach (Staff) or a promotion (peak league).
 function skillCapCause(key) {
-  if (isTopSkill(key)) return null;
+  if (isTopSkill(key) || key === PY_SKILL.key) return null;
   const shop = skillShopCap(key);
   const league = leagueSkillCap(key);
   if (Math.min(shop, league) >= 100) return null;
@@ -1120,6 +1182,10 @@ function freshState() {
     pendingSplash: null, // phase splashes not yet dismissed (a list: a season can end and a new year start on one day)
     tutorialSeen: false,
     topReveal: false, // just arrived somewhere new — the next year's splash explains it
+    topSince: null, // the first year played there
+    python: null, // its preseason exhibition — see initPython
+    gameComplete: null, // { year } once everything's been won in one year
+    finishReveal: false,
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
     leaguePoints: leagueData.points, // this season's live running points per tier, updated every round
@@ -1155,6 +1221,7 @@ function freshState() {
       relax: BAL.relaxComposureThreshold,
       nutrition: 1,
       work: 0, // a new career starts in preseason, on annual leave
+      pycourse: 0, // a later preseason's course
     },
     employment: {
       status: "employed", // "employed" | "unemployed" | "pro"
@@ -1227,6 +1294,7 @@ function migrateSave(parsed) {
   fresh.rivals.forEach((r) => {
     if (r.top && TOP_RENAMED[r.name]) r.name = TOP_RENAMED[r.name];
   });
+  if (fresh.leagueTier === TOP_TIER && fresh.topSince == null) fresh.topSince = fresh.year;
   fresh.saveVersion = SAVE_VERSION;
   // Slider maxes can drop between versions — never load a plan past them.
   const a = fresh.allocation;
@@ -1398,10 +1466,15 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
     // Above this week's ceiling (e.g. 57 with no coach, ceiling 50): an
     // hour or more holds it steady, less lets it rust — it's never cut down
     // to the ceiling just because the coach isn't on hand this week.
+    // Python only exists in its preseason, and never rusts; the top tier's
+    // skills are set aside (frozen) while it's on.
+    const pyMult = key === PY_SKILL.key ? PY_GAIN_MULT[BAL.gameLength] || 1 : 1;
     if (hours >= BAL.skillDecayThresholdHours) {
       const eff = effectiveHours(hours);
-      const gain = eff * BAL.skillGainBase * focusMult * physMult * restMult * skillDiminish(s.skills[key]) * coachMult * (1 + gear.training);
+      const gain = eff * BAL.skillGainBase * focusMult * physMult * restMult * skillDiminish(s.skills[key]) * coachMult * (1 + gear.training) * pyMult;
       skills[key] = s.skills[key] >= cap ? s.skills[key] : Math.min(s.skills[key] + gain, cap);
+    } else if (key === PY_SKILL.key || (isTopSkill(key) && pyPreseason())) {
+      skills[key] = s.skills[key];
     } else if (coachEff) {
       // A hired coach keeps the skill from rusting while they're on the
       // books — even in a week it isn't trained (or can't be).
@@ -1533,6 +1606,24 @@ function resolveDay() {
       events.push({ type: "neutral", text: `${meta.icon} No ${meta.name} training: your experience held it (XP ${fmt(skillXp(key))})` });
     }
   });
+
+  // ---- The Python course: hours go to the current part, in order ----
+  if (pyPreseason() && (a.pycourse || 0) > 0) {
+    let left = a.pycourse;
+    while (left > 0 && pyCurrent() != null) {
+      const i = pyCurrent();
+      const need = pyCourseHours(i);
+      const used = Math.min(left, need - state.python.course[i]);
+      state.python.course[i] += used;
+      left -= used;
+      if (state.python.course[i] >= need) {
+        state.python.mastered.push(PY_COURSE[i].name);
+        events.push({ type: "good", text: `${PY_COURSE[i].icon} Mastered ${PY_COURSE[i].name}! ${PY_COURSE[i].desc} in the exhibition.` });
+      }
+    }
+    const i = pyCurrent();
+    if (i != null) events.push({ type: "neutral", text: `📚 Python course: ${PY_COURSE[i].name} ${fmt(state.python.course[i])}/${pyCourseHours(i)}h` });
+  }
 
   // ---- Physical health ----
   const physBefore = s.phys;
@@ -1850,7 +1941,7 @@ function performanceScore(keys) {
 // same caps as yours (their league's cap for a specialisation,
 // otherSkillCapGap lower for the rest).
 function ensureRivalProfile(r) {
-  if (r.top) return r; // top-tier players have their own fixed profile
+  if (r.top || r.py) return r; // top-tier players have their own fixed profile
   if (Array.isArray(r.specs) && r.specs.length === BAL.specialisationCount && r.skillOffsets) return r;
   const pool = SKILL_KEYS.slice();
   r.specs = [];
@@ -1859,7 +1950,9 @@ function ensureRivalProfile(r) {
   return r;
 }
 function rivalSkill(r, key) {
+  if (r.py) return key === PY_SKILL.key ? r.py.python : 100;
   if (r.top) return isTopSkill(key) ? r.top.skills[key] : 100;
+  if (key === PY_SKILL.key) return 0;
   if (isTopSkill(key)) return 0;
   ensureRivalProfile(r);
   const spec = r.specs.includes(key);
@@ -1881,9 +1974,10 @@ function rivalFocusAverage(r, keys = state.activeSkills) {
 // top its three) plus a steady rivalCondition for Health / Calm / Rest, on
 // your weights.
 function rivalPerformance(r) {
-  const keys = r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
+  const keys = r.py ? [PY_SKILL.key] : r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
   const avg = keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length;
-  return clamp(PERF_WEIGHTS.skill * avg + (1 - PERF_WEIGHTS.skill) * BAL.rivalCondition + movesPerf(rivalTopMoves(r)), 0, 100);
+  const condition = r.py ? r.py.condition : BAL.rivalCondition;
+  return clamp(PERF_WEIGHTS.skill * avg + (1 - PERF_WEIGHTS.skill) * condition + movesPerf(rivalTopMoves(r)), 0, 100);
 }
 // The week's focus keys for a rival-vs-rival match: the top tier's three
 // for its players; the seven for everyone else (the week's own focus,
@@ -1918,6 +2012,7 @@ function expectedFinish(xp, bonusSec = 0) {
 // Seconds off your finish: Speed & Shortcuts (up to 2 minutes at 100) and
 // signature moves — only at the top.
 function playerFinishBonus() {
+  if (pyPreseason()) return movesSeconds(pyMoves());
   if (!inTop()) return 0;
   return ((state.stats.skills.speed || 0) / 100) * TOP_SPEED_MAX_SECONDS + movesSeconds(playerTopMoves());
 }
@@ -1966,6 +2061,7 @@ function focusXpAverage(keys = state.activeSkills) {
 // A rival's experience — the same in every skill: their league's, a little
 // higher or lower with their rating.
 function rivalXp(r) {
+  if (r.py) return r.py.xp;
   if (r.top) return r.top.xp;
   const base = BAL.rivalXpByTier[r.league] != null ? BAL.rivalXpByTier[r.league] : 0;
   if (base <= 0) return 0; // nobody earns experience in League 5
@@ -2062,7 +2158,8 @@ function awardMatchXp(knockout) {
   return { earned: true, skills };
 }
 
-function resolveMatch(opponent) {
+// exhibition: nothing but the result and XP — no rating, prize or record.
+function resolveMatch(opponent, { exhibition = false } = {}) {
   const managerEff = upgradeEffect("manager");
   const rankLossMult = managerEff ? managerEff.rankLossMult : 1.0;
   const cashBonusMult = managerEff ? managerEff.cashBonusMult : 1.0;
@@ -2095,7 +2192,7 @@ function resolveMatch(opponent) {
   // Rating moves on the rating gap alone (not the match odds), so it stays
   // a record of results.
   const ratingProb = ratingExpectation(rankBefore, opponentRating);
-  let ratingChange = Math.round(K * (actual - ratingProb));
+  let ratingChange = exhibition ? 0 : Math.round(K * (actual - ratingProb));
   if (ratingChange < 0) ratingChange = Math.round(ratingChange * rankLossMult);
   state.rank = clamp(state.rank + ratingChange, BAL.ratingMin, BAL.ratingMax);
   state.peakRank = Math.max(state.peakRank, state.rank);
@@ -2105,11 +2202,13 @@ function resolveMatch(opponent) {
   const prizeFormula = { base: BAL.prizeWinBase, div: BAL.prizeRatingDiv, loss: BAL.prizeLoss };
   // The same prize is on offer every match: the winner takes it all.
   const fullPrize = prizeFormula.base + state.rank / prizeFormula.div;
-  const cashReward = Math.round((win ? fullPrize : prizeFormula.loss) * cashBonusMult);
+  const cashReward = exhibition ? 0 : Math.round((win ? fullPrize : prizeFormula.loss) * cashBonusMult);
   state.cash += cashReward;
   state.yearCashFlow.matchCash += cashReward;
-  if (win) state.wins += 1;
-  else state.losses += 1;
+  if (!exhibition) {
+    if (win) state.wins += 1;
+    else state.losses += 1;
+  }
   const xp = awardMatchXp(mu.knockout);
 
   // Display figures for the result screen — cosmetic only; the result was
@@ -2206,6 +2305,7 @@ function resolveMatch(opponent) {
     // can make a sub-1 margin look like a tie, which reads as "less than 1".
     margin: Math.abs(yourFinalShown - oppFinalShown),
     xp, // experience this match earned the focus skills
+    exhibition,
   };
 }
 
@@ -2274,7 +2374,7 @@ function recordLeagueResult(tier, roundKey, winnerId, loserId, winnerRating, los
 // history (every match you play is recorded, with its year).
 function seasonRecord() {
   const mine = (state.matchHistory && state.matchHistory.mine) || [];
-  const thisYear = mine.filter((m) => m.year === state.year);
+  const thisYear = mine.filter((m) => m.year === state.year && !m.exhibition);
   const wins = thisYear.filter((m) => m.win).length;
   const draws = thisYear.filter((m) => m.draw).length;
   return { wins, draws, losses: thisYear.length - wins - draws };
@@ -2575,6 +2675,17 @@ function finalizeSeasonMovement(playerTierChampion) {
   // playoff champion, all seven skills and their XP at 100, and every
   // technique mastered — an invitation upstairs.
   const invited = playedTier === 1 && topEntryMet(champions[1]);
+  // The finish line: top of the table, playoff champion and the exhibition,
+  // all in one year at the top.
+  if (playedTier === TOP_TIER && !state.gameComplete) {
+    const tableTop = state.lastStandings && state.lastStandings[0] && state.lastStandings[0].isPlayer;
+    const champTop = champions[TOP_TIER] && champions[TOP_TIER].isPlayer;
+    const pyWon = state.python && state.python.wonYears.includes(state.year);
+    if (tableTop && champTop && pyWon) {
+      state.gameComplete = { year: state.year, day: state.day, rating: state.rank, peakRating: state.peakRank };
+      state.finishReveal = true;
+    }
+  }
   if (invited) newTier = enterTop();
   state.leagueTier = newTier;
   state.peakLeagueTier = Math.min(state.peakLeagueTier, newTier);
@@ -2583,6 +2694,48 @@ function finalizeSeasonMovement(playerTierChampion) {
   const champText = champ && !champ.isPlayer ? ` ${champ.name} won the ${lg(playedTier)} playoffs.` : "";
   const moveText = invited ? " ✉️ An invitation has arrived." : newTier < playedTier ? ` ⬆️ Promoted to ${lg(newTier)}!` : newTier > playedTier ? ` ⬇️ Relegated to ${lg(newTier)}.` : "";
   return champText + moveText;
+}
+
+// One game of the exhibition (or null once it's decided). Python stands in
+// for the focus skills; there's nothing at stake but the series.
+function playPyGame() {
+  initPython();
+  const py = state.python;
+  if (!py.series || py.series.year !== state.year) py.series = { year: state.year, you: 0, opp: 0 };
+  const sr = py.series;
+  const need = Math.ceil(PY_GAMES / 2);
+  if (sr.you >= need || sr.opp >= need) return null;
+  const rival = pyRival();
+  const saved = state.activeSkills;
+  state.activeSkills = [PY_SKILL.key];
+  const res = resolveMatch({ rivalId: rival.id, name: rival.name }, { exhibition: true });
+  state.activeSkills = saved;
+  const before = { you: sr.you, opp: sr.opp };
+  if (res.win) sr.you += 1;
+  else sr.opp += 1;
+  const n = sr.you + sr.opp;
+  res.opponentName = rival.name;
+  res.opponentRivalId = rival.id;
+  res.roundLabel = `🐍 ${PY_EVENT_NAME} · Game ${n}`;
+  res.series = { before, after: { you: sr.you, opp: sr.opp }, need };
+  let event = `🐍 ${PY_EVENT_NAME}, game ${n}: ${res.win ? "won" : "lost"} — ${sr.you}–${sr.opp}.`;
+  if (sr.you >= need) {
+    const first = !py.wonYears.length;
+    py.wonYears.push(state.year);
+    res.series.won = true;
+    event += ` 🏆 You've won the ${PY_EVENT_NAME}!`;
+    if (first) {
+      const emp = state.employment;
+      emp.techniquesMastered = emp.techniquesMastered || [];
+      if (!emp.techniquesMastered.includes("Python in Excel")) emp.techniquesMastered.push("Python in Excel");
+      res.series.move = true;
+      event += " ✨ New signature move: Python in Excel (+2 on every focus skill in the edge, finish 30s sooner).";
+    }
+  } else if (sr.opp >= need) {
+    res.series.lost = true;
+    event += ` ${rival.name} keeps the ${PY_EVENT_NAME}.`;
+  }
+  return { result: res, event };
 }
 
 function topEntryMet(l1Champ) {
@@ -2616,6 +2769,7 @@ function enterTop() {
     if (state.stats.xp[k] == null) state.stats.xp[k] = 0;
   });
   state.topReveal = true; // the next year's splash says where you are
+  state.topSince = state.year + 1;
   return TOP_TIER;
 }
 
@@ -2766,6 +2920,7 @@ function startNewYear() {
   if (yearSummary.proEnded) phaseEvent += ` 📉 Sponsorship not renewed — your skill average was ${yearSummary.proEnded.avg}, under the ${yearSummary.proEnded.bar} needed. Time to find a job: ${yearSummary.proEnded.searchHours}h of Job Search.`;
   else if (yearSummary.proRenewed) phaseEvent += ` 🏆 Sponsorship renewed for Year ${state.year}.`;
   if (worn.length) phaseEvent += ` Last year's equipment has worn out (${worn.map((e) => e.name).join(", ")}).`;
+  if (pyUnlocked()) initPython();
   return { yearSummary, phaseEvent };
 }
 
@@ -2784,6 +2939,15 @@ function processDayEnd() {
   let newYearNow = false;
 
   if (state.seasonPhase === "preseason") {
+    // The exhibition: the last PY_GAMES days of the preseason, a game a day
+    // until someone has won the majority.
+    if (pyUnlocked() && state.phaseDay > BAL.preseasonDays - PY_GAMES) {
+      const game = playPyGame();
+      if (game) {
+        matchResult = game.result;
+        phaseEvent = game.event;
+      }
+    }
     if (state.phaseDay >= BAL.preseasonDays) {
       state.seasonPhase = "regular";
       state.phaseDay = 0;
@@ -2793,8 +2957,9 @@ function processDayEnd() {
       allSkillKeys().forEach((k) => {
         state.allocation.skills[k] = 0;
       });
+      state.allocation.pycourse = 0;
       const focus = state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join(", ");
-      phaseEvent = `🏁 Preseason over — the ${roundsFor(state.leagueTier)}-round regular season begins. This week's focus: ${focus}.`;
+      phaseEvent = `${phaseEvent ? phaseEvent + " " : ""}🏁 Preseason over — the ${roundsFor(state.leagueTier)}-round regular season begins. This week's focus: ${focus}.`;
     }
     return { matchResult, phaseEvent, yearSummary, newYearNow };
   }
@@ -3049,7 +3214,7 @@ function phaseLabelText() {
 /* ---------------------------------------------------------------------- */
 const $ = (id) => document.getElementById(id);
 
-const ACT_MAX = { exercise: BAL.gymMaxHours, sleep: 12, relax: 12, nutrition: 4 };
+const ACT_MAX = { exercise: BAL.gymMaxHours, sleep: 12, relax: 12, nutrition: 4, pycourse: 16 };
 const SKILL_MAX_HOURS = 16;
 
 function markerPct(threshold, max) {
@@ -3126,7 +3291,7 @@ function renderStats() {
 function totalAssigned() {
   const a = state.allocation;
   const skillSum = trainableSkills().reduce((sum, k) => sum + (a.skills[k] || 0), 0);
-  return skillSum + a.exercise + a.sleep + a.relax + a.nutrition + (a.work || 0);
+  return skillSum + a.exercise + a.sleep + a.relax + a.nutrition + (a.work || 0) + (pyPreseason() ? a.pycourse || 0 : 0);
 }
 
 // One row does double duty as both the stat readout (name, value/cap, bar)
@@ -3292,7 +3457,7 @@ function renderPlannerRows() {
     const cap = skillCap(key);
     const lvl = hiredLevel(coachKey(key));
     // Tap it to go straight to this skill's coach in Staff.
-    const shopTag = isTopSkill(key)
+    const shopTag = isTopSkill(key) || key === PY_SKILL.key
       ? `<span class="skill-shop-tag skill-shop-tag-none">solo</span>`
       : lvl > 0
       ? `<button class="skill-shop-tag coach-link" data-coach="${key}">🧑‍🏫 Lv${lvl}</button>`
@@ -3311,13 +3476,36 @@ function renderPlannerRows() {
         // A hired coach — or XP at the skill's level — stops rust: under 1h
         // shows neutral, not red.
         markerHours: BAL.skillDecayThresholdHours,
-        heldBelow: lvl > 0 || s.skills[key] <= skillXp(key) + 1e-9,
+        heldBelow: lvl > 0 || s.skills[key] <= skillXp(key) + 1e-9 || key === PY_SKILL.key,
         shopTag,
         barClass: "skill",
         xpStrip: xpStripHtml(key, { preview: true }),
       })
     );
   });
+
+  // The Python course: its own slider, its parts in order.
+  if (pyPreseason()) {
+    const i = pyCurrent();
+    const need = i == null ? 1 : pyCourseHours(i);
+    const done = i == null ? 1 : state.python.course[i];
+    rows.push(
+      comboRowHtml("pycourse", {
+        icon: "📚",
+        label: "Python course",
+        outcomeText: i == null ? "all 3 mastered" : `${PY_COURSE[i].icon} ${PY_COURSE[i].name} ${fmt(done)}/${need}h · ${i + 1} of 3`,
+        value: done,
+        previewValue: i == null ? null : Math.min(need, done + (a.pycourse || 0)),
+        cap: need,
+        scaleMax: need,
+        hours: a.pycourse || 0,
+        maxHours: ACT_MAX.pycourse,
+        markerHours: 0,
+        disabled: i == null,
+        barClass: "skill",
+      })
+    );
+  }
 
   const pCap = physCap();
   // Room for one note plus the injury readout before the row overflows.
@@ -3629,6 +3817,17 @@ function matchResultTableHtml(result) {
   const d0 = rec.draws || 0;
   const recAfter = { wins: rec.wins + (result.win ? 1 : 0), draws: d0 + (result.draw ? 1 : 0), losses: rec.losses + (result.win || result.draw ? 0 : 1) };
   const recText = (r) => wdl(r.wins, r.draws, r.losses);
+  if (result.exhibition && result.series) {
+    const sr = result.series;
+    const xpRows = (result.xp && result.xp.earned ? result.xp.skills : []).map((x) => `<tr><td>${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP</td><td>${fmt(x.before)}</td><td>${fmt(x.after)}</td><td class="wk-up">+${fmt(x.after - x.before)}</td></tr>`).join("");
+    const verdict = sr.won ? "🏆 won it" : sr.lost ? "lost it" : `first to ${sr.need}`;
+    return `
+    <table class="perf-table result-table">
+      <thead><tr><th>Your Result</th><th>Before</th><th>After</th><th>Change</th></tr></thead>
+      <tbody><tr><td>🐍 Series</td><td>${sr.before.you}–${sr.before.opp}</td><td>${sr.after.you}–${sr.after.opp}</td><td class="${result.win ? "wk-up" : "wk-down"}">${result.win ? "W" : "L"}</td></tr>${xpRows}</tbody>
+    </table>
+    <div class="match-sub perf-note">An exhibition — no rating, prize or record at stake. Series: ${verdict}.${sr.move ? " ✨ New signature move: <b>Python in Excel</b> — +2 on every focus skill in the edge and 30s off your finish, in every league match from now on." : ""}</div>`;
+  }
   const row = (label, before, after, change, cls) =>
     `<tr><td>${label}</td><td>${before}</td><td>${after}</td><td class="${cls}">${change}</td></tr>`;
   const rows = [row("🏆 Rating", fmt(result.rankBefore), fmt(ratingAfter), signedNum(ratingAfter - result.rankBefore), deltaClass(ratingAfter - result.rankBefore))];
@@ -3871,10 +4070,10 @@ function showMatchModal(result, extraHtml = "", { onContinue = null, continueLab
           <summary>How do luck and win chance work?</summary>
           ${luckExplainerHtml(result)}
         </details>
-        <details class="match-more">
+        ${result.exhibition ? "" : `<details class="match-more">
           <summary>How were rating and cash worked out?</summary>
           ${ratingCashExplainerHtml(result)}
-        </details>
+        </details>`}
       </div>`;
   openModal(html, { ownClose: true, onDismiss: onDone, page });
   $("matchOk").addEventListener("click", onContinue || closeModal);
@@ -4357,7 +4556,7 @@ function employmentSectionHtml() {
     return `${expensesLine}${leaveLine}<p>🏆 <b>Pro</b> · Pro Duties ${BAL.proDutyHoursRequired}h/day required ($${fmt(emp.proPay)}/day) · ${fmt1(lives)}/${fmt1(BAL.strikesToFire)} chances</p>${strikeLines}
       <p class="modal-sub">Sponsored to the end of Year ${state.year}. Renewal needs a skill average of ${proAverageBar()}+ when the year ends: ${meetsProSkillBar() ? `on track ✓ (average ${skillAverage()})` : `⚠️ not yet — average ${skillAverage()}`}.</p>
       <p><b>Technique queue</b> (hours above ${BAL.proDutyHoursRequired}h/day go here)${penalty > 0 ? ` — currently <b>-${penalty}%</b> match performance` : ""}:<br>${queueHtml}</p>
-      <p class="modal-sub">📘 Mastered ${techniquesMasteredCount()} of ${EXCEL_TECHNIQUES.length} techniques.</p>${inTop() ? `<p class="modal-sub">✨ Signature moves: ${playerTopMoves().length ? playerTopMoves().map((m) => `${m.name} (${m.desc})`).join("; ") : "none yet"} — ${playerTopMoves().length} of ${TOP_TECHNIQUES.length}.</p>` : ""}`;
+      <p class="modal-sub">📘 Mastered ${techniquesMasteredCount()} of ${EXCEL_TECHNIQUES.length} techniques.</p>${inTop() ? `<p class="modal-sub">✨ Signature moves: ${topMovesFor(state.employment.techniquesMastered || []).length ? topMovesFor(state.employment.techniquesMastered || []).map((m) => `${m.name} (${m.desc})`).join("; ") : "none yet"} — ${topMovesFor(state.employment.techniquesMastered || []).length} of ${TOP_TECHNIQUE_NAMES.length + (topMovesFor(state.employment.techniquesMastered || []).some((m) => m.granted) ? 1 : 0)}.</p>` : ""}`;
   }
 
   const goProHint = checkGoProEligible()
@@ -4448,8 +4647,18 @@ function openCareer() {
     </div>`;
   }
 
+  const pySection = pyUnlocked() && state.python
+    ? `<div class="modal-section">
+      <h3>🐍 ${PY_EVENT_NAME}</h3>
+      <div class="kv-row"><span>🐍 Python</span><span>${fmt(state.stats.skills.python || 0)}/100${xpText(PY_SKILL.key)}</span></div>
+      ${PY_COURSE.map((t, i) => `<div class="kv-row"><span>${t.icon} ${t.name}</span><span>${pyMastered().includes(t.name) ? "mastered ✓" : `${fmt(state.python.course[i])}/${pyCourseHours(i)}h`}</span></div>`).join("")}
+      <div class="kv-row"><span>🏆 Won</span><span>${state.python.wonYears.length ? state.python.wonYears.map((y) => `Year ${y}`).join(", ") : "not yet"}</span></div>
+      <p class="modal-sub">Best of ${PY_GAMES} vs ${PY_RIVAL.name} at the end of every preseason. Python and the course are only trained then.</p>
+    </div>`
+    : "";
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
+    ${state.gameComplete ? `<div class="modal-section"><p class="mastered-tag">🌟 Game complete — Year ${state.gameComplete.year}</p></div>` : ""}
     <div class="modal-section">
       <h3>Next Up</h3>
       ${nextSection}
@@ -4491,6 +4700,7 @@ function openCareer() {
         </div>`;
       }).join("")}
     </div>
+    ${pySection}
     <div class="modal-section">
       <h3>Current Stats</h3>
       ${currentStatsHtml()}
@@ -5145,6 +5355,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     how.push(["🏆 Playoffs", `missed (top ${playoffSizeFor(state.lastStandingsTier)} only)`]);
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
     next.push(...campAndNextYearRows());
+    if (inTop() && state.year === state.topSince) notes.push("Someone's been watching your season.");
   } else if (from === "playoffs" && to === "offseason") {
     const p = state.playoff || {};
     const champ = !!p.champion;
@@ -5155,6 +5366,19 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
     next.push(...campAndNextYearRows());
     if (champ && playedTier === 1 && state.leagueTier !== TOP_TIER) notes.push("There's always another level.");
+    if (inTop() && playedTier === TOP_TIER && state.year === state.topSince) notes.push("Someone's been watching your season.");
+    if (state.finishReveal) {
+      state.finishReveal = false;
+      icon = "🌟"; title = "Game complete!";
+      how.length = 0;
+      how.push(["👑 " + TOP_LEAGUE_NAME, "top of the table and playoff champion"]);
+      how.push([`🐍 ${PY_EVENT_NAME}`, `won (Year ${state.year})`]);
+      how.push(["📅 Years played", String(state.year)]);
+      how.push(["🏆 Best rating", fmt(state.peakRank)]);
+      how.push([`🐍 Invitationals won`, String(state.python.wonYears.length)]);
+      how.push(["📋 All-time record", wdl(state.wins, state.draws, state.losses)]);
+      notes.push(`Everything there is to win, all in one year. <b>You've finished CELLOG.</b> Your career carries on — keep playing as long as you like.`);
+    }
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
     if (state.topReveal) {
@@ -5177,8 +5401,16 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     } else if (yearSummary && yearSummary.proRenewed) {
       next.push(["🏆 Sponsorship", `renewed (average ${skillAverage()})`]);
     }
+    if (pyUnlocked() && state.python && !state.python.revealed) {
+      state.python.revealed = true;
+      icon = "🐍"; title = `An invitation: the ${PY_EVENT_NAME}`;
+      notes.push(`Every preseason from now on ends with an exhibition: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel. Nothing's at stake but the series — and the title.`);
+      notes.push(`For the preseason, everything else is set aside (your ${TOP_LEAGUE_NAME} skills are frozen, not rusting). Two sliders instead: 🐍 <b>Python</b>, the skill (it never rusts), and 📚 the <b>Python course</b> — ${PY_COURSE.map((t) => `${t.icon} ${t.name}`).join(", then ")}, each a bonus in the exhibition.`);
+      notes.push(`Win it for the first time and you'll take a signature move into the league. Win it, top the table and take the playoffs <b>in the same year</b>, and you've done it all.`);
+    }
     next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
-    next.push(["🎯 Skills", `all ${playSkillKeys().length} trainable`]);
+    next.push(["🎯 Skills", pyPreseason() ? "🐍 Python and its course only" : `all ${playSkillKeys().length} trainable`]);
+    if (pyPreseason()) next.push([`🐍 ${PY_EVENT_NAME}`, `best of ${PY_GAMES} vs ${PY_RIVAL.name}, the last ${PY_GAMES} days`]);
     next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", "all preseason, paid"]);
     if (!inTop()) {
       next.push(["🧑‍🏫 Skill coaches", "half price"]);
@@ -5565,7 +5797,15 @@ function openHowTo() {
     `<b>${TOP_SIZE} players</b>, you included. ${roundsFor(TOP_TIER)} rounds (the round robin ${BAL.topRoundRobins === 1 ? "once" : `${BAL.topRoundRobins} times over`}), then a top-${TOP_PLAYOFF_SIZE} playoff. Nobody is relegated. The goal: <b>${TOP_LEAGUE_NAME} Champion</b>.`,
     `Your seven case skills are mastered and held at 100 by their XP. Matches here are about three skills: ${TOP_SKILLS.map((k) => `${k.icon} ${k.name}`).join(", ")} — no coaches, no caps. They earn XP like any other.`,
     `<b>🧬 Single-Cell Solutions</b> counts double in the focus-skill edge. <b>⌨️ Speed &amp; Shortcuts</b> makes you finish up to ${TOP_SPEED_MAX_SECONDS / 60} minutes sooner (at 100).`,
-    `<b>✨ Signature moves</b> arrive like techniques (Pro Duties hours past ${B.proDutyHoursRequired}h master them), but each is a lasting bonus, never a penalty: ${TOP_TECHNIQUES.map((t) => `${t.name} (${t.desc})`).join("; ")}.`,
+    `<b>✨ Signature moves</b> arrive like techniques (Pro Duties hours past ${B.proDutyHoursRequired}h master them), but each is a lasting bonus, never a penalty: ${TOP_TECHNIQUES.filter((t) => !t.granted).map((t) => `${t.name} (${t.desc})`).join("; ")}.`,
+  ]));
+
+  if (pyUnlocked() && state.python && state.python.revealed) sec("py", "🐍", PY_EVENT_NAME, ul([
+    `At the end of every preseason: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days. An exhibition — no rating, prize or record at stake.`,
+    `Python stands in for the focus skills: it's the skill part of performance and the focus-skill edge. Health, Calm, Rest, luck and finish time count as usual (${PY_RIVAL.name}'s condition is ${PY_RIVAL.condition}).`,
+    `During the preseason your ${TOP_LEAGUE_NAME} skills are set aside (frozen). Two sliders: 🐍 Python (never rusts) and 📚 the course, its parts in order: ${PY_COURSE.map((t, i) => `${t.icon} ${t.name} (${pyCourseHours(i)}h — ${t.desc})`).join(", ")}.`,
+    `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
+    `<b>Finishing the game:</b> top of the table, the playoffs and the ${PY_EVENT_NAME}, all in the same year.`,
   ]));
 
   sec("season", "📅", "Season & leagues", `
@@ -6001,7 +6241,9 @@ function runDay() {
   if (matchResult) {
     const oppText = matchResult.opponentName ? ` vs ${matchResult.opponentName}` : "";
     const label = matchResult.roundLabel || "Match";
-    const summary = `🏆 ${label}${oppText} (${matchResult.opponentRating}) — ${matchResult.win ? "WON" : matchResult.draw ? "DREW" : "LOST"}. Rating ${fmt(matchResult.rankBefore)} → ${fmt(state.rank)}. +$${matchResult.cashReward}.`;
+    const summary = matchResult.exhibition
+      ? `${label}${oppText} — ${matchResult.win ? "WON" : "LOST"}.`
+      : `🏆 ${label}${oppText} (${matchResult.opponentRating}) — ${matchResult.win ? "WON" : matchResult.draw ? "DREW" : "LOST"}. Rating ${fmt(matchResult.rankBefore)} → ${fmt(state.rank)}. +$${matchResult.cashReward}.`;
     const e = { html: summary, cls: "event-match" };
     state.logEntries.push(e);
     appendLog(e.html, e.cls);
