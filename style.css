@@ -925,3 +925,7 @@ details.match-more[open] { padding-bottom: 8px; }
 .completion-bar { height: 10px; border-radius: 999px; background: var(--bg-elev-2); border: 1px solid var(--border); overflow: hidden; margin: 6px 0 8px; }
 .completion-fill { height: 100%; background: var(--accent); border-radius: 999px; }
 .kv-row.completion-done span:last-child { color: var(--accent); }
+
+/* An invitational's choice on the new year's splash */
+.event-choice { margin-top: 14px; }
+.event-choice .event-choice-btn { margin-top: 8px; }
