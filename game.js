@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.82.0";
+const APP_VERSION = "4.83.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1185,7 +1185,7 @@ function freshState() {
     topSince: null, // the first year played there
     python: null, // its preseason exhibition — see initPython
     gameComplete: null, // { year } once everything's been won in one year
-    trophies: { sweeps: [], unbeaten: [] }, // after finishing: 3–0 exhibitions, unbeaten regular seasons at the top
+    trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
@@ -2741,8 +2741,8 @@ function playPyGame() {
     event += ` ${rival.name} keeps the ${PY_EVENT_NAME}.`;
   }
   res.series.last = n === PY_GAMES;
-  // After finishing the game: a 3–0 is a clean sweep.
-  if (n === PY_GAMES && sr.you === PY_GAMES && state.gameComplete) {
+  // A trophy: a 3–0 is a clean sweep.
+  if (n === PY_GAMES && sr.you === PY_GAMES) {
     state.trophies = state.trophies || { sweeps: [], unbeaten: [] };
     if (!state.trophies.sweeps.includes(state.year)) state.trophies.sweeps.push(state.year);
     res.series.sweep = true;
@@ -3026,8 +3026,8 @@ function processDayEnd() {
         for (let r = state.roundIndex; r < BAL.seasonRounds; r++) {
           for (const tier of leagueTiers()) if (tier !== playedTier) resolveLeagueRoundForTier(tier, r);
         }
-        // After finishing the game: every regular-season match won at the top.
-        if (playedTier === TOP_TIER && state.gameComplete && state.seasonResults.length === roundsFor(TOP_TIER) && state.seasonResults.every((r) => r.win)) {
+        // A trophy: every regular-season match won at the top.
+        if (playedTier === TOP_TIER && state.seasonResults.length === roundsFor(TOP_TIER) && state.seasonResults.every((r) => r.win)) {
           state.trophies = state.trophies || { sweeps: [], unbeaten: [] };
           if (!state.trophies.unbeaten.includes(state.year)) state.trophies.unbeaten.push(state.year);
         }
@@ -4608,6 +4608,21 @@ function currentStatsHtml() {
     .join("");
 }
 
+// Trophies won at the top (and the finish), once there's something in it.
+function trophyCabinetHtml() {
+  const t = state.trophies || { sweeps: [], unbeaten: [] };
+  if (!state.gameComplete && !t.sweeps.length && !t.unbeaten.length) return "";
+  const years = (ys) => (ys.length ? ys.map((y) => `Y${y}`).join(", ") : "not yet");
+  const py = pyUnlocked() && state.python && state.python.revealed;
+  return `<div class="modal-section">
+      <h3>🏆 Trophy cabinet</h3>
+      ${state.gameComplete ? `<div class="kv-row"><span>🌟 Game complete</span><span class="mastered-tag">Year ${state.gameComplete.year}</span></div>` : ""}
+      ${py ? `<div class="kv-row"><span>🐍 ${PY_EVENT_NAME}</span><span>${years(state.python.wonYears)}</span></div>
+      <div class="kv-row"><span>🧹 Clean sweeps (3–0)</span><span>${years(t.sweeps)}</span></div>` : ""}
+      <div class="kv-row"><span>🛡️ Unbeaten seasons</span><span>${years(t.unbeaten)}</span></div>
+    </div>`;
+}
+
 function openCareer() {
   const info = getNextMatchInfo();
   let nextSection;
@@ -4677,13 +4692,7 @@ function openCareer() {
     : "";
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
-    ${state.gameComplete ? `<div class="modal-section">
-      <h3>🏆 Trophy cabinet</h3>
-      <div class="kv-row"><span>🌟 Game complete</span><span class="mastered-tag">Year ${state.gameComplete.year}</span></div>
-      <div class="kv-row"><span>🐍 ${PY_EVENT_NAME}</span><span>${state.python ? state.python.wonYears.map((y) => `Y${y}`).join(", ") : "—"}</span></div>
-      <div class="kv-row"><span>🧹 Clean sweeps (3–0)</span><span>${state.trophies && state.trophies.sweeps.length ? state.trophies.sweeps.map((y) => `Y${y}`).join(", ") : "not yet"}</span></div>
-      <div class="kv-row"><span>🛡️ Unbeaten seasons</span><span>${state.trophies && state.trophies.unbeaten.length ? state.trophies.unbeaten.map((y) => `Y${y}`).join(", ") : "not yet"}</span></div>
-    </div>` : ""}
+    ${trophyCabinetHtml()}
     <div class="modal-section">
       <h3>Next Up</h3>
       ${nextSection}
@@ -5404,7 +5413,10 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       how.push([`🐍 Invitationals won`, String(state.python.wonYears.length)]);
       how.push(["📋 All-time record", wdl(state.wins, state.draws, state.losses)]);
       notes.push(`Everything there is to win, all in one year. <b>You've finished CELLOG.</b> Your career carries on — keep playing as long as you like.`);
-      notes.push(`Two more trophies now await: a 🧹 <b>clean sweep</b> of the ${PY_EVENT_NAME} (3–0), and a 🛡️ <b>${TOP_LEAGUE_NAME} regular season without a single defeat</b>.`);
+      const left = [];
+      if (!state.trophies.sweeps.length) left.push(`a 🧹 <b>clean sweep</b> of the ${PY_EVENT_NAME} (3–0)`);
+      if (!state.trophies.unbeaten.length) left.push(`a 🛡️ <b>${TOP_LEAGUE_NAME} regular season without a single defeat</b>`);
+      if (left.length) notes.push(`Still to collect: ${left.join(", and ")}.`);
     }
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
@@ -5825,6 +5837,7 @@ function openHowTo() {
     `Your seven case skills are mastered and held at 100 by their XP. Matches here are about three skills: ${TOP_SKILLS.map((k) => `${k.icon} ${k.name}`).join(", ")} — no coaches, no caps. They earn XP like any other.`,
     `<b>🧬 Single-Cell Solutions</b> counts double in the focus-skill edge. <b>⌨️ Speed &amp; Shortcuts</b> makes you finish up to ${TOP_SPEED_MAX_SECONDS / 60} minutes sooner (at 100).`,
     `<b>✨ Signature moves</b> arrive like techniques (Pro Duties hours past ${B.proDutyHoursRequired}h master them), but each is a lasting bonus, never a penalty: ${TOP_TECHNIQUES.filter((t) => !t.granted).map((t) => `${t.name} (${t.desc})`).join("; ")}.`,
+    `<b>🛡️ Unbeaten trophy:</b> win every regular-season match of a ${TOP_LEAGUE_NAME} season.`,
   ]));
 
   if (pyUnlocked() && state.python && state.python.revealed) sec("py", "🐍", PY_EVENT_NAME, ul([
@@ -5833,7 +5846,7 @@ function openHowTo() {
     `During the preseason your ${TOP_LEAGUE_NAME} skills are set aside (frozen). Two sliders: 🐍 Python (never rusts) and 📚 the course, its parts in order: ${PY_COURSE.map((t, i) => `${t.icon} ${t.name} (${pyCourseHours(i)}h — ${t.desc})`).join(", ")}.`,
     `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
     `<b>Finishing the game:</b> top of the table, the playoffs and the ${PY_EVENT_NAME}, all in the same year.`,
-    ...(state.gameComplete ? [`<b>After that:</b> 🧹 a clean sweep (3–0) of the ${PY_EVENT_NAME}, and 🛡️ an unbeaten ${TOP_LEAGUE_NAME} regular season, are trophies of their own.`] : []),
+    `<b>🧹 Clean sweep trophy:</b> win all ${PY_GAMES} games (3–0). Any year — not needed to finish the game.`,
   ]));
 
   sec("season", "📅", "Season & leagues", `
