@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.81.0";
+const APP_VERSION = "4.82.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1185,6 +1185,7 @@ function freshState() {
     topSince: null, // the first year played there
     python: null, // its preseason exhibition — see initPython
     gameComplete: null, // { year } once everything's been won in one year
+    trophies: { sweeps: [], unbeaten: [] }, // after finishing: 3–0 exhibitions, unbeaten regular seasons at the top
     finishReveal: false,
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
@@ -2696,15 +2697,17 @@ function finalizeSeasonMovement(playerTierChampion) {
   return champText + moveText;
 }
 
-// One game of the exhibition (or null once it's decided). Python stands in
-// for the focus skills; there's nothing at stake but the series.
+// One game of the exhibition (all PY_GAMES are always played; the series —
+// and the signature move — are decided at a majority). Python stands in for
+// the focus skills; there's nothing at stake but the series.
 function playPyGame() {
   initPython();
   const py = state.python;
   if (!py.series || py.series.year !== state.year) py.series = { year: state.year, you: 0, opp: 0 };
   const sr = py.series;
   const need = Math.ceil(PY_GAMES / 2);
-  if (sr.you >= need || sr.opp >= need) return null;
+  if (sr.you + sr.opp >= PY_GAMES) return null;
+  const decidedBefore = sr.you >= need || sr.opp >= need;
   const rival = pyRival();
   const saved = state.activeSkills;
   state.activeSkills = [PY_SKILL.key];
@@ -2719,7 +2722,9 @@ function playPyGame() {
   res.roundLabel = `🐍 ${PY_EVENT_NAME} · Game ${n}`;
   res.series = { before, after: { you: sr.you, opp: sr.opp }, need };
   let event = `🐍 ${PY_EVENT_NAME}, game ${n}: ${res.win ? "won" : "lost"} — ${sr.you}–${sr.opp}.`;
-  if (sr.you >= need) {
+  if (decidedBefore) {
+    res.series.decided = sr.you >= need ? "won" : "lost";
+  } else if (sr.you >= need) {
     const first = !py.wonYears.length;
     py.wonYears.push(state.year);
     res.series.won = true;
@@ -2734,6 +2739,14 @@ function playPyGame() {
   } else if (sr.opp >= need) {
     res.series.lost = true;
     event += ` ${rival.name} keeps the ${PY_EVENT_NAME}.`;
+  }
+  res.series.last = n === PY_GAMES;
+  // After finishing the game: a 3–0 is a clean sweep.
+  if (n === PY_GAMES && sr.you === PY_GAMES && state.gameComplete) {
+    state.trophies = state.trophies || { sweeps: [], unbeaten: [] };
+    if (!state.trophies.sweeps.includes(state.year)) state.trophies.sweeps.push(state.year);
+    res.series.sweep = true;
+    event += " 🧹 Clean sweep — a new trophy!";
   }
   return { result: res, event };
 }
@@ -3012,6 +3025,11 @@ function processDayEnd() {
         // remaining rounds now, so all tables finish together.
         for (let r = state.roundIndex; r < BAL.seasonRounds; r++) {
           for (const tier of leagueTiers()) if (tier !== playedTier) resolveLeagueRoundForTier(tier, r);
+        }
+        // After finishing the game: every regular-season match won at the top.
+        if (playedTier === TOP_TIER && state.gameComplete && state.seasonResults.length === roundsFor(TOP_TIER) && state.seasonResults.every((r) => r.win)) {
+          state.trophies = state.trophies || { sweeps: [], unbeaten: [] };
+          if (!state.trophies.unbeaten.includes(state.year)) state.trophies.unbeaten.push(state.year);
         }
         const result = processLeagueSeasonEnd();
         state.lastStandings = result.standings;
@@ -3820,13 +3838,14 @@ function matchResultTableHtml(result) {
   if (result.exhibition && result.series) {
     const sr = result.series;
     const xpRows = (result.xp && result.xp.earned ? result.xp.skills : []).map((x) => `<tr><td>${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP</td><td>${fmt(x.before)}</td><td>${fmt(x.after)}</td><td class="wk-up">+${fmt(x.after - x.before)}</td></tr>`).join("");
-    const verdict = sr.won ? "🏆 won it" : sr.lost ? "lost it" : `first to ${sr.need}`;
+    const verdict = sr.won ? "🏆 you've won it" : sr.lost ? `${result.opponentName} keeps it` : sr.decided === "won" ? "already yours" : sr.decided === "lost" ? `already ${result.opponentName}'s` : `first to ${sr.need}`;
+    const tail = sr.sweep ? " 🧹 <b>Clean sweep</b> — a new trophy!" : sr.last ? ` Final score ${sr.after.you}–${sr.after.opp}.` : ` All ${PY_GAMES} games are played.`;
     return `
     <table class="perf-table result-table">
       <thead><tr><th>Your Result</th><th>Before</th><th>After</th><th>Change</th></tr></thead>
       <tbody><tr><td>🐍 Series</td><td>${sr.before.you}–${sr.before.opp}</td><td>${sr.after.you}–${sr.after.opp}</td><td class="${result.win ? "wk-up" : "wk-down"}">${result.win ? "W" : "L"}</td></tr>${xpRows}</tbody>
     </table>
-    <div class="match-sub perf-note">An exhibition — no rating, prize or record at stake. Series: ${verdict}.${sr.move ? " ✨ New signature move: <b>Python in Excel</b> — +2 on every focus skill in the edge and 30s off your finish, in every league match from now on." : ""}</div>`;
+    <div class="match-sub perf-note">An exhibition — no rating, prize or record at stake. Series: ${verdict}.${tail}${sr.move ? " ✨ New signature move: <b>Python in Excel</b> — +2 on every focus skill in the edge and 30s off your finish, in every league match from now on." : ""}</div>`;
   }
   const row = (label, before, after, change, cls) =>
     `<tr><td>${label}</td><td>${before}</td><td>${after}</td><td class="${cls}">${change}</td></tr>`;
@@ -4658,7 +4677,13 @@ function openCareer() {
     : "";
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
-    ${state.gameComplete ? `<div class="modal-section"><p class="mastered-tag">🌟 Game complete — Year ${state.gameComplete.year}</p></div>` : ""}
+    ${state.gameComplete ? `<div class="modal-section">
+      <h3>🏆 Trophy cabinet</h3>
+      <div class="kv-row"><span>🌟 Game complete</span><span class="mastered-tag">Year ${state.gameComplete.year}</span></div>
+      <div class="kv-row"><span>🐍 ${PY_EVENT_NAME}</span><span>${state.python ? state.python.wonYears.map((y) => `Y${y}`).join(", ") : "—"}</span></div>
+      <div class="kv-row"><span>🧹 Clean sweeps (3–0)</span><span>${state.trophies && state.trophies.sweeps.length ? state.trophies.sweeps.map((y) => `Y${y}`).join(", ") : "not yet"}</span></div>
+      <div class="kv-row"><span>🛡️ Unbeaten seasons</span><span>${state.trophies && state.trophies.unbeaten.length ? state.trophies.unbeaten.map((y) => `Y${y}`).join(", ") : "not yet"}</span></div>
+    </div>` : ""}
     <div class="modal-section">
       <h3>Next Up</h3>
       ${nextSection}
@@ -5339,6 +5364,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     notes.push(inTop() ? "Only the week's focus skills can be trained now — and up here there are no coaches." : "Only the week's focus skills can be trained now — hire their coaches in 🧑‍🏫 Staff. Contracts end after each match.");
   } else if (from === "regular" && to === "playoffs") {
     icon = "🏆"; title = "Through to the playoffs!"; sub = `Year ${state.year} · ${lg(playedTier)}`;
+    if (state.trophies && state.trophies.unbeaten.includes(state.year)) notes.push("🛡️ <b>Unbeaten</b> — every regular-season match won. A new trophy!");
     how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${leagueSizeFor(state.lastStandingsTier)}`]);
     how.push(["📋 Record", wdl(w, dr, season.length - w - dr)]);
     if (playedTier > 1 && state.lastPlayerPosition <= BAL.promotionTablePlaces) how.push(["⬆️ Promotion", `secured (top ${BAL.promotionTablePlaces})`]);
@@ -5378,6 +5404,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       how.push([`🐍 Invitationals won`, String(state.python.wonYears.length)]);
       how.push(["📋 All-time record", wdl(state.wins, state.draws, state.losses)]);
       notes.push(`Everything there is to win, all in one year. <b>You've finished CELLOG.</b> Your career carries on — keep playing as long as you like.`);
+      notes.push(`Two more trophies now await: a 🧹 <b>clean sweep</b> of the ${PY_EVENT_NAME} (3–0), and a 🛡️ <b>${TOP_LEAGUE_NAME} regular season without a single defeat</b>.`);
     }
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
@@ -5801,11 +5828,12 @@ function openHowTo() {
   ]));
 
   if (pyUnlocked() && state.python && state.python.revealed) sec("py", "🐍", PY_EVENT_NAME, ul([
-    `At the end of every preseason: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days. An exhibition — no rating, prize or record at stake.`,
+    `At the end of every preseason: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. An exhibition — no rating, prize or record at stake.`,
     `Python stands in for the focus skills: it's the skill part of performance and the focus-skill edge. Health, Calm, Rest, luck and finish time count as usual (${PY_RIVAL.name}'s condition is ${PY_RIVAL.condition}).`,
     `During the preseason your ${TOP_LEAGUE_NAME} skills are set aside (frozen). Two sliders: 🐍 Python (never rusts) and 📚 the course, its parts in order: ${PY_COURSE.map((t, i) => `${t.icon} ${t.name} (${pyCourseHours(i)}h — ${t.desc})`).join(", ")}.`,
     `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
     `<b>Finishing the game:</b> top of the table, the playoffs and the ${PY_EVENT_NAME}, all in the same year.`,
+    ...(state.gameComplete ? [`<b>After that:</b> 🧹 a clean sweep (3–0) of the ${PY_EVENT_NAME}, and 🛡️ an unbeaten ${TOP_LEAGUE_NAME} regular season, are trophies of their own.`] : []),
   ]));
 
   sec("season", "📅", "Season & leagues", `
