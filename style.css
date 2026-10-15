@@ -199,13 +199,13 @@ html, body {
 .activity-name { font-weight: 600; flex-shrink: 0; }
 .combo-outcome {
   font-size: 12px;
+  line-height: 1.3;
   color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
   flex-shrink: 1;
 }
+/* Wraps between pieces (at a " · "), never inside one. */
+.outcome-part { white-space: nowrap; }
 .combo-bar { margin: 5px 0 8px; }
 .activity-hours {
   margin-left: auto;

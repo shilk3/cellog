@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.88.0";
+const APP_VERSION = "4.89.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3599,6 +3599,14 @@ function lockedZoneHtml(cap, scaleMax) {
 // under the marker reads neutral rather than red.
 // bank / bankPreview: a reserve above 100 (Calm), drawn as a bright strip
 // over the full bar — its width is the reserve's share of the most it can hold.
+// A row's readout, in pieces that stay whole: when it doesn't fit beside
+// the name it wraps at a " · " rather than being cut off.
+function outcomeHtml(text) {
+  return String(text)
+    .split(" · ")
+    .map((part, i) => `<span class="outcome-part">${i ? "· " : ""}${part}</span>`)
+    .join(" ");
+}
 function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap, scaleMax = cap, hours, maxHours, markerHours, shopTag, disabled, barClass, heldBelow = false, bank = 0, bankPreview = 0, xpStrip = "" }) {
   const barPct = clamp((value / scaleMax) * 100, 0, 100);
   const previewPct = previewValue == null ? barPct : clamp((previewValue / scaleMax) * 100, 0, 100);
@@ -3619,7 +3627,7 @@ function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap,
       <span class="activity-icon">${icon}</span>
       <span class="activity-name">${label}</span>
       ${shopTag || ""}
-      <span class="combo-outcome">${outcomeText}</span>
+      <span class="combo-outcome">${outcomeHtml(outcomeText)}</span>
       <span class="activity-hours"><span id="hoursVal_${key}">${hours}</span>h</span>
     </div>
     <div class="bar combo-bar"><div class="bar-fill ${barClass}" style="width:${barPct}%"></div>${lockedZoneHtml(cap, scaleMax)}${overlayHtml}${bankHtml(bank, bankPreview)}${xpStrip}</div>
