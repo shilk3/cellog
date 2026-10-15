@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.89.0";
+const APP_VERSION = "4.90.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -204,11 +204,14 @@ const BAL = {
   techniqueMinHours: 30,
   techniqueMaxHours: 45,
   techniquePenaltyPerUnmastered: 0.05,
-  // Experience: every match a skill is in focus earns it XP (0–100, never
-  // rusts) — only while you play in League xpFromTier or higher, playoff
-  // matches counting xpPlayoffMult times. xpPerMatch is the game length's
-  // (length), so a skill fills in roughly 8–9 seasons in every length.
+  // Experience: every match a ⭐ specialisation is in focus earns it XP
+  // (0–100, never rusts): xpPerMatch × xpSpecMult, playoff matches counting
+  // xpPlayoffMult times. A focus skill that isn't a ⭐ earns nothing in the
+  // league and xpPerMatch in a playoff. Only while you play in League
+  // xpFromTier or higher. xpPerMatch is the game length's (length), so a ⭐
+  // fills in roughly 3–5 seasons in every length.
   xpPerMatch: 1, // (length)
+  xpSpecMult: 2,
   xpMax: 100,
   xpFromTier: 4,
   xpPlayoffMult: 2,
@@ -2369,7 +2372,7 @@ function recordRivalResultVsPlayer(rivalId, outcome, playerRating) {
 }
 
 // Experience earned by one match: each of the week's focus skills gains
-// xpPerMatch (double in a knockout), but only while you play in League
+// xpGainFor (⭐ specialisations most), but only while you play in League
 // xpFromTier or higher. Returns what moved, for the result screen.
 // All 7 skills' experience added up — for the progress tables.
 function xpTotal(s = state, keys = playSkillKeys()) {
@@ -2378,17 +2381,23 @@ function xpTotal(s = state, keys = playSkillKeys()) {
 function xpEarnsHere(tier = state.leagueTier) {
   return tier <= BAL.xpFromTier;
 }
-function xpPerFocusMatch(knockout) {
-  return BAL.xpPerMatch * (knockout ? BAL.xpPlayoffMult : 1);
+// One focus match's XP for a skill: a ⭐ specialisation earns xpSpecMult
+// times the base; any other of the seven earns nothing — except the base in
+// a playoff. Skills with no specialisations (the top tier's, the
+// invitationals') earn the base, as they always have.
+function xpGainFor(key, knockout) {
+  const ko = knockout ? BAL.xpPlayoffMult : 1;
+  if (!SKILL_KEYS.includes(key)) return BAL.xpPerMatch * ko;
+  if (isSpecialisation(key)) return BAL.xpPerMatch * BAL.xpSpecMult * ko;
+  return knockout ? BAL.xpPerMatch : 0;
 }
 function awardMatchXp(knockout) {
   if (!xpEarnsHere()) return { earned: false, skills: [] };
-  const gain = xpPerFocusMatch(knockout);
   const xp = state.stats.xp;
   const skills = state.activeSkills.map((key) => {
     const before = xp[key] || 0;
-    xp[key] = Math.min(BAL.xpMax, before + gain);
-    return { key, before, after: xp[key] };
+    xp[key] = Math.min(BAL.xpMax, before + xpGainFor(key, knockout));
+    return { key, before, after: xp[key], notSpec: SKILL_KEYS.includes(key) && !isSpecialisation(key) };
   });
   return { earned: true, skills };
 }
@@ -3655,11 +3664,17 @@ function bankHtml(bank, bankPreview) {
 function xpStripHtml(key, { preview = false } = {}) {
   const xp = (state.stats.xp && state.stats.xp[key]) || 0;
   const next = preview && inSeason() && xpEarnsHere() && state.activeSkills.includes(key)
-    ? Math.min(BAL.xpMax, xp + xpPerFocusMatch(playerKnockout())) : xp;
+    ? Math.min(BAL.xpMax, xp + xpGainFor(key, playerKnockout())) : xp;
   if (xp < 0.5 && next < 0.5) return "";
   const now = clamp((xp / BAL.xpMax) * 100, 0, 100);
   const to = clamp((next / BAL.xpMax) * 100, 0, 100);
   return `<div class="bar-xp${xp >= BAL.xpMax ? " xp-max" : ""}" style="width:${now}%"></div>${to > now + 0.1 ? `<div class="bar-xp bar-xp-gain" style="left:${now}%;width:${to - now}%"></div>` : ""}`;
+}
+// What this match's focus skills will earn, for the next-match screen.
+function xpMatchNote(knockout) {
+  if (!state.activeSkills.some((k) => SKILL_KEYS.includes(k))) return `Each focus skill earns <b>+${xpGainFor(state.activeSkills[0], knockout)} XP</b> from this match`;
+  const other = xpGainFor(SKILL_KEYS.find((k) => !isSpecialisation(k)) || SKILL_KEYS[0], knockout);
+  return `⭐ focus skills earn <b>+${BAL.xpPerMatch * BAL.xpSpecMult * (knockout ? BAL.xpPlayoffMult : 1)} XP</b> from this match, other focus skills ${other ? `+${other}` : "none"}`;
 }
 // Every one of the seven at 100 XP.
 function allSevenMastered() {
@@ -4142,7 +4157,7 @@ function matchResultTableHtml(result) {
   rows.push(row(result.recordScope === "season" ? "📋 Season record" : "📋 Record", recText(rec), recText(recAfter), result.win ? "W" : result.draw ? "D" : "L", result.win ? "wk-up" : result.draw ? "" : "wk-down"));
   // Experience each focus skill earned (results from before v4.75 have none).
   const xp = result.xp;
-  if (xp && xp.earned) xp.skills.forEach((x) => rows.push(row(`${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP`, fmt(x.before), fmt(x.after), x.after > x.before ? `+${fmt(x.after - x.before)}` : "max", x.after > x.before ? "wk-up" : "")));
+  if (xp && xp.earned) xp.skills.forEach((x) => rows.push(row(`${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP`, fmt(x.before), fmt(x.after), x.after > x.before ? `+${fmt(x.after - x.before)}` : x.before >= BAL.xpMax ? "max" : x.notSpec ? "+0 · not ⭐" : "max", x.after > x.before ? "wk-up" : "")));
 
   return `
     <table class="perf-table result-table">
@@ -4335,7 +4350,7 @@ function nextMatchPreviewHtml() {
         <tbody>${focusRows}${edgeRow}${timeRows}</tbody>
       </table>
       <div class="match-sub perf-note">At today's form you have a <b>${info.winPct}%</b> win chance. ${r ? `About ${Math.round(mu.deadHeatProb * 100)}% of the time it's a dead heat (level scores), settled on finish time — you're the faster finisher ${Math.round(fasterChance(mu.youXp - mu.oppXp, mu.youBonus - mu.oppBonus) * 100)}% of the time.` : ""}</div>
-      <div class="match-sub perf-note">🎓 ${xpEarnsHere(tier) ? `Each focus skill earns <b>+${xpPerFocusMatch(info.kind === "playoff")} XP</b> from this match, win or lose.` : `Experience is earned from League ${BAL.xpFromTier} up.`}</div>
+      <div class="match-sub perf-note">🎓 ${xpEarnsHere(tier) ? `${xpMatchNote(info.kind === "playoff")}, win or lose.` : `Experience is earned from League ${BAL.xpFromTier} up.`}</div>
     </div>`;
 }
 
@@ -6174,10 +6189,10 @@ function openHowTo() {
   ]));
 
   sec("xp", "🎓", "Experience", ul([
-    `Every match a skill is in focus earns it <b>+${B.xpPerMatch} XP</b>, win or lose — <b>+${B.xpPerMatch * B.xpPlayoffMult}</b> in a playoff match. Up to ${B.xpMax} per skill, and it never rusts.`,
+    `Every match a <b>⭐ specialisation</b> is in focus earns it <b>+${B.xpPerMatch * B.xpSpecMult} XP</b>, win or lose — <b>+${B.xpPerMatch * B.xpSpecMult * B.xpPlayoffMult}</b> in a playoff match. A focus skill that isn't a ⭐ earns nothing in the league, and <b>+${B.xpPerMatch}</b> in a playoff. Up to ${B.xpMax} per skill, and it never rusts.`,
     `Only earned while you play in <b>League ${B.xpFromTier} or higher</b> — in League 5 there's none yet, and a relegation back there pauses it.`,
     `<b>XP is a floor:</b> a skill never rusts below its XP, and if it stops being a ⭐ specialisation it only drops to its XP (when that's above the lower cap). Max a skill's XP and it stays at 100 whichever skills are your ⭐ — so you can swap them around.`,
-    `It builds slowly: a skill fills in about 8–9 seasons. It shows as the violet strip along the bottom of each skill bar (<b>XP</b> beside the number), with the next match's gain faint after it.`,
+    `A ⭐ fills in about 3–5 seasons. To fill all seven, <b>rotate your ⭐s</b> (Career) — swap one out once its XP is high (it only drops to its XP), and a new one starts earning. Done well, all seven take about 10–13 seasons. It shows as the violet strip along the bottom of each skill bar (<b>XP</b> beside the number), with the next match's gain faint after it.`,
     `Experience makes you <b>finish faster</b>: a minute per ${B.xpPerMinute} XP across the week's focus skills. The faster finish settles a dead heat (see Match day).`,
   ]));
 

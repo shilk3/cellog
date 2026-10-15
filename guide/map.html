@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.89.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.90.0</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -165,7 +165,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
   <figure>
     <div class="sheet" id="sheet"></div>
-    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.89.0).</figcaption>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.90.0).</figcaption>
   </figure>
 
   <section class="detail" id="detail" aria-live="polite"></section>
@@ -204,7 +204,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["calm", "Calm (+ Chill)", "0–100, Chill to 130", "stats", 1, 3, "Built by Relax, plus a Sleep bonus (+1.5 a day at 7h, +3 at 8h+); Rest below 80 wears it down. Counts 15% of match performance (Chill counts as 100 at most), and below 20 it also cuts the skills part (×0.75, ×0.5 under 10). At 0 you burn out."],
     ["health", "Health", "0–100", "stats", 1, 4, "Built by Gym (Rest boosts the gains), fades without it. Capped at 70, +10 per Physio level. Scales training (×0.5 at 0 up to ×1 at 100) and counts 25% of match performance."],
     ["skills", "Skills ×7", "⭐ 3 specialisations", "stats", 1, 5, "Seven case skills. Your 3 ⭐ specialisations can reach your best league's cap; the other four stop 20 lower. The week's focus skills are what a match tests."],
-    ["experience", "Experience ×7", "XP 0–100 per skill", "stats", 1, 6, "Every match a skill is in focus earns it XP, win or lose: +1 (Full), +2 (Half), +4 (Short), double in playoffs. Only while you play in League 4 or higher. Up to 100 per skill, never rusts — a skill fills in about 8–9 seasons. It is also each skill's floor: no rust below it, and a ⭐ you swap out only drops to its XP if that's above the lower cap. Your focus skills' average XP sets your finish time: a minute sooner per 10 XP."],
+    ["experience", "Experience ×7", "XP 0–100 per skill", "stats", 1, 6, "Every match a ⭐ specialisation is in focus earns it XP, win or lose: +2 (Full), +4 (Half), +8 (Short), double in playoffs. A focus skill that isn't a ⭐ earns nothing — only the base (+1 / +2 / +4) in a playoff. Only while you play in League 4 or higher. Up to 100 per skill, never rusts — a ⭐ fills in about 3–5 seasons; rotating ⭐s fills all seven in about 10–13. It is also each skill's floor: no rust below it, and a ⭐ you swap out only drops to its XP if that's above the lower cap. Your focus skills' average XP sets your finish time: a minute sooner per 10 XP."],
     ["cash", "Cash", "your bank", "money", 1, 8, "Money in from pay and prizes, out on living costs, staff wages and things you buy."],
     ["living", "Living costs", "$50 every day", "money", 1, 9, "Charged every day whatever you're doing: preseason, unemployed or pro."],
 
@@ -323,7 +323,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["yearend", "pro", "renewal check", "decides"],
     ["yearend", "gear", "equipment expires", "hurts"],
     ["rest", "gym", "×1 → ×2 gains", "helps"],
-    ["focus", "experience", "+1 XP per match in focus", "helps"],
+    ["focus", "experience", "+2 XP per match in focus, ⭐ only", "helps"], ["skills", "experience", "⭐ earn it (others only in playoffs)", "decides"],
     ["playoffs", "experience", "counts double", "helps"],
     ["league", "experience", "earned in League 4 and up", "decides"],
     ["coaches", "skills", "stops rust", "helps"],

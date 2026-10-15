@@ -148,10 +148,12 @@ what each change costs first). Every rival has 3 specialisations too, fixed
 for good, under the same caps, with levels that follow their rating — so
 they rise and fall with their results.
 
-**Experience**: every match a skill is in the week's focus earns it 🎓 XP,
-win or lose — +1 in a Full game (+2 Half, +4 Short), double in playoff
-matches — but only while you play in League 4 or higher. Up to 100 per skill
-and it never rusts, so a skill fills in about 8–9 seasons. XP is also each
+**Experience**: every match a ⭐ specialisation is in the week's focus earns
+it 🎓 XP, win or lose — +2 in a Full game (+4 Half, +8 Short), double in
+playoff matches; a focus skill that isn't a ⭐ earns nothing, except +1 (+2,
++4) in a playoff — but only while you play in League 4 or higher. Up to 100
+per skill and it never rusts, so a ⭐ fills in about 3–5 seasons; rotating
+your ⭐s fills all seven in about 10–13. XP is also each
 skill's floor: a skill never rusts below its XP, and a ⭐ specialisation you
 swap out only drops to its XP if that's above the lower cap (XP 100 → it
 stays at 100). It shows as a
