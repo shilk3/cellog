@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.86.0";
+const APP_VERSION = "4.87.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -368,14 +368,15 @@ const MOB_COURSE = [
 const MOB_GAIN_BOOST = 2; // trains twice as fast as Python: it shares the preseason with your seven
 const MOB_RIVAL_NAME = "PocketLacaze";
 const MOB_EVENT_NAME = "Mobile Invitational";
-const MOB_TIERS = [3, 2, 1]; // below the top: its preseasons in these leagues
-// PocketLacaze by your league (0 = the top), and the series prize.
+// PocketLacaze by your league (0 = the top), and the series prize. Below
+// the top, its preseasons are in the leagues listed here.
 const MOB_BY_TIER = {
   3: { mobile: 60, xp: 5, condition: 80, rating: 1050, prize: 500 },
   2: { mobile: 75, xp: 10, condition: 85, rating: 1400, prize: 750 },
   1: { mobile: 90, xp: 15, condition: 90, rating: 1900, prize: 1000 },
   0: { mobile: 100, xp: 20, condition: 95, rating: 2650, prize: 1500 },
 };
+const MOB_TIERS = Object.keys(MOB_BY_TIER).map(Number).filter((t) => t !== TOP_TIER);
 // Both invitationals, for what they share.
 const EVENTS = {
   py: { id: "py", skill: PY_SKILL, course: PY_COURSE, name: PY_EVENT_NAME, icon: "🐍", courseAct: "pycourse", stateKey: "python" },
@@ -404,16 +405,8 @@ function pyUnlocked(s) {
   }
   return inTop(s) && s.topSince != null && s.year > s.topSince;
 }
-// Its preseason: everything else set aside.
 function isEventSkill(key) {
   return EVENT_SKILL_KEYS.includes(key);
-}
-// This year's preseason invitational: "py", "mob" or null (none, or
-// declined). Chosen when the year starts — see decidePreseasonEvent.
-function preseasonEvent() {
-  const s = liveState();
-  const e = s && s.events;
-  return e && e.year === s.year ? e.choice : null;
 }
 // The state, or null while a new career's state is still being built.
 function liveState() {
@@ -423,26 +416,27 @@ function liveState() {
     return null;
   }
 }
-function inPreseason() {
+// This year's preseason invitational: "py", "mob" or null (none, or
+// declined). Set when the year starts — see decidePreseasonEvent.
+function preseasonEvent() {
   const s = liveState();
-  return !!s && s.seasonPhase === "preseason";
+  const e = s && s.events;
+  return e && e.year === s.year ? e.choice : null;
+}
+// The invitational whose sliders are in the plan now (its preseason only).
+function courseEvent() {
+  return isPreseason() ? preseasonEvent() : null;
 }
 // Its preseason, now — swapped in for everything else (at the top) or
 // alongside your seven (below it).
 function eventPreseason(id) {
-  return inPreseason() && preseasonEvent() === id;
+  return courseEvent() === id;
 }
 function swapEvent() {
-  return (inPreseason() && inTop() && preseasonEvent()) || null;
+  return (inTop() && courseEvent()) || null;
 }
 function alongsideEvent() {
-  return (inPreseason() && !inTop() && preseasonEvent()) || null;
-}
-function pyPreseason() {
-  return eventPreseason("py");
-}
-function mobPreseason() {
-  return eventPreseason("mob");
+  return (!inTop() && courseEvent()) || null;
 }
 function evState(id) {
   return state[EVENTS[id].stateKey];
@@ -462,8 +456,16 @@ function evCurrent(id) {
   const i = EVENTS[id].course.findIndex((t) => !evMastered(id).includes(t.name));
   return i < 0 ? null : i;
 }
-function evRival(id) {
-  return state.rivals.find((r) => (id === "py" ? r.py : r.mob));
+// Which invitational a rival plays ("py" / "mob"), and their fixed profile
+// ({ <skill key>, xp, condition }).
+function rivalEvent(r) {
+  return r && r.py ? "py" : r && r.mob ? "mob" : null;
+}
+function rivalEventProfile(r) {
+  return r.py || r.mob;
+}
+function evRival(id, s = state) {
+  return s.rivals.find((r) => rivalEvent(r) === id);
 }
 function pyCourseHours(i) {
   return evCourseHours("py", i);
@@ -471,16 +473,10 @@ function pyCourseHours(i) {
 function pyMastered() {
   return evMastered("py");
 }
-function pyMoves() {
-  return evMoves("py");
-}
-function pyCurrent() {
-  return evCurrent("py");
-}
 function pyRival() {
   return evRival("py");
 }
-// The Mobile Invitational has started for you (its first preseason).
+// The Mobile Invitational has been offered to you (its first preseason).
 function mobRevealed() {
   return !!(state.mobile && state.mobile.revealed);
 }
@@ -498,19 +494,42 @@ function eventOptions() {
   if (!mobRevealed()) return { options: ["mob"], def: "mob", must: true };
   return { options: ["mob", null], def: null };
 }
-// Called as each year starts: the default stands until you choose.
+// Called as each year starts: the default stands until you choose. Being
+// offered the Mobile Invitational for the first time is its reveal (the
+// new year's splash tells you about it: revealMob).
 function decidePreseasonEvent() {
   const o = eventOptions();
-  state.events = { year: state.year, choice: o.def, options: o.options, must: !!o.must, chosen: !!o.must || o.options.length === 0 };
-  if (o.def === "mob" || o.options.includes("mob")) initMobile();
+  state.events = { year: state.year, choice: o.def, options: o.options, must: !!o.must, revealMob: false };
+  o.options.filter(Boolean).forEach((id) => initEvent(id));
+  if (o.options.includes("mob") && !state.mobile.revealed) {
+    state.mobile.revealed = true;
+    state.events.revealMob = true;
+  }
+}
+// The choice can change until the invitational's first game.
+function canChooseEvent() {
+  const e = state.events;
+  return !!e && e.year === state.year && e.options.length > 1 && isPreseason() && state.phaseDay <= BAL.preseasonDays - PY_GAMES;
 }
 function chooseEvent(choice) {
-  const e = state.events;
-  if (!e || e.year !== state.year || !e.options.includes(choice) || state.seasonPhase !== "preseason") return;
-  e.choice = choice;
-  e.chosen = true;
-  if (choice === "mob") initMobile();
-  if (choice === "py") initPython();
+  if (!canChooseEvent() || !state.events.options.includes(choice)) return;
+  state.events.choice = choice;
+  if (choice) initEvent(choice);
+}
+// Sets an invitational up the first time it's needed (s: a save being
+// migrated, before it's the live state).
+function initEvent(id, s = state) {
+  const E = EVENTS[id];
+  if (!s[E.stateKey]) s[E.stateKey] = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], sweeps: [], revealed: false };
+  if (s.stats.skills[E.skill.key] == null) s.stats.skills[E.skill.key] = 0;
+  if (s.stats.xp[E.skill.key] == null) s.stats.xp[E.skill.key] = 0;
+  if (!evRival(id, s)) {
+    const profile = id === "py" ? { python: PY_RIVAL.python, xp: PY_RIVAL.xp, condition: PY_RIVAL.condition } : { ...MOB_BY_TIER[3] };
+    s.rivals.push({
+      id: Math.max(...s.rivals.map((r) => r.id)) + 1, name: id === "py" ? PY_RIVAL.name : MOB_RIVAL_NAME, rating: id === "py" ? PY_RIVAL.rating : MOB_BY_TIER[3].rating, league: -1,
+      wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0, [id]: profile,
+    });
+  }
 }
 
 // ---- Completion: one percentage over every goal you know about so far.
@@ -588,30 +607,6 @@ function completionPct(stage = completionStage()) {
 }
 function completionBarHtml(pct) {
   return `<div class="completion-bar"><div class="completion-fill" style="width:${pct}%"></div></div>`;
-}
-// Sets it all up the first time it's needed.
-function initPython() {
-  if (!state.python) state.python = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], revealed: false };
-  if (state.stats.skills.python == null) state.stats.skills.python = 0;
-  if (state.stats.xp.python == null) state.stats.xp.python = 0;
-  if (!pyRival()) {
-    state.rivals.push({
-      id: Math.max(...state.rivals.map((r) => r.id)) + 1, name: PY_RIVAL.name, rating: PY_RIVAL.rating, league: -1,
-      wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0,
-      py: { python: PY_RIVAL.python, xp: PY_RIVAL.xp, condition: PY_RIVAL.condition },
-    });
-  }
-}
-function initMobile() {
-  if (!state.mobile) state.mobile = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], sweeps: [], revealed: false };
-  if (state.stats.skills.mobile == null) state.stats.skills.mobile = 0;
-  if (state.stats.xp.mobile == null) state.stats.xp.mobile = 0;
-  if (!evRival("mob")) {
-    state.rivals.push({
-      id: Math.max(...state.rivals.map((r) => r.id)) + 1, name: MOB_RIVAL_NAME, rating: MOB_BY_TIER[3].rating, league: -1,
-      wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0, mob: { ...MOB_BY_TIER[3] },
-    });
-  }
 }
 // PocketLacaze plays to your league.
 function mobTierFor() {
@@ -694,7 +689,8 @@ const SKILLS = [
 ];
 const SKILL_KEYS = SKILLS.map((s) => s.key);
 function skillMeta(key) {
-  return SKILLS.find((s) => s.key === key) || TOP_SKILLS.find((s) => s.key === key) || (key === PY_SKILL.key ? PY_SKILL : key === MOB_SKILL.key ? MOB_SKILL : undefined);
+  const ev = Object.values(EVENTS).find((E) => E.skill.key === key);
+  return SKILLS.find((s) => s.key === key) || TOP_SKILLS.find((s) => s.key === key) || (ev && ev.skill);
 }
 function coachKey(key) {
   return `coach_${key}`;
@@ -715,7 +711,8 @@ function rollActiveSkills() {
   return picked;
 }
 function isPreseason() {
-  return state.seasonPhase === "preseason";
+  const s = liveState(); // safe while a new career's state is still being built
+  return !!s && s.seasonPhase === "preseason";
 }
 // Regular season and playoffs: the stretch with a match every week.
 function inSeason() {
@@ -1401,8 +1398,8 @@ function freshState() {
     tutorialSeen: false,
     topReveal: false, // just arrived somewhere new — the next year's splash explains it
     topSince: null, // the first year played there
-    python: null, // its preseason exhibition — see initPython
-    mobile: null, // the Mobile Invitational — see initMobile
+    python: null, // its preseason exhibition — see initEvent
+    mobile: null, // the Mobile Invitational — see initEvent
     events: null, // { year, choice, options, must, chosen } — this year's preseason invitational (decidePreseasonEvent)
     gameComplete: null, // { year } once everything's been won in one year
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
@@ -1521,8 +1518,9 @@ function migrateSave(parsed) {
   // Before the invitationals had a choice: Python's preseason as it was.
   if (!fresh.events) {
     const py = pyUnlocked(fresh);
-    fresh.events = { year: fresh.year, choice: py ? "py" : null, options: py ? ["py"] : [], must: py, chosen: true };
+    fresh.events = { year: fresh.year, choice: py ? "py" : null, options: py ? ["py"] : [], must: py, revealMob: false };
   }
+  if (fresh.events.choice) initEvent(fresh.events.choice, fresh);
   // Completion goals already met before it was tracked.
   const feats = fresh.completion.feats;
   if (fresh.leagueTier === TOP_TIER) feats.l1Table = feats.l1Champ = true;
@@ -1700,10 +1698,10 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
     // to the ceiling just because the coach isn't on hand this week.
     // Python only exists in its preseason, and never rusts; the top tier's
     // skills are set aside (frozen) while it's on.
-    const pyMult = isEventSkill(key) ? (PY_GAIN_MULT[BAL.gameLength] || 1) * (key === MOB_SKILL.key ? MOB_GAIN_BOOST : 1) : 1;
+    const eventMult = isEventSkill(key) ? (PY_GAIN_MULT[BAL.gameLength] || 1) * (key === MOB_SKILL.key ? MOB_GAIN_BOOST : 1) : 1;
     if (hours >= BAL.skillDecayThresholdHours) {
       const eff = effectiveHours(hours);
-      const gain = eff * BAL.skillGainBase * focusMult * physMult * restMult * skillDiminish(s.skills[key]) * coachMult * (1 + gear.training) * pyMult;
+      const gain = eff * BAL.skillGainBase * focusMult * physMult * restMult * skillDiminish(s.skills[key]) * coachMult * (1 + gear.training) * eventMult;
       skills[key] = s.skills[key] >= cap ? s.skills[key] : Math.min(s.skills[key] + gain, cap);
     } else if (isEventSkill(key) || (isTopSkill(key) && swapEvent())) {
       skills[key] = s.skills[key];
@@ -1840,7 +1838,7 @@ function resolveDay() {
   });
 
   // ---- An invitational's course: hours go to the current part, in order ----
-  const cev = state.seasonPhase === "preseason" ? preseasonEvent() : null;
+  const cev = courseEvent();
   if (cev && (a[EVENTS[cev].courseAct] || 0) > 0) {
     const E = EVENTS[cev], es = evState(cev);
     let left = a[E.courseAct];
@@ -2175,7 +2173,7 @@ function performanceScore(keys) {
 // same caps as yours (their league's cap for a specialisation,
 // otherSkillCapGap lower for the rest).
 function ensureRivalProfile(r) {
-  if (r.top || r.py || r.mob) return r; // top-tier and invitational players have their own fixed profile
+  if (r.top || rivalEvent(r)) return r; // top-tier and invitational players have their own fixed profile
   if (Array.isArray(r.specs) && r.specs.length === BAL.specialisationCount && r.skillOffsets) return r;
   const pool = SKILL_KEYS.slice();
   r.specs = [];
@@ -2184,8 +2182,8 @@ function ensureRivalProfile(r) {
   return r;
 }
 function rivalSkill(r, key) {
-  if (r.py) return key === PY_SKILL.key ? r.py.python : 100;
-  if (r.mob) return key === MOB_SKILL.key ? r.mob.mobile : 100;
+  const ev = rivalEvent(r);
+  if (ev) return key === EVENTS[ev].skill.key ? rivalEventProfile(r)[key] : 100;
   if (r.top) return isTopSkill(key) ? r.top.skills[key] : 100;
   if (isEventSkill(key)) return 0;
   if (isTopSkill(key)) return 0;
@@ -2209,9 +2207,10 @@ function rivalFocusAverage(r, keys = state.activeSkills) {
 // top its three) plus a steady rivalCondition for Health / Calm / Rest, on
 // your weights.
 function rivalPerformance(r) {
-  const keys = r.py ? [PY_SKILL.key] : r.mob ? [MOB_SKILL.key] : r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
+  const ev = rivalEvent(r);
+  const keys = ev ? [EVENTS[ev].skill.key] : r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
   const avg = keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length;
-  const condition = r.py ? r.py.condition : r.mob ? r.mob.condition : BAL.rivalCondition;
+  const condition = ev ? rivalEventProfile(r).condition : BAL.rivalCondition;
   return clamp(PERF_WEIGHTS.skill * avg + (1 - PERF_WEIGHTS.skill) * condition + movesPerf(rivalTopMoves(r)), 0, 100);
 }
 // The week's focus keys for a rival-vs-rival match: the top tier's three
@@ -2297,8 +2296,7 @@ function focusXpAverage(keys = state.activeSkills) {
 // A rival's experience — the same in every skill: their league's, a little
 // higher or lower with their rating.
 function rivalXp(r) {
-  if (r.py) return r.py.xp;
-  if (r.mob) return r.mob.xp;
+  if (rivalEvent(r)) return rivalEventProfile(r).xp;
   if (r.top) return r.top.xp;
   const base = BAL.rivalXpByTier[r.league] != null ? BAL.rivalXpByTier[r.league] : 0;
   if (base <= 0) return 0; // nobody earns experience in League 5
@@ -2946,8 +2944,7 @@ function finalizeSeasonMovement(playerTierChampion) {
 // Mobile: each series win pays a prize. A 3–0 is a clean sweep — a trophy.
 function playEventGame(id) {
   const E = EVENTS[id];
-  if (id === "py") initPython();
-  else initMobile();
+  initEvent(id);
   const es = evState(id);
   if (!es.series || es.series.year !== state.year) es.series = { year: state.year, you: 0, opp: 0 };
   const sr = es.series;
@@ -3015,10 +3012,6 @@ function playEventGame(id) {
   }
   return { result: res, event };
 }
-function playPyGame() {
-  return playEventGame("py");
-}
-
 // Completion: first in the League 1 or top table, as soon as it's final.
 function noteTableTop() {
   const top = state.lastStandings && state.lastStandings[0] && state.lastStandings[0].isPlayer;
@@ -3208,7 +3201,6 @@ function startNewYear() {
   if (yearSummary.proEnded) phaseEvent += ` 📉 Sponsorship not renewed — your skill average was ${yearSummary.proEnded.avg}, under the ${yearSummary.proEnded.bar} needed. Time to find a job: ${yearSummary.proEnded.searchHours}h of Job Search.`;
   else if (yearSummary.proRenewed) phaseEvent += ` 🏆 Sponsorship renewed for Year ${state.year}.`;
   if (worn.length) phaseEvent += ` Last year's equipment has worn out (${worn.map((e) => e.name).join(", ")}).`;
-  if (pyUnlocked()) initPython();
   decidePreseasonEvent();
   return { yearSummary, phaseEvent };
 }
@@ -3587,7 +3579,7 @@ function renderStats() {
 function totalAssigned() {
   const a = state.allocation;
   const skillSum = trainableSkills().reduce((sum, k) => sum + (a.skills[k] || 0), 0);
-  const cev = state.seasonPhase === "preseason" ? preseasonEvent() : null;
+  const cev = courseEvent();
   return skillSum + a.exercise + a.sleep + a.relax + a.nutrition + (a.work || 0) + (cev ? a[EVENTS[cev].courseAct] || 0 : 0);
 }
 
@@ -3748,6 +3740,7 @@ function renderPlannerRows() {
   const s = state.stats;
   const preview = previewTomorrow();
   const rows = [workRowHtml()];
+  if (canChooseEvent()) rows.unshift(eventChoiceRowHtml());
 
   trainableSkills().forEach((key) => {
     const meta = skillMeta(key);
@@ -3782,7 +3775,7 @@ function renderPlannerRows() {
   });
 
   // An invitational's course: its own slider, its parts in order.
-  const cev = state.seasonPhase === "preseason" ? preseasonEvent() : null;
+  const cev = courseEvent();
   if (cev) {
     const E = EVENTS[cev], act = E.courseAct;
     const i = evCurrent(cev);
@@ -4991,7 +4984,7 @@ function openCareer() {
       <div class="kv-row"><span>🐍 Python</span><span>${fmt(state.stats.skills.python || 0)}/100${xpText(PY_SKILL.key)}</span></div>
       ${PY_COURSE.map((t, i) => `<div class="kv-row"><span>${t.icon} ${t.name}</span><span>${pyMastered().includes(t.name) ? "mastered ✓" : `${fmt(state.python.course[i])}/${pyCourseHours(i)}h`}</span></div>`).join("")}
       <div class="kv-row"><span>🏆 Won</span><span>${state.python.wonYears.length ? state.python.wonYears.map((y) => `Year ${y}`).join(", ") : "not yet"}</span></div>
-      <p class="modal-sub">Best of ${PY_GAMES} vs ${PY_RIVAL.name} at the end of every preseason. Python and the course are only trained then.</p>
+      <p class="modal-sub">Best of ${PY_GAMES} vs ${PY_RIVAL.name} at the end of ${state.gameComplete ? "a preseason you choose it" : "every preseason"}. Python and the course are only trained then.</p>
     </div>`
     : "";
   const mobSection = mobRevealed()
@@ -5766,8 +5759,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     }
     // The Mobile Invitational: revealed by its first preseason.
     const evs = state.events && state.events.year === state.year ? state.events : null;
-    if (evs && evs.options.includes("mob") && state.mobile && !state.mobile.revealed) {
-      state.mobile.revealed = true;
+    if (evs && evs.revealMob) {
       const t = MOB_BY_TIER[mobTierFor()];
       if (title === `Year ${state.year} begins`) { icon = "📱"; title = `An invitation: the ${MOB_EVENT_NAME}`; }
       notes.push(`<b>${MOB_RIVAL_NAME}</b> plays Excel on a phone — and wins. ${inTop() ? "Each preseason" : "Each preseason in Leagues 3, 2 and 1"} can now end with the <b>${MOB_EVENT_NAME}</b>: <b>best of ${PY_GAMES}</b> against him, a game on each of the last ${PY_GAMES} days (all ${PY_GAMES} are always played). He plays to your league — 📱 Mobile Excel ${t.mobile} here.`);
@@ -5822,7 +5814,10 @@ function progressRows(start) {
   const s = state.stats;
   // The skills that were in play when this stretch started (a stretch that
   // began before a move upstairs still shows the seven).
-  const keys = playSkillKeys().some((k) => start.skills[k] != null) ? playSkillKeys() : SKILL_KEYS;
+  const base = playSkillKeys().some((k) => start.skills[k] != null) ? playSkillKeys() : SKILL_KEYS;
+  // Plus an invitational's skill if it moved (it trains alongside below the
+  // top, and its preseason's over by the time the phase screen shows).
+  const keys = base.concat(EVENT_SKILL_KEYS.filter((k) => !base.includes(k) && start.skills[k] != null && (s.skills[k] || 0) !== start.skills[k]));
   const rows = keys.map((k) => [`${skillMeta(k).icon} ${skillMeta(k).name}`, start.skills[k] || 0, s.skills[k] || 0]);
   [["phys", "🏃 Health"], ["rest", "🌙 Rest"], ["composure", "🎮 Calm"], ["nutrition", "🥗 Nutrition"]].forEach(([k, label]) => {
     if (start[k] != null) rows.push([label, start[k], s[k]]);
@@ -5882,25 +5877,37 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       if (onDone) onDone();
     },
   });
-  if (sp.choice) {
-    document.querySelectorAll("[data-event-choice]").forEach((b) =>
-      b.addEventListener("click", () => {
-        const v = b.dataset.eventChoice;
-        chooseEvent(v === "none" ? null : v);
-        closeModal();
-        renderAll();
-      })
-    );
-  } else $("splashGo").addEventListener("click", closeModal);
+  if (sp.choice) wireEventChoice();
+  else $("splashGo").addEventListener("click", closeModal);
+}
+function wireEventChoice() {
+  document.querySelectorAll("[data-event-choice]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const v = b.dataset.eventChoice;
+      chooseEvent(v === "none" ? null : v);
+      closeModal();
+      renderAll();
+    })
+  );
+}
+const eventChoiceLabel = (o) =>
+  o === "mob" ? `📱 ${inTop() ? "" : "Join the "}${MOB_EVENT_NAME}` : o === "py" ? `🐍 ${PY_EVENT_NAME}` : inTop() ? "Neither — a normal preseason" : "Not this year";
+// In the plan until the first game: this preseason's choice, and a way to change it.
+function eventChoiceRowHtml() {
+  const cur = preseasonEvent();
+  return `<div class="event-choice-row callout"><span>${cur ? `${EVENTS[cur].icon} ${EVENTS[cur].name}: <b>in</b>` : `🎟️ Invitational: <b>${inTop() ? "neither" : "not joined"}</b>`}</span><button class="link-btn" data-event-change="1">Change ›</button></div>`;
+}
+function openEventChoice() {
+  if (!canChooseEvent()) return;
+  openModal(`<div class="splash"><div class="splash-icon">🎟️</div><div class="splash-title">This preseason's invitational</div>${eventChoiceHtml(state.events.options)}</div>`);
+  wireEventChoice();
 }
 // Join / decline (or, at the top, which one): one button each.
 function eventChoiceHtml(options) {
-  const label = (o) =>
-    o === "mob" ? `📱 ${inTop() ? "" : "Join the "}${MOB_EVENT_NAME}` : o === "py" ? `🐍 ${PY_EVENT_NAME}` : inTop() ? "Neither — a normal preseason" : "Not this year";
   const cur = preseasonEvent();
   return `<div class="event-choice">
-      <p class="modal-sub">This preseason's invitational — your choice${inTop() ? " (one, or neither)" : ""}:</p>
-      ${options.map((o) => `<button class="${o === cur || (o === null && cur === null) ? "primary-btn" : "ghost-btn"} event-choice-btn" data-event-choice="${o || "none"}">${label(o)}</button>`).join("")}
+      <p class="modal-sub">This preseason's invitational — your choice${inTop() ? " (one, or neither)" : ""}. You can change it in your plan until its first game.</p>
+      ${options.map((o) => `<button class="${o === cur ? "primary-btn" : "ghost-btn"} event-choice-btn" data-event-choice="${o || "none"}">${eventChoiceLabel(o)}</button>`).join("")}
     </div>`;
 }
 
@@ -6193,7 +6200,7 @@ function openHowTo() {
   ]));
 
   if (pyUnlocked() && state.python && state.python.revealed) sec("py", "🐍", PY_EVENT_NAME, ul([
-    `At the end of every preseason: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. An exhibition — no rating, prize or record at stake.`,
+    `At the end of ${state.gameComplete ? "a preseason you choose it" : "every preseason"}: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. An exhibition — no rating, prize or record at stake.`,
     `Python stands in for the focus skills: it's the skill part of performance and the focus-skill edge. Health, Calm, Rest, luck and finish time count as usual (${PY_RIVAL.name}'s condition is ${PY_RIVAL.condition}).`,
     `During the preseason your ${TOP_LEAGUE_NAME} skills are set aside (frozen). Two sliders: 🐍 Python (never rusts) and 📚 the course, its parts in order: ${PY_COURSE.map((t, i) => `${t.icon} ${t.name} (${pyCourseHours(i)}h — ${t.desc})`).join(", ")}.`,
     `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
@@ -6874,6 +6881,7 @@ function wireInputs() {
     if (key) setAllocation(key, Number(e.target.value));
   });
   container.addEventListener("click", (e) => {
+    if (e.target.closest("[data-event-change]")) return openEventChoice();
     const coach = e.target.closest("[data-coach]");
     if (coach) return openShop({ tab: "staff", coach: coachKey(coach.dataset.coach) });
     const btn = e.target.closest(".step-btn");

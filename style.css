@@ -929,3 +929,4 @@ details.match-more[open] { padding-bottom: 8px; }
 /* An invitational's choice on the new year's splash */
 .event-choice { margin-top: 14px; }
 .event-choice .event-choice-btn { margin-top: 8px; }
+.event-choice-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
