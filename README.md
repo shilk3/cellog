@@ -40,7 +40,8 @@ Relax, and Food. Everything is connected:
 - **Food** builds Nutrition, which keeps tomorrow's day at full length — see below.
   **Carb loading:** once Nutrition is already at 100, each Food hour past 1h banks one extra hour for the next
   day only (up to +3h at 4h of Food) — it moves hours between days, 1:1.
-  End Week stops on a carb-loaded day so the extra hours can be planned.
+  End Week / To Match carry on with the plan as it is, so unassigned extra hours
+  go unused (the week summary says how many).
 - **Decay is universal**: every stat needs upkeep or it slips — an
   inactive skill, Gym, Sleep, Relax, or Food below its
   threshold hours (shown as a marker on each slider) causes that stat to

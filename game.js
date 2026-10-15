@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.87.0";
+const APP_VERSION = "4.88.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -6018,13 +6018,6 @@ function dayEventCards(before) {
             tip: "Trim the plan to carry on, and give Food more time so tomorrow's day grows back.",
           }
     );
-  } else if ((state.carbHours || 0) > 0 && todayHours() - totalAssigned() > 0) {
-    // Only stops End Week — after End Day you're already planning the day.
-    cards.push({
-      icon: "🍝", tone: "good", title: "Carb-loaded", weekOnly: true,
-      body: `Yesterday's extra Food gave today <b>+${state.carbHours}h</b> (${todayHours()}h in all). You have ${todayHours() - totalAssigned()}h unassigned.`,
-      tip: "Put them to use today — they don't carry over to tomorrow.",
-    });
   }
   return cards;
 }
@@ -6148,7 +6141,7 @@ function openHowTo() {
   sec("nutrition", "🥗", "Nutrition & day length", ul([
     `Nutrition sets how many hours tomorrow has: <b>${B.dailyHoursFloor}h</b> at ${B.nutritionHoursCapLow} or below, rising to the full <b>${B.dailyHoursCeiling}h</b> at ${B.nutritionHoursCapHigh}+.`,
     `Under ${B.skillDecayThresholdHours}h of Food a day, Nutrition drops.`,
-    `<b>🍝 Carb loading:</b> once Nutrition is already at 100, each Food hour past ${B.skillDecayThresholdHours}h banks one extra hour for <b>tomorrow only</b> (up to +${B.carbLoadMaxHours}h). It moves hours between days rather than adding any — End Week stops on a carb-loaded day so you can use them.`,
+    `<b>🍝 Carb loading:</b> once Nutrition is already at 100, each Food hour past ${B.skillDecayThresholdHours}h banks one extra hour for <b>tomorrow only</b> (up to +${B.carbLoadMaxHours}h). It moves hours between days rather than adding any. End Week / To Match carry on with your plan as it is, so extra hours you haven't assigned go unused (the summary says how many).`,
   ]));
 
   sec("health", "🏃", "Health & injuries", ul([
@@ -6741,7 +6734,7 @@ function endDay() {
   const before = weekSnapshot();
   const { matchResult, splashes } = runDay();
   finishTurn();
-  const cards = dayEventCards(before).filter((c) => !c.weekOnly);
+  const cards = dayEventCards(before);
   // The match result comes first, then the phase change, then anything
   // else that happened — each opens once the one before is closed.
   showSequence([
@@ -6798,8 +6791,10 @@ function endWeek() {
   let yearSummary = null;
   let splashes = [];
   let cards = [];
+  let unassigned = 0; // hours the repeated plan left unused (a carb-loaded day's extra ones, say)
   while (daysRun < planned) {
     const before = weekSnapshot();
+    unassigned += Math.max(0, todayHours() - totalAssigned());
     const result = runDay();
     daysRun += 1;
     matchResult = result.matchResult;
@@ -6815,7 +6810,7 @@ function endWeek() {
     appendLog(e.html, e.cls);
   }
   finishTurn();
-  const summaryHtml = weekSummaryHtml({ start, daysRun, planned, stopReason });
+  const summaryHtml = weekSummaryHtml({ start, daysRun, planned, stopReason, unassigned });
   // The week summary rides on the first screen shown.
   if (!matchResult && !splashes.length && !cards.length) return showWeekSummaryModal(summaryHtml, daysRun);
   showSequence([
@@ -6826,12 +6821,13 @@ function endWeek() {
   ]);
 }
 
-function weekSummaryHtml({ start, daysRun, planned, stopReason }) {
+function weekSummaryHtml({ start, daysRun, planned, stopReason, unassigned = 0 }) {
   return `
     <div class="modal-section splash-section week-summary">
       <h3 class="week-summary-title">${daysRun === 1 ? "Progress today" : `Progress over ${daysRun} days`}</h3>
       ${stopReason ? `<div class="week-stop">⏸️ Stopped after ${daysRun} of ${planned} days — ${stopReason}</div>` : ""}
       ${progressTableHtml(progressRows(start))}
+      ${unassigned > 0 ? `<div class="match-sub perf-note">⏳ <b>${fmt(unassigned)}h</b> went unassigned${daysRun === 1 ? "" : ` over these ${daysRun} days`} — the plan repeats as it is, so give spare hours (a carb-loaded day's, say) a slider to use them.</div>` : ""}
       <div class="match-sub perf-note">Day-by-day detail is in the log.</div>
     </div>`;
 }
