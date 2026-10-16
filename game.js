@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.92.0";
+const APP_VERSION = "4.93.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -2951,6 +2951,41 @@ function finalizeSeasonMovement(playerTierChampion) {
 // One game of the exhibition (all PY_GAMES are always played; the series —
 // and the signature move — are decided at a majority). Python stands in for
 // the focus skills; there's nothing at stake but the series.
+// The invitational's player, set to play at your level (PocketLacaze plays
+// to your league).
+function prepEventRival(id) {
+  const rival = evRival(id);
+  if (id === "mob") {
+    const t = MOB_BY_TIER[mobTierFor()];
+    rival.mob = { ...t };
+    rival.rating = t.rating;
+  }
+  return rival;
+}
+// The next game of this preseason's invitational, for the top bar: null if
+// there isn't one (none chosen, or the series is over).
+function nextEventGame() {
+  const id = isPreseason() ? preseasonEvent() : null;
+  if (!id) return null;
+  initEvent(id);
+  const es = evState(id);
+  const sr = es.series && es.series.year === state.year ? es.series : { you: 0, opp: 0 };
+  const n = sr.you + sr.opp + 1;
+  if (n > PY_GAMES) return null;
+  const rival = prepEventRival(id);
+  const saved = state.activeSkills;
+  state.activeSkills = [EVENTS[id].skill.key];
+  exhibitionEvent = id;
+  let winPct;
+  try {
+    winPct = Math.round(winProbabilityAgainst({ rivalId: rival.id, name: rival.name }) * 100);
+  } finally {
+    exhibitionEvent = null;
+    state.activeSkills = saved;
+  }
+  // Game n is played as the day ends on preseason day (preseasonDays − PY_GAMES + n).
+  return { id, n, rival, winPct, series: sr, daysUntil: BAL.preseasonDays - PY_GAMES + n - state.phaseDay };
+}
 // One game of an invitational (all PY_GAMES are always played; the series
 // is decided at a majority). Python: the first win brings a signature move.
 // Mobile: each series win pays a prize. A 3–0 is a clean sweep — a trophy.
@@ -2963,12 +2998,7 @@ function playEventGame(id) {
   const need = Math.ceil(PY_GAMES / 2);
   if (sr.you + sr.opp >= PY_GAMES) return null;
   const decidedBefore = sr.you >= need || sr.opp >= need;
-  const rival = evRival(id);
-  if (id === "mob") {
-    const t = MOB_BY_TIER[mobTierFor()];
-    rival.mob = { ...t };
-    rival.rating = t.rating;
-  }
+  const rival = prepEventRival(id);
   const saved = state.activeSkills;
   state.activeSkills = [E.skill.key];
   exhibitionEvent = id;
@@ -3409,6 +3439,19 @@ function getNextMatchInfo() {
   const s = state;
   if (s.seasonPhase === "preseason") {
     const daysUntil = BAL.preseasonDays - s.phaseDay;
+    // This preseason's invitational: its next game, like a league match.
+    const g = nextEventGame();
+    if (g) {
+      const E = EVENTS[g.id];
+      const score = g.n > 1 ? ` · series ${g.series.you}–${g.series.opp}` : "";
+      return {
+        kind: "event",
+        daysUntil: g.daysUntil,
+        label: `${E.icon} Game ${g.n}/${PY_GAMES} vs ${g.rival.name} · ${g.winPct}% · ${daysUntilPhrase(g.daysUntil)}`,
+        labelLine1: `${E.icon} Game ${g.n}/${PY_GAMES} vs ${g.rival.name}`,
+        labelLine2: matchOddsLine(g.winPct, g.daysUntil) + score,
+      };
+    }
     return { kind: "preseason", label: `Season starts ${daysUntilPhrase(daysUntil)}` };
   }
   if (s.seasonPhase === "regular") {
@@ -3811,7 +3854,7 @@ function renderPlannerRows() {
       comboRowHtml(act, {
         icon: "📚",
         label: `${E.skill.name} course`,
-        outcomeText: i == null ? "all 3 mastered" : `${E.course[i].icon} ${E.course[i].name} ${fmt(done)}/${need}h · ${i + 1} of 3`,
+        outcomeText: i == null ? "all 3 mastered" : `${E.course[i].icon} ${E.course[i].name} · ${fmt(done)}/${need}h · ${i + 1} of 3`,
         value: done,
         previewValue: i == null ? null : Math.min(need, done + (a[act] || 0)),
         cap: need,

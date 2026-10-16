@@ -204,8 +204,9 @@ html, body {
   min-width: 0;
   flex-shrink: 1;
 }
-/* Wraps between pieces (at a " · "), never inside one. */
-.outcome-part { white-space: nowrap; }
+/* Wraps between pieces (at a " · ") first: each piece moves to the next line whole; one too wide for the room left
+   wraps inside itself rather than spilling over the hours. */
+.outcome-part { display: inline-block; max-width: 100%; vertical-align: top; }
 .combo-bar { margin: 5px 0 8px; }
 .activity-hours {
   margin-left: auto;
