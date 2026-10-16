@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.90.0";
+const APP_VERSION = "4.91.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5989,8 +5989,8 @@ function dayEventCards(before) {
     } else {
       cards.push({
         icon: "💼", tone: "good", title: "Hired!",
-        body: `The job search paid off. Work is back to <b>${BAL.workHoursRequired}h/day</b> at $${fmt(emp.workPay)}/day, with a full set of ${fmt1(BAL.strikesToFire)} chances.`,
-        tip: "Missing Work hours costs chances again from tomorrow — check the Work slider fits today's plan.",
+        body: `The job search paid off. Work is back to <b>${BAL.workHoursRequired}h/day</b> at $${fmt(emp.workPay)}/day, with a full set of ${fmt1(BAL.strikesToFire)} chances.${isOverAllocated() ? ` It's back in your plan, which now uses <b>${totalAssigned()}h</b> of today's ${todayHours()}h.` : ""}`,
+        tip: isOverAllocated() ? "Trim training or other hours to fit, then carry on. Missing Work hours costs chances again from tomorrow." : "Missing Work hours costs chances again from tomorrow — check the Work slider fits today's plan.",
       });
     }
   }
@@ -6026,10 +6026,19 @@ function dayEventCards(before) {
       body: `Preseason is over, so ${label} needs <b>${requiredWorkHours()}h a day</b> again — it's back in your plan, which now uses ${totalAssigned()}h of today's ${todayHours()}h.`,
       tip: `Trim training or other hours to fit, then carry on. Missing ${label} hours costs chances again from today.`,
     });
-  } else if (isOverAllocated()) {
-    const carbGone = (before.carbHours || 0) > (state.carbHours || 0);
+  } else if (isOverAllocated() && !(before.employment !== emp.status && emp.status !== "unemployed")) {
+    // Say why the plan no longer fits: the day got shorter (carb hours used
+    // up, or low Nutrition) — or the plan itself grew.
+    const shorter = before.dayHours != null ? todayHours() < before.dayHours : true;
+    const carbGone = shorter && (before.carbHours || 0) > (state.carbHours || 0);
     cards.push(
-      carbGone
+      !shorter
+        ? {
+            icon: "🧮", tone: "neutral", title: "Over today's hours",
+            body: `Today has <b>${todayHours()}h</b>, but your plan uses ${totalAssigned()}h.`,
+            tip: "Trim the plan to carry on.",
+          }
+        : carbGone
         ? {
             icon: "🍝", tone: "neutral", title: "Carb-load used up",
             body: `Yesterday's extra hours have run out, so today has <b>${todayHours()}h</b> — but your plan uses ${totalAssigned()}h.`,
@@ -6795,6 +6804,7 @@ function weekSnapshot() {
     burnout: state.burnout.active,
     employment: state.employment.status,
     techniques: state.employment.techniqueQueue.length,
+    dayHours: todayHours(),
     carbHours: state.carbHours || 0,
     leave: onLeave(),
   };
