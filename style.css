@@ -930,3 +930,18 @@ details.match-more[open] { padding-bottom: 8px; }
 .event-choice { margin-top: 14px; }
 .event-choice .event-choice-btn { margin-top: 8px; }
 .event-choice-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* Something new, explained in one box right under a splash's title */
+.splash-feature {
+  text-align: left;
+  margin: 16px 0 4px;
+  padding: 12px 14px;
+  background: rgba(52, 208, 160, 0.08);
+  border: 1px solid rgba(52, 208, 160, 0.35);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.feature-point { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.4; }
+.feature-icon { flex-shrink: 0; width: 20px; text-align: center; }

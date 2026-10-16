@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.91.0";
+const APP_VERSION = "4.92.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1407,6 +1407,7 @@ function freshState() {
     gameComplete: null, // { year } once everything's been won in one year
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
+    staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
     leagueRoundRobins: leagueData.roundRobins, // this season's full fixture list per tier, all 5 at once
@@ -1524,6 +1525,8 @@ function migrateSave(parsed) {
     fresh.events = { year: fresh.year, choice: py ? "py" : null, options: py ? ["py"] : [], must: py, revealMob: false };
   }
   if (fresh.events.choice) initEvent(fresh.events.choice, fresh);
+  // Staff unlocks for the best league so far were announced already.
+  if (fresh.staffUnlockNoted == null) fresh.staffUnlockNoted = fresh.peakLeagueTier;
   // Completion goals already met before it was tracked.
   const feats = fresh.completion.feats;
   if (fresh.leagueTier === TOP_TIER) feats.l1Table = feats.l1Champ = true;
@@ -5693,6 +5696,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   let icon = "📅", title = "", sub = "";
   let nextMatch = false; // show the next-match preview (drawn live when shown)
   let choice = null; // this preseason's invitational choices, as buttons
+  const features = []; // something new, explained right under the title: [[icon, html], …] per box
 
   if (from === "preseason" && to === "regular") {
     icon = "🏁"; title = "The season starts!"; sub = `Year ${state.year} · ${lg(state.leagueTier)}`;
@@ -5756,9 +5760,12 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     if (state.topReveal) {
       icon = "🏛️"; title = `Welcome to the ${TOP_LEAGUE_NAME}`;
       state.topReveal = false;
-      notes.push(`Top of League 1, its champion, all seven skills mastered and every technique learned — all in one season. That earns a seat at the very top: <b>${TOP_SIZE} players</b>, including you.`);
-      notes.push(`Your seven case skills are done — held at 100 by their experience. Up here there are three new ones: ${TOP_SKILLS.map((k) => `${k.icon} <b>${k.name}</b>`).join(", ")}. No coaches can teach them; you start at ${TOP_SKILL_START}. Single-Cell Solutions counts double in the focus-skill edge, and Speed &amp; Shortcuts makes you finish up to 2 minutes sooner.`);
-      notes.push(`New techniques here are <b>signature moves</b>: each one you master is a lasting bonus, never a penalty. The season is ${roundsFor(TOP_TIER)} rounds, then a top-${TOP_PLAYOFF_SIZE} playoff. No one is relegated. The goal: <b>${TOP_LEAGUE_NAME} Champion</b>.`);
+      features.push([
+        ["🎟️", `Top of League 1, its champion, all seven skills mastered and every technique learned — all in one season. That earns a seat at the very top: <b>${TOP_SIZE} players</b>, including you.`],
+        ["🧬", `Your seven case skills are done — held at 100 by their experience. Three new ones: ${TOP_SKILLS.map((k) => `${k.icon} <b>${k.name}</b>`).join(", ")}. No coaches; you start at ${TOP_SKILL_START}. Single-Cell Solutions counts double in the focus-skill edge, and Speed &amp; Shortcuts makes you finish up to 2 minutes sooner.`],
+        ["✨", `New techniques here are <b>signature moves</b>: each one you master is a lasting bonus, never a penalty.`],
+        ["📅", `${roundsFor(TOP_TIER)} rounds, then a top-${TOP_PLAYOFF_SIZE} playoff. No one is relegated. The goal: <b>${TOP_LEAGUE_NAME} Champion</b>.`],
+      ]);
     }
     if (yearSummary) {
       money.push(["💼 Pay earned", `+${fmtMoney(yearSummary.workPay)}`]);
@@ -5776,18 +5783,25 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     if (pyUnlocked() && state.python && !state.python.revealed) {
       state.python.revealed = true;
       icon = "🐍"; title = `An invitation: the ${PY_EVENT_NAME}`;
-      notes.push(`Every preseason from now on ends with an exhibition: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel. Nothing's at stake but the series — and the title.`);
-      notes.push(`For the preseason, everything else is set aside (your ${TOP_LEAGUE_NAME} skills are frozen, not rusting). Two sliders instead: 🐍 <b>Python</b>, the skill (it never rusts), and 📚 the <b>Python course</b> — ${PY_COURSE.map((t) => `${t.icon} ${t.name}`).join(", then ")}, each a bonus in the exhibition.`);
-      notes.push(`Win it for the first time and you'll take a signature move into the league. Win it, top the table and take the playoffs <b>in the same year</b>, and you've done it all.`);
+      features.push([
+        ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel — a game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played. Every preseason from now on.`],
+        ["🎚️", `Everything else is set aside for the preseason (your ${TOP_LEAGUE_NAME} skills are frozen, not rusting). Two sliders instead: 🐍 <b>Python</b> (it never rusts) and 📚 the <b>Python course</b> — ${PY_COURSE.map((t) => `${t.icon} ${t.name}`).join(" → ")}, each a bonus in the series.`],
+        ["✨", `Your first win brings a signature move for the league: <b>Python in Excel</b>. No rating, prize or record at stake.`],
+        ["🏁", `Win it, top the table and take the playoffs <b>in the same year</b>, and you've done it all.`],
+      ]);
     }
     // The Mobile Invitational: revealed by its first preseason.
     const evs = state.events && state.events.year === state.year ? state.events : null;
     if (evs && evs.revealMob) {
       const t = MOB_BY_TIER[mobTierFor()];
       if (title === `Year ${state.year} begins`) { icon = "📱"; title = `An invitation: the ${MOB_EVENT_NAME}`; }
-      notes.push(`<b>${MOB_RIVAL_NAME}</b> plays Excel on a phone — and wins. ${inTop() ? "Each preseason" : "Each preseason in Leagues 3, 2 and 1"} can now end with the <b>${MOB_EVENT_NAME}</b>: <b>best of ${PY_GAMES}</b> against him, a game on each of the last ${PY_GAMES} days (all ${PY_GAMES} are always played). He plays to your league — 📱 Mobile Excel ${t.mobile} here.`);
-      notes.push(`${inTop() ? "Like Python, it sets everything else aside for the preseason." : "Two sliders join your seven skills for the preseason:"} 📱 <b>Mobile Excel</b> (it never rusts) and 📚 the <b>Mobile Excel course</b> — ${MOB_COURSE.map((c) => `${c.icon} ${c.name}`).join(", then ")}, each a bonus in the series. Win it for a prize (<b>$${fmt(t.prize)}</b> here) and a 🏆 trophy; a 3–0 is a 🧹 clean sweep, a trophy of its own.`);
-      if (evs.must) notes.push(`This first one isn't optional. From next year, each ${inTop() ? "" : "League 3, 2 or 1 "}preseason you can join it or not.`);
+      features.push([
+        ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${MOB_RIVAL_NAME}</b>, who plays Excel on a phone — and wins. A game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played.`],
+        ["📱", `He plays to your league: Mobile Excel <b>${t.mobile}</b> here${inTop() ? "" : ` (${MOB_BY_TIER[2].mobile} in League 2, ${MOB_BY_TIER[1].mobile} in League 1)`}.`],
+        ["🎚️", `${inTop() ? "Like Python, it sets everything else aside. Two sliders instead:" : "Two sliders join your seven skills:"} 📱 <b>Mobile Excel</b> (it never rusts) and 📚 the <b>course</b> — ${MOB_COURSE.map((c) => `${c.icon} ${c.name}`).join(" → ")}, each a bonus in the series.`],
+        ["🏆", `Win it for <b>$${fmt(t.prize)}</b> and a trophy. A 3–0 is a 🧹 <b>clean sweep</b> — a trophy of its own. No rating or record at stake.`],
+        ...(evs.must ? [["📅", `This first one isn't optional. From next year, each ${inTop() ? "" : "League 3, 2 or 1 "}preseason you can join it or not.`]] : []),
+      ]);
     }
     next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
     if (evs && evs.options.length > 1) {
@@ -5796,7 +5810,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     } else {
       const ev = preseasonEvent();
       next.push(["🎯 Skills", inTop() && ev ? `${EVENTS[ev].icon} ${EVENTS[ev].skill.name} and its course only` : ev ? `all ${playSkillKeys().length}, plus ${EVENTS[ev].icon} ${EVENTS[ev].skill.name} and its course` : `all ${playSkillKeys().length} trainable`]);
-      if (ev) next.push([`${EVENTS[ev].icon} ${EVENTS[ev].name}`, `best of ${PY_GAMES} vs ${evRival(ev) ? evRival(ev).name : ""}, the last ${PY_GAMES} days`]);
+      if (ev && !features.length) next.push([`${EVENTS[ev].icon} ${EVENTS[ev].name}`, `best of ${PY_GAMES} vs ${evRival(ev) ? evRival(ev).name : ""}, the last ${PY_GAMES} days`]);
     }
     next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", "all preseason, paid"]);
     if (!inTop()) {
@@ -5807,13 +5821,15 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     if (SKILL_COACH_LEVELS.some((l, i) => l.unlock === state.peakLeagueTier && i > 0)) unlockable.push(`Coach Lv${SKILL_COACH_LEVELS.findIndex((l) => l.unlock === state.peakLeagueTier) + 1}`);
     const supIdx = SUPPORT_LEVEL_UNLOCK.indexOf(state.peakLeagueTier);
     if (supIdx > 0) unlockable.push(`support staff Lv${supIdx + 1}`);
-    if (unlockable.length) notes.push(`New in 🧑‍🏫 Staff: ${unlockable.join(" and ")} can now be unlocked.`);
+    // Once, the first year in a new best league.
+    if (unlockable.length && state.peakLeagueTier < (state.staffUnlockNoted == null ? 6 : state.staffUnlockNoted)) notes.push(`New in 🧑‍🏫 Staff: ${unlockable.join(" and ")} can now be unlocked.`);
+    state.staffUnlockNoted = state.peakLeagueTier;
     if (yearSummary && yearSummary.equipmentExpired) notes.push(`Last year's equipment has worn out: ${yearSummary.equipmentExpired.join(", ")}. Buy again in 🧑‍🏫 Staff &amp; Items if it's worth it.`);
   } else {
     title = `${PHASE_NAMES[to] || to}`;
   }
   const moneyTitle = yearSummary ? `Year ${yearSummary.year} money` : "";
-  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes, choice };
+  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes, choice, features };
 }
 
 // What's next once your season is over: training camp to the Final (if any
@@ -5881,6 +5897,7 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       <div class="splash-icon">${sp.icon}</div>
       <div class="splash-title">${sp.title}</div>
       ${sp.sub ? `<div class="splash-sub">${sp.sub}</div>` : ""}
+      ${(sp.features || []).map((f) => `<div class="splash-feature">${f.map(([i, t]) => `<div class="feature-point"><span class="feature-icon">${i}</span><span>${t}</span></div>`).join("")}</div>`).join("")}
       ${sp.how.length ? `<div class="modal-section splash-section"><h3>How the ${sp.fromName.toLowerCase()} went</h3>${rows(sp.how)}</div>` : ""}
       ${sp.progress ? `<div class="modal-section splash-section"><h3>Progress over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.progress)}</div>` : ""}
       ${sp.skills ? `<div class="modal-section splash-section"><h3>Skills over the ${sp.fromName.toLowerCase()}</h3>${progressTableHtml(sp.skills, "Skill")}</div>` : ""}
