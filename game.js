@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.96.0";
+const APP_VERSION = "4.96.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3203,7 +3203,7 @@ function campFeaturePoints() {
 function campChoiceHtml() {
   const price = campPrice(), short = price - state.cash;
   return `<div class="event-choice">
-      <button class="primary-btn" data-camp-choice="join" ${short > 0 ? "disabled" : ""}>🏕️ Go to camp · $${fmt(price)}</button>
+      <button class="primary-btn" data-camp-choice="join" ${short > 0 ? "disabled" : ""}>🏕️ Go to camp · pay $${fmt(price)}</button>
       ${short > 0 ? `<p class="modal-sub">You need $${fmt(short)} more. The price drops each day — you can join later from the top bar.</p>` : ""}
       <button class="ghost-btn" data-camp-choice="home">🏠 ${short > 0 ? "OK — off-season at home" : "Off-season at home"}</button>
     </div>`;
@@ -3222,7 +3222,7 @@ function wireCampChoice(after) {
 function openCampOffer() {
   if (!campOffered()) return;
   const points = campFeaturePoints();
-  openModal(`<div class="splash"><div class="splash-icon">🏕️</div><div class="splash-title">Training camp</div><div class="splash-sub">${offseasonDaysLeft()} days left · cash $${fmt(state.cash)}</div>
+  openModal(`<div class="splash"><div class="splash-icon">🏕️</div><div class="splash-title">Training camp</div><div class="splash-sub">${offseasonDaysLeft()} days left · cost $${fmt(campPrice())}</div>
     <div class="splash-feature">${points.map(([i, t]) => `<div class="feature-point"><span class="feature-icon">${i}</span><span>${t}</span></div>`).join("")}</div>
     ${campChoiceHtml()}</div>`);
   wireCampChoice();
