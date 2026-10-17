@@ -949,3 +949,7 @@ details.match-more[open] { padding-bottom: 8px; }
 
 /* The name's pun, said once where there's room (picker, How to Play). */
 .brand-tagline { color: var(--text-dim); font-size: 13px; letter-spacing: 0.3px; margin: 2px 0 6px; }
+
+/* Training camp: the plan's first row while you're there */
+.camp-card { line-height: 1.45; }
+.camp-card .modal-sub { display: inline; font-size: 12.5px; }

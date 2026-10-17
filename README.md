@@ -26,8 +26,8 @@ Relax, and Food. Everything is connected:
   (trainable) each round — 1 in 30% of weeks, 2 in 50%, 3 in 20% —
   revealed at the start of that round's week —
   every match that week tests exactly those skills. The other 4-6 sit
-  locked and slowly rust. Preseason and the off-season (including training
-  camp) have no matches, so all 7 are open.
+  locked and slowly rust. Preseason and the off-season (at home or at
+  training camp) have no matches, so all 7 are open.
 - **Gym** raises Physical Health — but low Physical Health caps how much
   your skill training actually helps.
 - **Sleep** builds Rest: 7h holds it, each hour short costs 1.3 a day,
@@ -209,7 +209,7 @@ of the Final.
 | Half | 2 weeks | 20 (19) | top 8: QF → Final | 3 / 3 | ~24 weeks |
 | Full | 3 weeks | 40 (39) | top 16: R16 → Final | 4 / 4 | ~46 weeks |
 
-Training camp is one week per playoff round (Short 14 days, Half 21, Full
+The off-season is one week per playoff round (Short 14 days, Half 21, Full
 28). A save from before game lengths is the Full game. The numbers below are
 the Full game's.
 
@@ -219,11 +219,23 @@ Finish in the top 16 of your 40-competitor league to reach the knockout
 playoffs (Round of 16 → Quarterfinal → Semifinal → Final, single elimination).
 Lose a playoff match and you're out; win the Final and you're champion. The
 day of the Final is the year's last day for everyone. Miss the playoffs and
-you get a 28-day training camp up to it, so missing the cut is never a worse
+you get a 28-day off-season up to it, so missing the cut is never a worse
 deal than qualifying and getting knocked out early. Get knocked out and you
-go to training camp too, for the rest of the playoff window (Round of 16
+get the off-season too, for the rest of the playoff window (Round of 16
 exit: 21 days, Quarterfinal: 14, Semifinal: 7). Reach the Final, win or
 lose, and the new year starts straight after it.
+
+**🏕️ Training camp** (optional, paid): spend the off-season at an
+all-inclusive camp instead — $60 a day for the days left, paid up front (it
+covers living costs). Camp life takes 10h a day and runs Sleep, Relax, Food
+and Gym for you, as if you'd planned an hour over each one's minimum (8h,
+4h, 2h, 2h; no injuries); the other 14h are all for skills, at ×4 training,
+with every support role at its top level and a coach on every skill at the
+best level you've unlocked. Work stops (unpaid leave; a pro's sponsor counts
+it as Pro Duties and keeps paying; a job search waits) and hired staff are
+paused, picked up again by auto-rehire after camp. It's offered when your
+season ends; if you can't pay yet, the top bar keeps the offer — its price
+falls each day.
 
 **Leagues**: 5 tiers (League 1 at the top, League 5 at the bottom — new
 careers start at the bottom). Every league has a persistent roster of 199

@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.95.0";
+const APP_VERSION = "4.96.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -855,8 +855,15 @@ function upgradeLevel(key) {
 function hiredLevel(key) {
   return (state.staff && state.staff.hired && state.staff.hired[key]) || 0;
 }
+// The level whose effect applies today: the one hired this week — or, at
+// the training camp, its own staff: every support role at its top level and
+// every coach at the highest level you've unlocked.
+function staffLevel(key) {
+  if (inCamp()) return key.startsWith("coach_") ? upgradeLevel(key) : UPGRADES[key].levels.length;
+  return hiredLevel(key);
+}
 function upgradeEffect(key) {
-  const lvl = hiredLevel(key);
+  const lvl = staffLevel(key);
   return lvl > 0 ? UPGRADES[key].levels[lvl - 1] : null;
 }
 // Skill coaches are half price in preseason (annual leave).
@@ -975,6 +982,15 @@ function isAutoRehire(key) {
 // at the same level for the new week if the cash is there; everyone else
 // waits to be hired again.
 function staffWeekEnded(ended) {
+  // At camp, staff are paused (no wages): auto-rehire waits until it's over.
+  if (inCamp()) {
+    const keep = Object.fromEntries(Object.entries(ended).filter(([key]) => isAutoRehire(key)));
+    state.staff.paused = { ...(state.staff.paused || {}), ...keep };
+    const e = { html: `📋 Staff contracts have ended. 🏕️ At camp they're paused — no wages${Object.keys(keep).length ? "; auto-rehire picks them up again after camp" : ""}.`, cls: "event-season" };
+    state.logEntries.push(e);
+    appendLog(e.html, e.cls);
+    return;
+  }
   const rehired = [];
   const missed = [];
   let others = 0;
@@ -1023,13 +1039,13 @@ function injuryChance(gymHours) {
   return clamp(gymHours * BAL.injuryChancePerHour * mult, 0, 1);
 }
 function physCap() {
-  return BAL.statCapBase + BAL.statCapPerLevel * hiredLevel("physio");
+  return BAL.statCapBase + BAL.statCapPerLevel * staffLevel("physio");
 }
 // Effective skill ceiling stacks two independent gates: the hired coach's
 // level (per skill, 5 levels) and the highest league ever reached (peak
 // tier) — full for a specialisation, otherSkillCapGap lower for the rest.
 function skillShopCap(key) {
-  return BAL.skillShopCapBase + BAL.skillShopCapPerLevel * hiredLevel(coachKey(key));
+  return BAL.skillShopCapBase + BAL.skillShopCapPerLevel * staffLevel(coachKey(key));
 }
 function isSpecialisation(key, s = state) {
   return (s.specialisations || []).includes(key);
@@ -1075,8 +1091,8 @@ function skillCapCause(key) {
   const shop = skillShopCap(key);
   const league = leagueSkillCap(key);
   if (Math.min(shop, league) >= 100) return null;
-  const lvl = hiredLevel(coachKey(key));
-  const coachText = lvl > 0 ? `Coach Lv${lvl}` : "no coach";
+  const lvl = staffLevel(coachKey(key));
+  const coachText = lvl > 0 ? `${inCamp() ? "camp " : ""}Coach Lv${lvl}` : "no coach";
   const leagueText = `${lg(state.peakLeagueTier)}${isSpecialisation(key) ? "" : ", not a ⭐"}`;
   if (shop < league) return coachText;
   if (league < shop) return leagueText;
@@ -1126,6 +1142,7 @@ function composureMatchMultiplier(composure) {
 // Today's full budget: Nutrition's cap plus any carb-loaded hours banked
 // by yesterday's extra Food.
 function todayHours() {
+  if (inCamp()) return 24 - CAMP.activityHours;
   return dailyHoursCap(state.stats.nutrition) + (state.carbHours || 0);
 }
 // Carb loading: once Nutrition is already full (100 at the start of the
@@ -1389,7 +1406,7 @@ function freshState() {
     // hired: { [upgradeKey]: level } for this week only. auto: support staff
     // to rehire at the same level when a week ends. missed: names that
     // auto-rehire couldn't afford today (for the event screen).
-    staff: { hired: {}, auto: {}, missed: [] },
+    staff: { hired: {}, auto: {}, missed: [], paused: {} }, // paused: auto-rehire staff waiting out a training camp
     // Energy items: used[key] = true once bought this week; crash is what
     // lands on the next day resolved.
     items: { used: {}, crash: { rest: 0, composure: 0 } },
@@ -1407,6 +1424,7 @@ function freshState() {
     gameComplete: null, // { year } once everything's been won in one year
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
+    camp: null, // { year, joined, price, days } — this off-season's all-inclusive training camp (joinCamp)
     staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
@@ -1668,7 +1686,7 @@ function fmtSigned(n, decimals = 1) {
 // end-of-day resolution and the live "tomorrow" preview on each slider, so
 // the two can never drift apart.
 function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
-  const a = allocation;
+  const a = inCamp() ? campAllocation(allocation) : allocation;
   const s = stats;
   const physioEff = upgradeEffect("physio");
   const sleepAppEff = upgradeEffect("sleepApp");
@@ -1683,7 +1701,7 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
   const focusMult = burnoutActive ? BAL.burnoutEffectivenessMult : 1;
   const gear = equipmentEffects();
   const physMult = physSynergy(s.phys);
-  const restMult = restTrainingMultiplier(s.rest, a.sleep);
+  const restMult = inCamp() ? CAMP.trainingMult : restTrainingMultiplier(s.rest, a.sleep);
 
   // ---- The 7 case specialties ----
   let totalSkillH = 0;
@@ -1836,7 +1854,7 @@ function resolveDay() {
       events.push({ type: delta > 0.5 ? "good" : "neutral", text: `${meta.icon} ${meta.name} (${hours}h): ${fmtSigned(delta)} skill${note}` });
     } else if (delta < 0 && isActive) {
       events.push({ type: "bad", text: `${meta.icon} No ${meta.name} training: skill rusted slightly (${fmtSigned(delta, Math.abs(delta) < 0.1 ? 2 : 1)})` });
-    } else if (isActive && hiredLevel(coachKey(key))) {
+    } else if (isActive && staffLevel(coachKey(key))) {
       events.push({ type: "neutral", text: `${meta.icon} No ${meta.name} training: your coach kept it steady` });
     } else if (isActive && before > 0 && delta === 0) {
       events.push({ type: "neutral", text: `${meta.icon} No ${meta.name} training: your experience held it (XP ${fmt(skillXp(key))})` });
@@ -1876,7 +1894,8 @@ function resolveDay() {
   }
 
   // ---- Injury roll (only if not already injured) ----
-  if (!state.injury.active && result.exerciseH > 0) {
+  // (The camp's sessions are supervised: no injuries there.)
+  if (!state.injury.active && result.exerciseH > 0 && !inCamp()) {
     if (Math.random() < injuryChance(result.exerciseH)) {
       const loss = randInt(BAL.injuryPhysLoss[0], BAL.injuryPhysLoss[1]);
       const daysReduce = recoveryEff ? recoveryEff.injuryDaysReduce : 0;
@@ -1894,7 +1913,7 @@ function resolveDay() {
 
   // ---- Nutrition ----
   const nutritionBefore = s.nutrition;
-  const carbEarned = carbHoursFrom(a.nutrition, nutritionBefore);
+  const carbEarned = inCamp() ? 0 : carbHoursFrom(a.nutrition, nutritionBefore);
   s.nutrition = result.nutrition;
   const nutritionH = a.nutrition || 0;
   if (nutritionH >= BAL.skillDecayThresholdHours) {
@@ -1967,6 +1986,20 @@ function resolveEmploymentDay() {
   const emp = state.employment;
   const workH = state.allocation.work || 0;
   const events = [];
+
+  // At camp: the fee covered living costs, and work is on hold.
+  if (inCamp()) {
+    if (emp.status === "pro") {
+      state.cash += emp.proPay;
+      state.yearCashFlow.workPay += emp.proPay;
+      events.push({ type: "neutral", text: `🏕️ Camp counts as Pro Duties: +$${emp.proPay} pay` });
+    } else if (emp.status === "employed") {
+      events.push({ type: "neutral", text: "🏕️ On unpaid leave for camp" });
+    } else {
+      events.push({ type: "neutral", text: `🏕️ Job search paused for camp (${fmt(emp.jobSearchHours)}/${jobSearchTarget()}h)` });
+    }
+    return events;
+  }
 
   // Cost of living — charged every day no matter what, employed or not, so
   // losing your job actually drains cash instead of just stalling income.
@@ -3112,6 +3145,97 @@ function isTrainingCamp(s = state) {
   return s.offseasonReason === "missed" || s.offseasonReason === "eliminated";
 }
 
+// ---- The all-inclusive training camp (the off-season, if you pay) ----
+// Paid up front for the days left (it stands in for the day's living costs).
+// Camp activities take CAMP.activityHours a day; the rest is all yours for
+// skills. Gym, Sleep, Relax and Food are run for you — each as if you'd put
+// an hour more than its minimum in — at every bonus's best: the top level of
+// every support role, every coach you've unlocked, and ×4 training. Work is
+// on hold: unpaid leave (a pro's sponsor counts it as Pro Duties and keeps
+// paying); a job search waits. Staff you hire are paused, no wages.
+const CAMP = {
+  dayCost: 60,
+  activityHours: 10,
+  trainingMult: 4,
+  allocation: { exercise: 2, sleep: 8, relax: 4, nutrition: 2, work: 0 }, // each an hour over its minimum
+};
+// Days of off-season left, today included.
+function offseasonDaysLeft(s = state) {
+  return Math.max(0, (s.offseasonDays || 0) - (s.phaseDay || 0));
+}
+// You're at camp now.
+function inCamp(s) {
+  s = s || liveState();
+  return !!s && s.seasonPhase === "offseason" && !!s.camp && s.camp.year === s.year && !!s.camp.joined && offseasonDaysLeft(s) > 0;
+}
+// The camp's on offer: an off-season with days left that you haven't joined.
+function campOffered(s = state) {
+  return s.seasonPhase === "offseason" && isTrainingCamp(s) && offseasonDaysLeft(s) > 0 && !inCamp(s);
+}
+function campPrice(s = state) {
+  return CAMP.dayCost * offseasonDaysLeft(s);
+}
+function joinCamp() {
+  if (!campOffered()) return false;
+  const price = campPrice();
+  if (state.cash < price) return false;
+  state.cash -= price;
+  state.yearCashFlow.expenses += price;
+  state.camp = { year: state.year, joined: true, price, days: offseasonDaysLeft() };
+  state.carbHours = 0;
+  const e = { html: `🏕️ Joined the training camp for ${state.camp.days} days (−$${fmt(price)}). ${CAMP.activityHours}h a day of camp life; ${24 - CAMP.activityHours}h for skills, at ×${CAMP.trainingMult} training.`, cls: "event-good" };
+  state.logEntries.push(e);
+  appendLog(e.html, e.cls);
+  return true;
+}
+// What the camp is, point by point (the season-end screen and the offer).
+function campFeaturePoints() {
+  const d = offseasonDaysLeft(), price = campPrice(), emp = state.employment.status;
+  const work = emp === "pro" ? "Your sponsor counts it as Pro Duties: you keep your pay." : emp === "employed" ? "You take <b>unpaid leave</b> from work for it." : "Your job search waits until it's over.";
+  return [
+    ["🏕️", `<b>All-inclusive training camp</b> to the Final: <b>${d} days</b> for <b>$${fmt(price)}</b>, paid up front ($${CAMP.dayCost} a day — it covers living costs while you're there).`],
+    ["🗓️", `Camp life takes ${CAMP.activityHours}h a day — meals, sleep, downtime and a coached fitness session, all run for you (as if you'd planned 🌙 ${CAMP.allocation.sleep}h, 🎮 ${CAMP.allocation.relax}h, 🥗 ${CAMP.allocation.nutrition}h, 🏃 ${CAMP.allocation.exercise}h, no injuries). The other <b>${24 - CAMP.activityHours}h are all for skills</b>.`],
+    ["⚡", `Every bonus at its best: <b>×${CAMP.trainingMult} training</b>, every support role at its top level, and a coach on every skill at the best level you've unlocked (unlock more in 🧑‍🏫 Staff any time).`],
+    ["💼", `${work} Staff you hire are paused, no wages.`],
+  ];
+}
+// Its buttons: go (if you can pay), or the off-season at home.
+function campChoiceHtml() {
+  const price = campPrice(), short = price - state.cash;
+  return `<div class="event-choice">
+      <button class="primary-btn" data-camp-choice="join" ${short > 0 ? "disabled" : ""}>🏕️ Go to camp · $${fmt(price)}</button>
+      ${short > 0 ? `<p class="modal-sub">You need $${fmt(short)} more. The price drops each day — you can join later from the top bar.</p>` : ""}
+      <button class="ghost-btn" data-camp-choice="home">🏠 ${short > 0 ? "OK — off-season at home" : "Off-season at home"}</button>
+    </div>`;
+}
+function wireCampChoice(after) {
+  document.querySelectorAll("[data-camp-choice]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (b.dataset.campChoice === "join") joinCamp();
+      closeModal();
+      renderAll();
+      if (after) after();
+    })
+  );
+}
+// From the top bar, any day of the off-season.
+function openCampOffer() {
+  if (!campOffered()) return;
+  const points = campFeaturePoints();
+  openModal(`<div class="splash"><div class="splash-icon">🏕️</div><div class="splash-title">Training camp</div><div class="splash-sub">${offseasonDaysLeft()} days left · cash $${fmt(state.cash)}</div>
+    <div class="splash-feature">${points.map(([i, t]) => `<div class="feature-point"><span class="feature-icon">${i}</span><span>${t}</span></div>`).join("")}</div>
+    ${campChoiceHtml()}</div>`);
+  wireCampChoice();
+}
+// The plan's first row at camp, in place of Work.
+function campCardHtml() {
+  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at its top level, your unlocked coaches on every skill, and <b>×${CAMP.trainingMult} training</b>. Your ${24 - CAMP.activityHours}h are for skills.</span></div>`;
+}
+// The plan at camp: its own Gym, Sleep, Relax and Food; no Work.
+function campAllocation(a) {
+  return { ...a, ...CAMP.allocation };
+}
+
 function resolvePlayoffRound() {
   const p = state.playoff;
   const roundName = PLAYOFF_ROUND_NAMES[p.stage];
@@ -3364,7 +3488,7 @@ function processDayEnd() {
           state.offseasonDays = campDays();
           state.offseasonReason = "missed";
           const outcome = finalizeSeasonMovement(null);
-          phaseEvent = `📋 Regular season complete. Finished #${pos} of ${size} in ${lg(playedTier)} — missed the top ${playoffSizeFor(playedTier)} playoff cutoff.${outcome} ${state.offseasonDays}-day training camp starts now to get ready for next season.`;
+          phaseEvent = `📋 Regular season complete. Finished #${pos} of ${size} in ${lg(playedTier)} — missed the top ${playoffSizeFor(playedTier)} playoff cutoff.${outcome} ${state.offseasonDays}-day off-season starts now — at home, or at the all-inclusive 🏕️ training camp.`;
         }
       }
     }
@@ -3391,7 +3515,7 @@ function processDayEnd() {
         }
         phaseEvent += finalizeSeasonMovement(result.champion);
         if (state.offseasonDays > 0) {
-          phaseEvent += ` ${state.offseasonDays}-day training camp starts now to get ready for next season.`;
+          phaseEvent += ` ${state.offseasonDays}-day off-season starts now — at home, or at the all-inclusive 🏕️ training camp.`;
         } else {
           // The Final was the last day of the year — the new one starts now
           // (runDay rolls it over once this season's screen is built).
@@ -3508,10 +3632,17 @@ function getNextMatchInfo() {
   if (s.seasonPhase === "offseason") {
     const daysUntil = s.offseasonDays - s.phaseDay;
     let outcome = "Season over";
-    if (isTrainingCamp(s)) outcome = "Training camp";
+    if (inCamp(s)) outcome = "🏕️ Training camp";
+    else if (isTrainingCamp(s)) outcome = "Off-season";
     else if (s.playoff && s.playoff.champion) outcome = "🏆 Champion!";
     else if (s.playoff && s.playoff.eliminated) outcome = "Eliminated";
-    return { kind: "offseason", daysUntil, label: `${outcome} · Year ${s.year + 1} ${daysUntilPhrase(daysUntil)}` };
+    const label = `${outcome} · Year ${s.year + 1} ${daysUntilPhrase(daysUntil)}`;
+    // Not at camp yet: its price (falling each day) — tap to join.
+    if (campOffered(s)) {
+      const price = campPrice(s), short = price - s.cash;
+      return { kind: "offseason", daysUntil, campOffer: true, label, labelLine1: label, labelLine2: short > 0 ? `🏕️ Camp $${fmt(price)} · need $${fmt(short)} more` : `🏕️ Join camp · $${fmt(price)} ›` };
+    }
+    return { kind: "offseason", daysUntil, label };
   }
   return { kind: "unknown", label: "" };
 }
@@ -3589,13 +3720,14 @@ function renderTopbar() {
   $("matchCounter").textContent = `${phase} · ${info.labelLine1 || info.label}`;
   $("matchCounter2").textContent = info.labelLine1 ? (info.labelLine2 || "") : "";
   // The match lines open the next-match preview whenever there is one.
-  const hasNext = (info.kind === "fixture" || info.kind === "playoff") && info.opponentRivalId != null;
+  const hasNext = ((info.kind === "fixture" || info.kind === "playoff") && info.opponentRivalId != null) || !!info.campOffer;
   $("matchCounter").classList.toggle("tappable", hasNext);
   $("matchCounter2").classList.toggle("tappable", hasNext);
 }
 
 // The next-match preview on its own, from the top bar's match lines.
 function openNextMatch() {
+  if (getNextMatchInfo().campOffer) return openCampOffer();
   const preview = nextMatchPreviewHtml();
   if (!preview) return;
   const info = getNextMatchInfo();
@@ -3633,6 +3765,7 @@ function renderStats() {
 function totalAssigned() {
   const a = state.allocation;
   const skillSum = trainableSkills().reduce((sum, k) => sum + (a.skills[k] || 0), 0);
+  if (inCamp()) return skillSum; // camp runs the rest of the day
   const cev = courseEvent();
   return skillSum + a.exercise + a.sleep + a.relax + a.nutrition + (a.work || 0) + (cev ? a[EVENTS[cev].courseAct] || 0 : 0);
 }
@@ -3807,16 +3940,18 @@ function renderPlannerRows() {
   const a = state.allocation;
   const s = state.stats;
   const preview = previewTomorrow();
-  const rows = [workRowHtml()];
+  const rows = [inCamp() ? campCardHtml() : workRowHtml()];
   if (canChooseEvent()) rows.unshift(eventChoiceRowHtml());
 
   trainableSkills().forEach((key) => {
     const meta = skillMeta(key);
     const cap = skillCap(key);
-    const lvl = hiredLevel(coachKey(key));
+    const lvl = staffLevel(coachKey(key));
     // Tap it to go straight to this skill's coach in Staff.
     const shopTag = isTopSkill(key) || isEventSkill(key)
       ? `<span class="skill-shop-tag skill-shop-tag-none">solo</span>`
+      : inCamp()
+      ? `<button class="skill-shop-tag coach-link" data-coach="${key}">🏕️ Lv${lvl}</button>`
       : lvl > 0
       ? `<button class="skill-shop-tag coach-link" data-coach="${key}">🧑‍🏫 Lv${lvl}</button>`
       : `<button class="skill-shop-tag skill-shop-tag-none coach-link" data-coach="${key}">no coach</button>`;
@@ -3867,6 +4002,11 @@ function renderPlannerRows() {
     );
   }
 
+  // At camp, it runs Gym, Sleep, Relax and Food for you.
+  if (inCamp()) {
+    $("plannerRows").innerHTML = rows.join("");
+    return;
+  }
   const pCap = physCap();
   // Room for one note plus the injury readout before the row overflows.
   // The note is "Rest −N" when poor Rest is draining Health (otherwise
@@ -4931,7 +5071,7 @@ function employmentSectionHtml() {
 // alike. Only Health has a cap below 100 (Sports Physio), hatched and named.
 function currentStatsHtml() {
   const s = state.stats;
-  const physioLvl = hiredLevel("physio");
+  const physioLvl = staffLevel("physio");
   const pCap = physCap();
   const rows = [
     { icon: "🏃", name: "Physical Health", val: s.phys, cap: pCap, cls: "phys", note: pCap < 100 ? `cap: ${physioLvl > 0 ? `Physio Lv${physioLvl}` : "no Physio"}` : "" },
@@ -5761,7 +5901,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     nextMatch = !!info.opponentName;
     next.push(["📅 Rounds", playoffFormatText()]);
     next.push(["👑 Champion", `+$${BAL.championCash.toLocaleString()} · +${BAL.championRating} rating${playedTier > 1 ? " · promoted" : ""}`]);
-    next.push(["💔 Knocked out", "training camp to the Final"]);
+    next.push(["💔 Knocked out", "off-season to the Final (or 🏕️ camp)"]);
   } else if (from === "regular" && to === "offseason") {
     icon = "📋"; title = "Regular season over"; sub = `Year ${state.year} · ${lg(playedTier)}`;
     how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${leagueSizeFor(state.lastStandingsTier)}`]);
@@ -5872,8 +6012,15 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
   } else {
     title = `${PHASE_NAMES[to] || to}`;
   }
+  // The season's over for you: camp or home, chosen here (the offer stays
+  // in the top bar if you can't pay yet).
+  let campChoice = false;
+  if (to === "offseason" && campOffered()) {
+    features.push(campFeaturePoints());
+    campChoice = true;
+  }
   const moneyTitle = yearSummary ? `Year ${yearSummary.year} money` : "";
-  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes, choice, features };
+  return { icon, title, sub, fromName: PHASE_NAMES[from] || from, how, progress, money, moneyTitle, next, nextMatch, notes, choice, features, campChoice };
 }
 
 // What's next once your season is over: training camp to the Final (if any
@@ -5881,7 +6028,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
 function campAndNextYearRows() {
   const rows = [];
   if (state.offseasonDays > 0) {
-    rows.push(["🏋️ Training camp", `${state.offseasonDays} days, to the Final`]);
+    rows.push(["🏠 Off-season", `${state.offseasonDays} days, to the Final — or 🏕️ training camp`]);
     rows.push(["🎯 Skills", `all ${playSkillKeys().length} trainable, no matches`]);
   }
   rows.push([`📅 Year ${state.year + 1}`, state.offseasonDays > 0 ? `${BAL.preseasonDays}-day preseason` : "starts now"]);
@@ -5950,7 +6097,7 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
       ${sp.nextMatch ? `<div class="splash-section">${nextMatchPreviewHtml()}</div>` : ""}
       ${sp.notes.map((n) => `<div class="callout splash-note">${n}</div>`).join("")}
       ${extraHtml}
-      ${sp.choice ? eventChoiceHtml(sp.choice) : `<button class="primary-btn" id="splashGo">Let's go ▶</button>`}
+      ${sp.choice ? eventChoiceHtml(sp.choice) : sp.campChoice && campOffered() ? campChoiceHtml() : `<button class="primary-btn" id="splashGo">Let's go ▶</button>`}
     </div>`;
   // Dismissing it any way counts as seen — no nagging on the next launch.
   openModal(html, {
@@ -5962,6 +6109,7 @@ function showPhaseSplash(sp, extraHtml = "", onDone = null) {
     },
   });
   if (sp.choice) wireEventChoice();
+  else if (sp.campChoice && campOffered()) wireCampChoice();
   else $("splashGo").addEventListener("click", closeModal);
 }
 function wireEventChoice() {
@@ -6308,7 +6456,8 @@ function openHowTo() {
       `<b>Game length:</b> this is a <b>${gameLengthInfo(state.gameLength).name}</b> game — ${gameLengthSummary(state.gameLength)}. Each length (Short, Half, Full) has its own save: ☰ → 🎮 Games.`,
       `<b>Preseason:</b> ${B.preseasonDays} days of training. <b>Regular season:</b> ${B.seasonRounds} rounds, one match a week, all scheduled in advance.`,
       `Top <b>${B.playoffSize}</b> of ${B.leagueSize} reach the knockout playoffs (${playoffFormatText()}).`,
-      `Miss the playoffs: a ${B.trainingCampDays}-day <b>training camp</b>; knocked out: camp for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
+      `Miss the playoffs: a ${B.trainingCampDays}-day <b>off-season</b>; knocked out: off-season for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
+      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries); the other ${24 - CAMP.activityHours}h are all for skills, at <b>×${CAMP.trainingMult} training</b>, with every support role at its top level and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day.`,
       `${B.leagueCount} leagues — you start in League ${B.leagueCount}. <b>${B.relegationCount} go up</b> from each: the playoff champion plus the next ${B.promotionTablePlaces} highest in the table. Bottom ${B.relegationCount} go down.`,
       "Every rival plays real simulated matches — all tables are live. Tap a name to see their season.",
       `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b>: most wins first; players level are split by their games against each other, then by rating.`,
@@ -6686,7 +6835,7 @@ function isOverAllocated() {
 // buttons and both actions, and shown as a hint under the buttons.
 function endDayBlocker() {
   if (isOverAllocated()) return "Over today's hours budget — trim your plan to end the day.";
-  if (state.employment.status === "unemployed" && (state.allocation.work || 0) < BAL.jobSearchMinHours) {
+  if (state.employment.status === "unemployed" && !inCamp() && (state.allocation.work || 0) < BAL.jobSearchMinHours) {
     return `🔍 Put at least ${BAL.jobSearchMinHours}h into Job Search to end the day.`;
   }
   return null;
@@ -6811,6 +6960,12 @@ function runDay() {
   // After the day ticks over, so the new week's wage is pro-rated for it.
   state.staff.missed = [];
   if (Object.keys(endedHires).length) staffWeekEnded(endedHires);
+  // Back from camp: staff paused there are picked up again (auto-rehire).
+  const paused = (state.staff && state.staff.paused) || {};
+  if (!inCamp() && Object.keys(paused).length) {
+    state.staff.paused = {};
+    staffWeekEnded(paused);
+  }
   return { matchResult, phaseEvent, yearSummary, splashes };
 }
 

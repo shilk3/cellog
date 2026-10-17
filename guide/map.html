@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.95.0</span></nav>
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="infographic.html">📊 Infographic</a><span>v4.96.0</span></nav>
 <style>
 /* Layout: a spreadsheet sheet. Mechanics sit in lettered columns (A plan → G career), arrows run between cells; tap a cell to trace it. */
 :root {
@@ -165,7 +165,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
 
   <figure>
     <div class="sheet" id="sheet"></div>
-    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.95.0).</figcaption>
+    <figcaption>Columns run from what you choose (A) to what it earns you over a career (G). Tap a box to see its arrows labelled with the actual numbers in the game (v4.96.0).</figcaption>
   </figure>
 
   <section class="detail" id="detail" aria-live="polite"></section>
@@ -195,7 +195,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["sleep", "Sleep", "7h holds Rest", "plan", 0, 2, "7h of sleep holds Rest; each hour short costs 1.3 Rest, each hour over adds 1.4 (up to 3). With Rest full, oversleeping pushes the day's training multiplier past ×2."],
     ["relax", "Relax", "3h holds Calm", "plan", 0, 3, "3h of Relax holds Calm; each hour short costs 2.4, each hour over adds 2.4. Calm past 100 becomes Chill, a reserve that drains first."],
     ["gym", "Gym", "builds Health", "plan", 0, 4, "Gym hours build Health, but every hour carries a 2.5% injury chance that day. Under 1h a day, Health slowly fades (detraining). Locked while injured."],
-    ["train", "Skill training", "hours per skill", "plan", 0, 5, "Hours on a skill raise it. In the season only the week's 1–3 focus skills can be trained; in preseason and training camp all 7 can. Gains shrink as a skill nears 100, and a skill trained under 1h a day slowly rusts unless its coach is hired. Past 8h on one activity in a day, extra hours count 60% (30% past 12h); this applies to Food and Gym too."],
+    ["train", "Skill training", "hours per skill", "plan", 0, 5, "Hours on a skill raise it. In the season only the week's 1–3 focus skills can be trained; in preseason and the off-season all 7 can. Gains shrink as a skill nears 100, and a skill trained under 1h a day slowly rusts unless its coach is hired. Past 8h on one activity in a day, extra hours count 60% (30% past 12h); this applies to Food and Gym too."],
     ["work", "Work / Pro Duties", "9h a day · 5h when pro", "plan", 0, 7, "Employed: 9h of Work a day earns your daily pay. Pro: 5h of Pro Duties at pro pay, and hours beyond 5h go towards techniques. Short hours cost part or all of one of your 3 chances; each comes back after 21 days. Employed, up to 4h overtime pays half rate."],
     ["jobsearch", "Job Search", "when unemployed", "plan", 0, 8, "After being fired (or not renewed as pro) the Work slider becomes Job Search. 10–40h in total gets you hired again (at least 1h a day), back on starting pay; living costs keep running meanwhile."],
 
@@ -232,7 +232,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["table", "League table", "most wins first", "career", 5, 5, "40 players per league (fewer in shorter games), ranked by wins. Level: head-to-head between them, then rating. Shows W–L and form (the last 5)."],
     ["league", "League", "5 tiers · best league", "career", 5, 7, "The league you play in sets your rivals; the best league you've ever reached sets skill caps, coach and staff levels, and the pro requirement."],
 
-    ["calendar", "Season calendar", "preseason → season → camp", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → training camp until the Final. The Final ends the year. Game length (Short, Half or Full) sets the league size, rounds, playoff size, how many go up and down, and preseason length."],
+    ["calendar", "Season calendar", "preseason → season → off-season", "career", 6, 0, "Preseason (21 days, all skills, no matches) → regular season (one match a week) → playoffs → off-season (at home, or a paid 🏕️ training camp: 14h of skills at ×4, everything else run for you, work on hold) until the Final. The Final ends the year. Game length (Short, Half or Full) sets the league size, rounds, playoff size, how many go up and down, and preseason length."],
     ["playoffs", "Playoffs", "top 16, knockout", "career", 6, 4, "The top of the table plays single-elimination; a dead heat goes to the faster finish, as in the league. Playoff matches earn double experience. The champion wins +$1,000 and +40 rating, and is promoted."],
     ["promo", "Up & down a league", "top 3 + champ · bottom 4", "career", 6, 6, "Four go up from each league below League 1: the playoff champion plus the next best in the table. The bottom four go down."],
     ["completion", "Completion", "% of every goal", "career", 5, 8, "One percentage of how much of CELLOG you've done: leagues climbed (4), the 7 skills at 100 (7) and their XP at 100 (7), pro techniques (half a goal each, 10), top of the League 1 table (1) and its playoff champion (1). Partly done counts partly; each goal keeps its best, so rust never lowers it. Shown in Career."],
@@ -314,7 +314,7 @@ svg:not(.focus) .lbl-wrap, svg.focus .lbl-wrap:not(.lit) { display: none; }
     ["pro", "techniques", "one every ~38 days (20 in all)", "hurts"],
     ["work", "techniques", "Pro hours past 5h master", "helps"],
     ["calendar", "focus", "rolled each season week", "decides"],
-    ["calendar", "train", "preseason & camp: all 7", "helps"],
+    ["calendar", "train", "preseason & off-season: all 7 · camp ×4", "helps"],
     ["calendar", "leave", "preseason", "decides"],
     ["calendar", "table", "39 rounds (Full game)", "decides"],
     ["leave", "work", "paid, no Work needed", "helps"],
