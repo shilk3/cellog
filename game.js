@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.97.0";
+const APP_VERSION = "4.97.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3235,7 +3235,7 @@ function openCampOffer() {
 }
 // The plan's first row at camp, in place of Work.
 function campCardHtml() {
-  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at its top level, your unlocked coaches on every skill, and 8h sleep's training boost (<b>${campTrainingText()}</b> with Rest full). Your ${24 - CAMP.activityHours}h are for skills.</span>${state.injury.active ? `<br><span class="modal-sub">🤕 Injured: rehab instead of the fitness session for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"} — it holds Health.</span>` : ""}</div>`;
+  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at its top level, your unlocked coaches on every skill, and sleep's training boost (<b>${campTrainingText()}</b> with Rest full). Camp takes up ${CAMP.activityHours}h of your day, so the other ${24 - CAMP.activityHours}h are all yours to train skills.</span>${state.injury.active ? `<br><span class="modal-sub">🤕 Injured: rehab instead of the fitness session for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"} — it holds Health.</span>` : ""}</div>`;
 }
 // The plan at camp: its own Gym, Sleep, Relax and Food; no Work.
 function campAllocation(a) {
