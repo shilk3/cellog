@@ -3,17 +3,15 @@
 *An Excel esports manager: CELL + SLOG. Plan every hour, train seven skills,
 climb five leagues — one cell at a time.*
 
-**Play it at [cellog.website](https://cellog.website)** (Vercel project
-`cellog`, team shilkteam; every push to `main` redeploys it). DNS is at
-Namecheap (A `@` → 76.76.21.21, CNAME `www` → cname.vercel-dns.com; www
-redirects to the apex). The same build is also at
-[cellog.vercel.app](https://cellog.vercel.app) and on GitHub Pages at
-[shilk3.github.io/cellog](https://shilk3.github.io/cellog/) (the repository
-was renamed from `excel-run-sim`; the old Pages address no longer works).
+**Play it at [cellog.vercel.app](https://cellog.vercel.app)** (Vercel project
+`cellog`, team shilkteam; every push to `main` redeploys it). The same build is
+also on GitHub Pages at [shilk3.github.io/cellog](https://shilk3.github.io/cellog/)
+(the repository was renamed from `excel-run-sim`; the old Pages address no
+longer works). The cellog.website domain has been retired.
 
-**Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.website/guide/map.html)
+**Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.vercel.app/guide/map.html)
 — every mechanic as a box with arrows for what it pushes on (tap one to
-trace it) — and 📊 [Infographic](https://cellog.website/guide/infographic.html),
+trace it) — and 📊 [Infographic](https://cellog.vercel.app/guide/infographic.html),
 every rule and number. They're copies of two claude.ai artifacts, built by
 `python3 tools/build_guides.py <infographic Main.dc.html> <map .html>`;
 rebuild them whenever a rule changes, with the usual version bump.
