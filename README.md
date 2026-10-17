@@ -11,7 +11,7 @@ longer works). The cellog.website domain has been retired.
 
 **Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.vercel.app/guide/map.html)
 — every mechanic as a box with arrows for what it pushes on (tap one to
-trace it) — and 📊 [Infographic](https://cellog.vercel.app/guide/infographic.html),
+trace it) — and 📊 [Mechanics Infographic](https://cellog.vercel.app/guide/infographic.html),
 every rule and number. They're copies of two claude.ai artifacts, built by
 `python3 tools/build_guides.py <infographic Main.dc.html> <map .html>`;
 rebuild them whenever a rule changes, with the usual version bump.

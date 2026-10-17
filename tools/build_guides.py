@@ -55,8 +55,8 @@ def build_infographic(src):
     fit_js = ("<script>(function(){var b=document.getElementById('igFit'),w=document.querySelector('.ig-wrap'),on=false;"
               "if(!b||!w)return;b.addEventListener('click',function(){on=!on;w.style.zoom=on?Math.min(1,(innerWidth-4)/1320):'';"
               "b.textContent=on?'Full size':'Fit width';});if(innerWidth>=1180)b.hidden=true;})();</script>\n")
-    bar = back_bar("map.html", "🗺️ Map").replace("<span>", '<button type="button" id="igFit">Fit width</button><span>', 1)
-    out = (head("CELLOG Infographic", style + fit_css) + "<body>\n" + bar
+    bar = back_bar("map.html", "🗺️ Mechanics Map").replace("<span>", '<button type="button" id="igFit">Fit width</button><span>', 1)
+    out = (head("CELLOG Mechanics Infographic", style + fit_css) + "<body>\n" + bar
            + '<div class="ig-scroll"><div class="ig-wrap">' + body + "</div></div>\n" + fit_js + "</body>\n</html>\n")
     (ROOT / "guide" / "infographic.html").write_text(out)
 
@@ -71,7 +71,7 @@ def build_map(src):
              ".cellog-back{padding-top:8px}</style>\n")
     links = "".join(l + "\n" for l in re.findall(r"<link[^>]*>", rest[:2000]))
     rest = re.sub(r"<link[^>]*>\s*", "", rest, count=3)
-    out = head("CELLOG Mechanics Map", reset + links) + "<body>\n" + back_bar("infographic.html", "📊 Infographic") + "\n" + rest + "\n</body>\n</html>\n"
+    out = head("CELLOG Mechanics Map", reset + links) + "<body>\n" + back_bar("infographic.html", "📊 Mechanics Infographic") + "\n" + rest + "\n</body>\n</html>\n"
     out = out.replace("(v4.70)", f"(v{VERSION})")
     (ROOT / "guide" / "map.html").write_text(out)
 

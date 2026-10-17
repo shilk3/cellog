@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.96.2";
+const APP_VERSION = "4.96.3";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4809,7 +4809,7 @@ function openMenu() {
     <div class="menu-row" id="menuHow"><span>❓ How to Play</span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuTutorial"><span>📖 Quick Tutorial</span><span class="arrow">›</span></div>
     <a class="menu-row guide-link" href="guide/map.html"><span>🗺️ Mechanics Map <span class="menu-note">how everything connects</span></span><span class="arrow">›</span></a>
-    <a class="menu-row guide-link" href="guide/infographic.html"><span>📊 Infographic <span class="menu-note">every rule &amp; number</span></span><span class="arrow">›</span></a>
+    <a class="menu-row guide-link" href="guide/infographic.html"><span>📊 Mechanics Infographic <span class="menu-note">every number</span></span><span class="arrow">›</span></a>
     <div class="menu-row" id="menuGames"><span>🎮 Games <span class="menu-note">${gameLengthInfo(state.gameLength).icon} ${gameLengthInfo(state.gameLength).name} game</span></span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuSaveTransfer"><span>💾 Export / Import Save</span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuInstall"><span>📲 Add to Home Screen</span><span class="arrow">›</span></div>
