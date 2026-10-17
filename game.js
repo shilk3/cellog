@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.97.1";
+const APP_VERSION = "4.97.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -856,11 +856,11 @@ function hiredLevel(key) {
   return (state.staff && state.staff.hired && state.staff.hired[key]) || 0;
 }
 // The level whose effect applies today: the one hired this week — or, at
-// the training camp, its own staff: every support role at its top level and
-// every coach at the highest level you've unlocked.
+// the training camp, its own staff: every support role at the best level
+// your league allows and every coach at the highest level you've unlocked.
 function staffLevel(key) {
   if (!UPGRADES[key]) return 0; // Python, Mobile and Titan skills have no coach
-  if (inCamp()) return key.startsWith("coach_") ? upgradeLevel(key) : UPGRADES[key].levels.length;
+  if (inCamp()) return key.startsWith("coach_") ? upgradeLevel(key) : leagueStaffLevel(key);
   return hiredLevel(key);
 }
 function upgradeEffect(key) {
@@ -881,6 +881,12 @@ function staffWage(key, level) {
 function staffCost(key, level) {
   const wage = staffWage(key, level);
   return Math.ceil((wage * daysLeftInWeek()) / 7);
+}
+// The best level your best league so far allows (at least 1).
+function leagueStaffLevel(key) {
+  let lvl = 1;
+  while (canUnlockLevel(key, lvl + 1)) lvl++;
+  return lvl;
 }
 function canUnlockLevel(key, level) {
   const lvl = UPGRADES[key].levels[level - 1];
@@ -3151,8 +3157,8 @@ function isTrainingCamp(s = state) {
 // Paid up front for the days left (it stands in for the day's living costs).
 // Camp activities take CAMP.activityHours a day; the rest is all yours for
 // skills. Gym, Sleep, Relax and Food are run for you — each as if you'd put
-// an hour more than its minimum in — at every bonus's best: the top level of
-// every support role and every coach you've unlocked. Training gets the
+// an hour more than its minimum in — at every bonus's best: every support role at
+// the best level your league allows and every coach you've unlocked. Training gets the
 // usual boost from its 8h of sleep (×2.33 with Rest full). An injury swaps
 // the Gym session for rehab, which holds Health. Work is on hold: unpaid leave (a pro's sponsor counts it as Pro Duties and keeps
 // paying); a job search waits. Staff you hire are paused, no wages.
@@ -3201,7 +3207,7 @@ function campFeaturePoints() {
   return [
     ["🏕️", `<b>All-inclusive training camp</b> to the Final: <b>${d} days</b> for <b>$${fmt(price)}</b>, paid up front ($${CAMP.dayCost} a day — it covers living costs while you're there).`],
     ["🗓️", `Camp life takes ${CAMP.activityHours}h a day — meals, sleep, downtime and a coached fitness session, all run for you (as if you'd planned 🌙 ${CAMP.allocation.sleep}h, 🎮 ${CAMP.allocation.relax}h, 🥗 ${CAMP.allocation.nutrition}h, 🏃 ${CAMP.allocation.exercise}h, no injuries). The other <b>${24 - CAMP.activityHours}h are all for skills</b>.`],
-    ["⚡", `Every support role at its top level, a coach on every skill at the best level you've unlocked (unlock more in 🧑‍🏫 Staff any time), and the training boost of 8h sleep: <b>${campTrainingText()}</b> once Rest is full.`],
+    ["⚡", `Every support role at the best level your league allows, a coach on every skill at the best level you've unlocked (unlock more in 🧑‍🏫 Staff any time), and the training boost of 8h sleep: <b>${campTrainingText()}</b> once Rest is full.`],
     ["💼", `${work} Staff you hire are paused, no wages.`],
   ];
 }
@@ -3235,7 +3241,7 @@ function openCampOffer() {
 }
 // The plan's first row at camp, in place of Work.
 function campCardHtml() {
-  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at its top level, your unlocked coaches on every skill, and sleep's training boost (<b>${campTrainingText()}</b> with Rest full). Camp takes up ${CAMP.activityHours}h of your day, so the other ${24 - CAMP.activityHours}h are all yours to train skills.</span>${state.injury.active ? `<br><span class="modal-sub">🤕 Injured: rehab instead of the fitness session for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"} — it holds Health.</span>` : ""}</div>`;
+  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at the best level your league allows, your unlocked coaches on every skill, and sleep's training boost (<b>${campTrainingText()}</b> with Rest full). Camp takes up ${CAMP.activityHours}h of your day, so the other ${24 - CAMP.activityHours}h are all yours to train skills.</span>${state.injury.active ? `<br><span class="modal-sub">🤕 Injured: rehab instead of the fitness session for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"} — it holds Health.</span>` : ""}</div>`;
 }
 // The plan at camp: its own Gym, Sleep, Relax and Food; no Work.
 function campAllocation(a) {
@@ -6464,7 +6470,7 @@ function openHowTo() {
       `<b>Preseason:</b> ${B.preseasonDays} days of training. <b>Regular season:</b> ${B.seasonRounds} rounds, one match a week, all scheduled in advance.`,
       `Top <b>${B.playoffSize}</b> of ${B.leagueSize} reach the knockout playoffs (${playoffFormatText()}).`,
       `Miss the playoffs: a ${B.trainingCampDays}-day <b>off-season</b>; knocked out: off-season for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
-      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at its top level and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day.`,
+      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at the best level your league allows and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day.`,
       `${B.leagueCount} leagues — you start in League ${B.leagueCount}. <b>${B.relegationCount} go up</b> from each: the playoff champion plus the next ${B.promotionTablePlaces} highest in the table. Bottom ${B.relegationCount} go down.`,
       "Every rival plays real simulated matches — all tables are live. Tap a name to see their season.",
       `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b>: most wins first; players level are split by their games against each other, then by rating.`,
