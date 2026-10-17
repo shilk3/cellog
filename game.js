@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.96.1";
+const APP_VERSION = "4.96.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -859,6 +859,7 @@ function hiredLevel(key) {
 // the training camp, its own staff: every support role at its top level and
 // every coach at the highest level you've unlocked.
 function staffLevel(key) {
+  if (!UPGRADES[key]) return 0; // Python, Mobile and Titan skills have no coach
   if (inCamp()) return key.startsWith("coach_") ? upgradeLevel(key) : UPGRADES[key].levels.length;
   return hiredLevel(key);
 }
