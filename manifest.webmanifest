@@ -1,7 +1,7 @@
 {
-  "name": "CELLOG — Excel Esports Manager",
+  "name": "CELLOG — the spreadsheet slog",
   "short_name": "CELLOG",
-  "description": "Manage an Excel esports pro: balance training, running, cross training, sleep and relaxation to become the best.",
+  "description": "An Excel esports manager: plan every hour, train seven skills and climb five leagues — the spreadsheet slog.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,7 @@
-# CELLOG — Excel Esports Manager
+# CELLOG — the spreadsheet slog
+
+*An Excel esports manager: CELL + SLOG. Plan every hour, train seven skills,
+climb five leagues — one cell at a time.*
 
 **Play it at [cellog.website](https://cellog.website)** (Vercel project
 `cellog`, team shilkteam; every push to `main` redeploys it). DNS is at

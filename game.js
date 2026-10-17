@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.93.0";
+const APP_VERSION = "4.94.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4778,7 +4778,7 @@ function openGames({ first = false } = {}) {
     ? `<p class="modal-sub">How long should a season be? Every length has the same 5 leagues, and a year ends on the day of the Final. You can start the others later from ☰ → 🎮 Games — each length keeps its own save.</p>`
     : `<p class="modal-sub">One game of each length, each with its own save. Switching saves this one first.</p>`;
   const html = `
-    ${first ? `<h2>Choose your game</h2>` : stickyHeadHtml("🎮 Games")}
+    ${first ? `<div class="brand-tagline">CELLOG — <i>the spreadsheet slog</i></div><h2>Choose your game</h2>` : stickyHeadHtml("🎮 Games")}
     ${intro}
     ${GAME_LENGTH_KEYS.map((len) => gameCardHtml(len, { first })).join("")}
     ${first ? "" : `<div class="menu-row" id="gamesXfer"><span>💾 Export / Import a game</span><span class="arrow">›</span></div>`}`;
@@ -5769,6 +5769,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     how.push(["📋 Record", wdl(w, dr, season.length - w - dr)]);
     how.push(["🏆 Playoffs", `missed (top ${playoffSizeFor(state.lastStandingsTier)} only)`]);
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
+    if (state.leagueTier < playedTier && state.leagueTier !== TOP_TIER) notes.push("⬆️ The slog pays off.");
     next.push(...campAndNextYearRows());
     if (inTop() && state.year === state.topSince) notes.push("Someone's been watching your season.");
   } else if (from === "playoffs" && to === "offseason") {
@@ -5779,6 +5780,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     const c = state.playoffChampions && state.playoffChampions[playedTier];
     if (c && !c.isPlayer) how.push(["👑 League champion", c.name]);
     how.push(["📅 Next season", moveText(playedTier, state.leagueTier)]);
+    if (state.leagueTier < playedTier && state.leagueTier !== TOP_TIER) notes.push("⬆️ The slog pays off.");
     next.push(...campAndNextYearRows());
     if (champ && playedTier === 1 && state.leagueTier !== TOP_TIER) notes.push("There's always another level.");
     if (inTop() && playedTier === TOP_TIER && state.year === state.topSince) notes.push("Someone's been watching your season.");
@@ -5799,7 +5801,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       if (left.length) notes.push(`Still to collect: ${left.join(", and ")}.`);
     }
   } else if (from === "offseason" && to === "preseason") {
-    icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)}`;
+    icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)} · another year of the slog`;
     if (state.topReveal) {
       icon = "🏛️"; title = `Welcome to the ${TOP_LEAGUE_NAME}`;
       state.topReveal = false;
@@ -6140,7 +6142,7 @@ function showEventSplash(cards, extraHtml = "", onDone = null) {
 /* ---------------------------------------------------------------------- */
 function tutorialPages() {
   return [
-    { icon: "👋", title: `Welcome, ${escapeHtml(state.playerName || "rookie")}`, body: `You're an Excel esports rookie starting at the bottom: <b>League ${BAL.leagueCount}</b> of ${BAL.leagueCount}, in a <b>${gameLengthInfo(state.gameLength).name}</b> game (${BAL.leagueSize} per league). Win matches, climb the table and get promoted — all the way to League 1.` },
+    { icon: "👋", title: `Welcome, ${escapeHtml(state.playerName || "rookie")}`, body: `You're an Excel esports rookie starting at the bottom: <b>League ${BAL.leagueCount}</b> of ${BAL.leagueCount}, in a <b>${gameLengthInfo(state.gameLength).name}</b> game (${BAL.leagueSize} per league). Win matches, climb the table and get promoted — all the way to League 1. Welcome to <b>CELLOG</b>, the spreadsheet slog: every cell counts.` },
     { icon: "🗓️", title: "Plan your day", body: `Each day you share out up to 24 hours with the sliders. <b>💼 Work ${BAL.workHoursRequired}h</b> pays the bills — $${BAL.dailyExpenses}/day living costs never stop — but preseason is paid <b>🏖️ annual leave</b>, so it's greyed out for now. Train skills, and keep <b>🏃 Gym</b>, <b>🌙 Sleep</b> (${BAL.idealSleep}h+), <b>🎮 Relax</b> and <b>🥗 Food</b> topped up. The small marker on each slider is the minimum to avoid losing ground; bars preview tomorrow — green up, red down.` },
     { icon: "🏋️", title: `This preseason: ${BAL.preseasonDays} days`, body: `No matches and no Work yet (it's paid 🏖️ annual leave), <b>all 7 skills</b> can be trained, and skill coaches are half price. Once the season starts only 1–3 <b>focus skills</b> a week can be trained — and they're exactly what that week's match tests. Tap <b>End Day ▶</b> for one day, or <b>End Week ▶▶</b> to play the week out.` },
     { icon: "🧑‍🏫", title: "Staff & money", body: `Skills train up to <b>${BAL.skillShopCapBase}</b> on your own. To go higher, hire that skill's <b>Coach</b> in Staff — one week at a time, paid up front. At $${SKILL_COACH_LEVELS[0].wage}/week a coach is a big chunk of your pay, so you can't hire everyone every week: spend where it counts.` },
@@ -6360,7 +6362,7 @@ function openHowTo() {
   const body = sections
     .map((s) => `<div class="modal-section howto-section" id="howto-${s.id}"><h3>${s.icon} ${s.title}</h3>${s.body}</div>`)
     .join("");
-  openModal(`${stickyHeadHtml("How to Play")}${nav}${body}`, { ownClose: true, page: { key: "howto", reopen: openHowTo } });
+  openModal(`${stickyHeadHtml("How to Play")}<p class="brand-tagline">CELLOG — <i>the spreadsheet slog</i>. Cell + slog: a career built one hour, one cell at a time.</p>${nav}${body}`, { ownClose: true, page: { key: "howto", reopen: openHowTo } });
   document.querySelectorAll("[data-jump]").forEach((btn) =>
     btn.addEventListener("click", () => {
       const target = $(`howto-${btn.dataset.jump}`);
