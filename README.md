@@ -6,8 +6,10 @@ climb five leagues — one cell at a time.*
 **Play it at [cellog.website](https://cellog.website)** (Vercel project
 `cellog`, team shilkteam; every push to `main` redeploys it). DNS is at
 Namecheap (A `@` → 76.76.21.21, CNAME `www` → cname.vercel-dns.com; www
-redirects to the apex). [cellog.vercel.app](https://cellog.vercel.app) and
-the original GitHub Pages address still work too.
+redirects to the apex). The same build is also at
+[cellog.vercel.app](https://cellog.vercel.app) and on GitHub Pages at
+[shilk3.github.io/cellog](https://shilk3.github.io/cellog/) (the repository
+was renamed from `excel-run-sim`; the old Pages address no longer works).
 
 **Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.website/guide/map.html)
 — every mechanic as a box with arrows for what it pushes on (tap one to
