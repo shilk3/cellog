@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.94.0";
+const APP_VERSION = "4.94.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -6597,7 +6597,9 @@ function openSaveTransfer(tab = saveTransferTab || state.gameLength) {
       $("saveExportShare").addEventListener("click", () => {
         if (!ready()) return;
         const file = new File([code], saveFileName(saved), { type: "text/plain" });
-        const data = navigator.canShare && navigator.canShare({ files: [file] }) ? { files: [file], title: `CELLOG ${g.name} save` } : { text: code, title: `CELLOG ${g.name} save` };
+        // Just the file: with a title too, Save to Files also writes the
+        // title as a separate little text file.
+        const data = navigator.canShare && navigator.canShare({ files: [file] }) ? { files: [file] } : { text: code, title: `CELLOG ${g.name} save` };
         navigator.share(data).catch((e) => {
           if (e && e.name !== "AbortError") exportStatus("Sharing didn't work here — use Copy save code instead.", true);
         });
