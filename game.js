@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.94.1";
+const APP_VERSION = "4.94.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3475,8 +3475,8 @@ function getNextMatchInfo() {
         ? `Rd ${roundNum} TODAY vs ${fixture.name} · ${winPct}%`
         : `Rd ${roundNum}/${roundsFor(state.leagueTier)} vs ${fixture.name} · ${winPct}% · ${daysUntilPhrase(daysUntil)}`,
       labelLine1: daysUntil <= 0
-        ? `Rd ${roundNum} TODAY vs ${fixture.name} (${oppRating})`
-        : `Rd ${roundNum}/${roundsFor(state.leagueTier)} vs ${fixture.name} (${oppRating})`,
+        ? `Rd ${roundNum} TODAY vs ${fixture.name}`
+        : `Rd ${roundNum}/${roundsFor(state.leagueTier)} vs ${fixture.name}`,
       labelLine2: matchOddsLine(winPct, daysUntil),
     };
   }
@@ -3490,7 +3490,6 @@ function getNextMatchInfo() {
     const diff = opp ? difficultyLabel(liveRating, s.rank) : null;
     const winPct = opp ? Math.round(winProbabilityAgainst(opp) * 100) : null;
     const oppRating = opp ? Math.round(liveRating) : null;
-    const oppTag = opp ? `${opp.name} (${oppRating})` : "?";
     return {
       kind: "playoff",
       daysUntil,
@@ -3502,7 +3501,7 @@ function getNextMatchInfo() {
       label: daysUntil <= 0
         ? `${roundName} TODAY vs ${opp ? opp.name : "?"}${winPct != null ? " · " + winPct + "%" : ""}`
         : `${roundName} vs ${opp ? opp.name : "?"}${winPct != null ? " · " + winPct + "%" : ""} · ${daysUntilPhrase(daysUntil)}`,
-      labelLine1: daysUntil <= 0 ? `${roundName} TODAY vs ${oppTag}` : `${roundName} vs ${oppTag}`,
+      labelLine1: daysUntil <= 0 ? `${roundName} TODAY vs ${opp ? opp.name : "?"}` : `${roundName} vs ${opp ? opp.name : "?"}`,
       labelLine2: winPct != null ? matchOddsLine(winPct, daysUntil) : daysUntilPhrase(daysUntil),
     };
   }
