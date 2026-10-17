@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.94.2";
+const APP_VERSION = "4.95.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -6210,6 +6210,7 @@ function openHowTo() {
     "<b>End Day ▶</b> plays one day.",
     "<b>To Match ▶▶</b> repeats today's plan up to and including the next match, then shows the result plus a week summary. Outside the season it's <b>End Week ▶▶</b> (up to 7 days).",
     "It stops early so you can re-plan on an injury, losing or finding a job, going pro, burnout, a new technique, or Nutrition shrinking the day below your plan. Each of those also gets its own screen.",
+    "Hours you haven't assigned are lost — they never carry over. If any are left when you press either button, it asks first.",
   ]));
 
   sec("rest", "🌙", "Rest & training speed", `
@@ -6822,6 +6823,29 @@ function finishTurn() {
   $("log").scrollTop = $("log").scrollHeight;
 }
 
+// Hours left out of the plan are lost (they never carry over): ask before
+// End Day / End Week uses them up.
+function confirmUnassigned(kind, go) {
+  if (endDayBlocker()) return;
+  const spare = todayHours() - totalAssigned();
+  if (spare <= 0) return go();
+  const week = kind === "week";
+  const label = week ? $("endWeekBtn").textContent.replace(/\s*\d+d\s*$/, "").trim() : "End Day ▶";
+  openModal(`
+    <div class="splash">
+      <div class="splash-icon">⏳</div>
+      <div class="splash-title">${spare}h unassigned</div>
+      <p class="modal-sub">${week ? `Your plan repeats as it is, so that's <b>${spare}h a day</b> going unused.` : "Hours you don't assign today are lost — they don't carry over to tomorrow."}</p>
+      <button class="ghost-btn" id="spareBack">Assign them</button>
+      <button class="primary-btn" id="spareGo">${label} anyway</button>
+    </div>`);
+  $("spareBack").addEventListener("click", closeModal);
+  $("spareGo").addEventListener("click", () => {
+    closeModal();
+    go();
+  });
+}
+
 function endDay() {
   // Defensive: the button is disabled whenever this is true, but guard the
   // action itself too in case it's ever reachable another way.
@@ -6985,8 +7009,8 @@ function wireInputs() {
     setAllocation(key, getAllocHours(key) + dir);
   });
 
-  $("endDayBtn").addEventListener("click", endDay);
-  $("endWeekBtn").addEventListener("click", endWeek);
+  $("endDayBtn").addEventListener("click", () => confirmUnassigned("day", endDay));
+  $("endWeekBtn").addEventListener("click", () => confirmUnassigned("week", endWeek));
   $("menuBtn").addEventListener("click", openMenu);
   $("cashChip").addEventListener("click", openShop);
   $("rankChip").addEventListener("click", openCareer);
