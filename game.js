@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.96.3";
+const APP_VERSION = "4.96.4";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7152,6 +7152,46 @@ function wireInputs() {
     const key = e.target.getAttribute("data-key");
     if (key) setAllocation(key, Number(e.target.value));
   });
+  // Sliders are dragged here, not natively: only a sideways drag moves one,
+  // so a swipe up or down that starts on a slider scrolls the page instead
+  // (touch-action: pan-y). It moves relative to the finger, never past the
+  // hours left; a mouse click on the track still jumps there.
+  let drag = null;
+  const thumb = 22; // the slider thumb's width (style.css)
+  const stepPx = (input) => Math.max(1, (input.getBoundingClientRect().width - thumb) / Math.max(1, Number(input.max)));
+  const nudge = (key, val) => { if (val !== getAllocHours(key)) setAllocation(key, val); };
+  container.addEventListener("pointerdown", (e) => {
+    const wrap = e.target.closest(".slider-wrap");
+    const input = wrap && wrap.querySelector("input[type=range]");
+    if (!input || input.disabled) return;
+    const key = input.dataset.key;
+    if ((key === "exercise" && state.injury.active) || (key === "work" && onLeave())) return;
+    const mouse = e.pointerType === "mouse";
+    if (mouse) {
+      e.preventDefault();
+      const r = input.getBoundingClientRect();
+      nudge(key, Math.round((e.clientX - r.left - thumb / 2) / stepPx(input)));
+    }
+    drag = { key, id: e.pointerId, x: e.clientX, y: e.clientY, from: getAllocHours(key), moving: mouse };
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const input = $(`hours_${drag.key}`);
+    if (!input) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moving) {
+      if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(e.clientY - drag.y)) return;
+      drag.moving = true;
+    }
+    const want = drag.from + Math.round(dx / stepPx(input));
+    nudge(drag.key, want);
+    // Held at 0 or the hours left: re-anchor, so dragging back responds at once.
+    const got = getAllocHours(drag.key);
+    if (got !== want) Object.assign(drag, { from: got, x: e.clientX });
+  });
+  const endDrag = (e) => { if (drag && e.pointerId === drag.id) drag = null; };
+  window.addEventListener("pointerup", endDrag);
+  window.addEventListener("pointercancel", endDrag);
   container.addEventListener("click", (e) => {
     if (e.target.closest("[data-event-change]")) return openEventChoice();
     const coach = e.target.closest("[data-coach]");

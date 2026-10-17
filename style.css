@@ -217,8 +217,9 @@ html, body {
   text-align: right;
 }
 .stepper { display: flex; align-items: center; gap: 10px; }
-.slider-wrap { position: relative; flex: 1; display: flex; align-items: center; }
-.slider-wrap input[type="range"] { flex: 1; }
+/* The whole wrap takes the touch (dragged in game.js); up/down scrolls. */
+.slider-wrap { position: relative; flex: 1; display: flex; align-items: center; align-self: stretch; min-height: 32px; touch-action: pan-y; cursor: pointer; }
+.slider-wrap input[type="range"] { flex: 1; pointer-events: none; }
 .slider-marker {
   position: absolute;
   top: 50%;
