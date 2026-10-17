@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.96.4";
+const APP_VERSION = "4.97.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1702,7 +1702,7 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
   const focusMult = burnoutActive ? BAL.burnoutEffectivenessMult : 1;
   const gear = equipmentEffects();
   const physMult = physSynergy(s.phys);
-  const restMult = inCamp() ? CAMP.trainingMult : restTrainingMultiplier(s.rest, a.sleep);
+  const restMult = restTrainingMultiplier(s.rest, a.sleep);
 
   // ---- The 7 case specialties ----
   let totalSkillH = 0;
@@ -1752,7 +1752,8 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
   const physDecayFromRest = restShortfall * BAL.restDragHealth;
   const detrainMult = recoveryEff ? recoveryEff.detrainMult : 1.0;
   const detrain = exerciseH < BAL.detrainThresholdHours ? BAL.detrainDecay * detrainMult : 0;
-  const physDelta = exerciseGain - physDecayFromRest - detrain;
+  // Injured at camp: rehab instead of the Gym session holds Health.
+  const physDelta = injuryActive && inCamp() ? 0 : exerciseGain - physDecayFromRest - detrain;
   // Same rule as skills: gains stop at the ceiling, but Health already above
   // it (physio not hired this week) only goes down if the day's net is down.
   const phys = physDelta > 0 ? Math.min(s.phys + physDelta, Math.max(pCap, s.phys)) : Math.max(0, s.phys + physDelta);
@@ -3151,15 +3152,19 @@ function isTrainingCamp(s = state) {
 // Camp activities take CAMP.activityHours a day; the rest is all yours for
 // skills. Gym, Sleep, Relax and Food are run for you — each as if you'd put
 // an hour more than its minimum in — at every bonus's best: the top level of
-// every support role, every coach you've unlocked, and ×4 training. Work is
-// on hold: unpaid leave (a pro's sponsor counts it as Pro Duties and keeps
+// every support role and every coach you've unlocked. Training gets the
+// usual boost from its 8h of sleep (×2.33 with Rest full). An injury swaps
+// the Gym session for rehab, which holds Health. Work is on hold: unpaid leave (a pro's sponsor counts it as Pro Duties and keeps
 // paying); a job search waits. Staff you hire are paused, no wages.
 const CAMP = {
   dayCost: 60,
   activityHours: 10,
-  trainingMult: 4,
   allocation: { exercise: 2, sleep: 8, relax: 4, nutrition: 2, work: 0 }, // each an hour over its minimum
 };
+// Camp's training boost: the usual one for its 8h of sleep, with Rest full.
+function campTrainingText() {
+  return `×${restTrainingMultiplier(100, CAMP.allocation.sleep).toFixed(1)}`;
+}
 // Days of off-season left, today included.
 function offseasonDaysLeft(s = state) {
   return Math.max(0, (s.offseasonDays || 0) - (s.phaseDay || 0));
@@ -3184,7 +3189,7 @@ function joinCamp() {
   state.yearCashFlow.expenses += price;
   state.camp = { year: state.year, joined: true, price, days: offseasonDaysLeft() };
   state.carbHours = 0;
-  const e = { html: `🏕️ Joined the training camp for ${state.camp.days} days (−$${fmt(price)}). ${CAMP.activityHours}h a day of camp life; ${24 - CAMP.activityHours}h for skills, at ×${CAMP.trainingMult} training.`, cls: "event-good" };
+  const e = { html: `🏕️ Joined the training camp for ${state.camp.days} days (−$${fmt(price)}). ${CAMP.activityHours}h a day of camp life; ${24 - CAMP.activityHours}h for skills.`, cls: "event-good" };
   state.logEntries.push(e);
   appendLog(e.html, e.cls);
   return true;
@@ -3196,7 +3201,7 @@ function campFeaturePoints() {
   return [
     ["🏕️", `<b>All-inclusive training camp</b> to the Final: <b>${d} days</b> for <b>$${fmt(price)}</b>, paid up front ($${CAMP.dayCost} a day — it covers living costs while you're there).`],
     ["🗓️", `Camp life takes ${CAMP.activityHours}h a day — meals, sleep, downtime and a coached fitness session, all run for you (as if you'd planned 🌙 ${CAMP.allocation.sleep}h, 🎮 ${CAMP.allocation.relax}h, 🥗 ${CAMP.allocation.nutrition}h, 🏃 ${CAMP.allocation.exercise}h, no injuries). The other <b>${24 - CAMP.activityHours}h are all for skills</b>.`],
-    ["⚡", `Every bonus at its best: <b>×${CAMP.trainingMult} training</b>, every support role at its top level, and a coach on every skill at the best level you've unlocked (unlock more in 🧑‍🏫 Staff any time).`],
+    ["⚡", `Every support role at its top level, a coach on every skill at the best level you've unlocked (unlock more in 🧑‍🏫 Staff any time), and the training boost of 8h sleep: <b>${campTrainingText()}</b> once Rest is full.`],
     ["💼", `${work} Staff you hire are paused, no wages.`],
   ];
 }
@@ -3230,7 +3235,7 @@ function openCampOffer() {
 }
 // The plan's first row at camp, in place of Work.
 function campCardHtml() {
-  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at its top level, your unlocked coaches on every skill, and <b>×${CAMP.trainingMult} training</b>. Your ${24 - CAMP.activityHours}h are for skills.</span></div>`;
+  return `<div class="callout camp-card">🏕️ <b>Training camp</b> · ${offseasonDaysLeft()} day${offseasonDaysLeft() === 1 ? "" : "s"} left<br><span class="modal-sub">Camp runs 🌙 Sleep, 🎮 Relax, 🥗 Food and 🏃 Gym for you, with every support role at its top level, your unlocked coaches on every skill, and 8h sleep's training boost (<b>${campTrainingText()}</b> with Rest full). Your ${24 - CAMP.activityHours}h are for skills.</span>${state.injury.active ? `<br><span class="modal-sub">🤕 Injured: rehab instead of the fitness session for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"} — it holds Health.</span>` : ""}</div>`;
 }
 // The plan at camp: its own Gym, Sleep, Relax and Food; no Work.
 function campAllocation(a) {
@@ -3750,7 +3755,8 @@ function renderStats() {
   const msgs = [];
   if (state.burnout.active) msgs.push("🔥 Burnout active — training & exercise are far less effective. Relax to recover.");
   else if (s.composure <= 10) msgs.push("🔥 Calm critical — burnout imminent. Schedule relaxation soon.");
-  if (state.injury.active) msgs.push(`🤕 Injured — Gym locked for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"}.`);
+  // At camp the camp card says it instead: rehab replaces the Gym session.
+  if (state.injury.active && !inCamp()) msgs.push(`🤕 Injured — Gym locked for ${state.injury.daysLeft} more ${state.injury.daysLeft === 1 ? "day" : "days"}.`);
   if (s.rest <= 30) msgs.push("🌙 Severely low Rest — your body is breaking down. Sleep more.");
   if (s.phys <= 20) msgs.push("💪 Health critically low — it's capping your training gains.");
   if (s.nutrition <= BAL.nutritionHoursCapLow) msgs.push(`🥗 Nutrition critical — your day is capped at only ${dailyHoursCap(s.nutrition)}h. Eat better to earn more hours back.`);
@@ -6458,7 +6464,7 @@ function openHowTo() {
       `<b>Preseason:</b> ${B.preseasonDays} days of training. <b>Regular season:</b> ${B.seasonRounds} rounds, one match a week, all scheduled in advance.`,
       `Top <b>${B.playoffSize}</b> of ${B.leagueSize} reach the knockout playoffs (${playoffFormatText()}).`,
       `Miss the playoffs: a ${B.trainingCampDays}-day <b>off-season</b>; knocked out: off-season for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
-      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries); the other ${24 - CAMP.activityHours}h are all for skills, at <b>×${CAMP.trainingMult} training</b>, with every support role at its top level and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day.`,
+      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at its top level and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day.`,
       `${B.leagueCount} leagues — you start in League ${B.leagueCount}. <b>${B.relegationCount} go up</b> from each: the playoff champion plus the next ${B.promotionTablePlaces} highest in the table. Bottom ${B.relegationCount} go down.`,
       "Every rival plays real simulated matches — all tables are live. Tap a name to see their season.",
       `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b>: most wins first; players level are split by their games against each other, then by rating.`,

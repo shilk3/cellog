@@ -229,8 +229,9 @@ lose, and the new year starts straight after it.
 all-inclusive camp instead — $60 a day for the days left, paid up front (it
 covers living costs). Camp life takes 10h a day and runs Sleep, Relax, Food
 and Gym for you, as if you'd planned an hour over each one's minimum (8h,
-4h, 2h, 2h; no injuries); the other 14h are all for skills, at ×4 training,
-with every support role at its top level and a coach on every skill at the
+4h, 2h, 2h; no injuries — an injury you already have swaps the Gym session
+for rehab, which holds Health); the other 14h are all for skills, with 8h
+sleep's usual training boost (×2.33 once Rest is full), every support role at its top level and a coach on every skill at the
 best level you've unlocked. Work stops (unpaid leave; a pro's sponsor counts
 it as Pro Duties and keeps paying; a job search waits) and hired staff are
 paused, picked up again by auto-rehire after camp. It's offered when your
