@@ -58,7 +58,9 @@ Relax, and Food. Everything is connected:
   shrinks to 16h, sliding up to a full 24h at 90+.
 - Every Gym hour carries a 2.5% injury chance that day (8h, the max, is
   20%; Sports Physio cuts it). An injury costs 5–10 Health and locks the
-  Gym for 3–5 days, but never stops you playing matches.
+  Gym for 3–5 days, but never stops you playing matches. A hired 🧊 Recovery
+  Program takes 1–3 days off, even when hired after you're hurt (at least 1
+  day left; once per injury).
 - **Energy Items** (in Staff & Items) are instant top-ups, each usable
   once a week: ☕ Coffee $40 (+10 Rest, −4 Rest the next day), 🧃 Energy
   Drink $90 (+15 Rest, +10 Calm, then −5 Rest, −3 Calm), 💆 Spa

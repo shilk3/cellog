@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.98.0";
+const APP_VERSION = "4.98.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -821,9 +821,9 @@ Object.assign(UPGRADES, {
     name: "Recovery Program",
     icon: "🧊",
     levels: [
-      { injuryDaysReduce: 1, detrainMult: 0.7, desc: "-1 day injury duration, -30% detraining" },
-      { injuryDaysReduce: 2, detrainMult: 0.45, desc: "-2 days injury duration, -55% detraining" },
-      { injuryDaysReduce: 3, detrainMult: 0.2, desc: "-3 days injury duration, -80% detraining" },
+      { injuryDaysReduce: 1, detrainMult: 0.7, desc: "-1 day injury duration (even mid-injury), -30% detraining" },
+      { injuryDaysReduce: 2, detrainMult: 0.45, desc: "-2 days injury duration (even mid-injury), -55% detraining" },
+      { injuryDaysReduce: 3, detrainMult: 0.2, desc: "-3 days injury duration (even mid-injury), -80% detraining" },
     ],
   },
   manager: {
@@ -904,7 +904,26 @@ function hireStaff(key, level) {
   state.cash -= cost;
   state.yearCashFlow.expenses += cost;
   state.staff.hired[key] = level;
+  applyRecoveryToInjury();
   return true;
+}
+// A Recovery Program shortens an injury: by its level's days when hired
+// before it, or — hired (or moved up) mid-injury — off the days left, at
+// least 1 left. Each injury counts it once: injury.reduced is the days
+// already taken off, so rehiring never takes off more.
+function applyRecoveryToInjury() {
+  const inj = state.injury, eff = upgradeEffect("recovery");
+  if (!inj || !inj.active || !eff) return;
+  const extra = eff.injuryDaysReduce - (inj.reduced || 0);
+  if (extra <= 0) return;
+  const before = inj.daysLeft;
+  inj.daysLeft = Math.max(1, inj.daysLeft - extra);
+  inj.reduced = eff.injuryDaysReduce;
+  if (inj.daysLeft < before) {
+    const e = { html: `🧊 Recovery Program: injury shortened by ${before - inj.daysLeft} ${before - inj.daysLeft === 1 ? "day" : "days"} — Gym back in ${inj.daysLeft} ${inj.daysLeft === 1 ? "day" : "days"}.`, cls: "event-good" };
+    state.logEntries.push(e);
+    appendLog(e.html, e.cls);
+  }
 }
 const SUPPORT_KEYS = ["physio", "nutritionist", "manager", "sleepApp", "meditation", "recovery"];
 
@@ -1939,7 +1958,7 @@ function resolveDay() {
       // Just the loss — never also pulled down to the ceiling. Health held
       // above it (a physio's gone) drops by the loss and decays from there.
       s.phys = Math.max(0, s.phys - loss);
-      state.injury = { active: true, daysLeft: days, loss };
+      state.injury = { active: true, daysLeft: days, loss, reduced: daysReduce };
       // The Gym slider locks while injured — free its hours rather than
       // leaving them stuck in the day's budget doing nothing.
       state.allocation.exercise = 0;
@@ -6442,7 +6461,7 @@ function openHowTo() {
     "Low Physical Health caps how much your skill training helps (the <b>×0.86 skill</b> on the Gym row).",
     `Health caps at <b>${B.statCapBase}</b> unless a Sports Physio is hired. Under ${B.skillDecayThresholdHours}h of Gym it slowly detrains.`,
     `Every Gym hour adds <b>${pct(B.injuryChancePerHour)}</b> injury chance that day (${B.gymMaxHours}h = ${pct(B.gymMaxHours * B.injuryChancePerHour)}); the Gym row shows it as <b>#% 🤕</b>.`,
-    `An injury costs ${B.injuryPhysLoss[0]}–${B.injuryPhysLoss[1]} Health and locks the Gym for ${B.injuryDaysRange[0]}–${B.injuryDaysRange[1]} days. It never stops you playing matches.`,
+    `An injury costs ${B.injuryPhysLoss[0]}–${B.injuryPhysLoss[1]} Health and locks the Gym for ${B.injuryDaysRange[0]}–${B.injuryDaysRange[1]} days. A hired 🧊 Recovery Program takes 1–3 days off — even hired after you're hurt (at least 1 day left; once per injury). It never stops you playing matches.`,
   ]));
 
   sec("rust", "📉", "Skill rust", ul([
@@ -7271,6 +7290,7 @@ function wireInputs() {
 /* Init                                                                   */
 /* ---------------------------------------------------------------------- */
 function renderAll() {
+  applyRecoveryToInjury(); // a save from before mid-injury hiring counted
   renderTopbar();
   renderStats();
   renderPlanner();
