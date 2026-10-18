@@ -34,7 +34,7 @@ a{color:var(--skill);}
 <style>.ig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.ig-wrap{min-width:1180px}.cellog-back button{font:600 13px inherit;color:#e7edf7;background:#131c2e;border:1px solid #263149;border-radius:8px;padding:4px 10px}</style>
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Mechanics Map</a><button type="button" id="igFit">Fit width</button><span>v4.98.1</span></nav><div class="ig-scroll"><div class="ig-wrap">
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Mechanics Map</a><button type="button" id="igFit">Fit width</button><span>v4.99.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
 
 <div style="width:100%;max-width:1320px;margin:0 auto;padding:56px 32px 140px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box;">
 
@@ -42,7 +42,7 @@ a{color:var(--skill);}
 <div style="display:flex;flex-direction:column;gap:14px;">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <div style="font-size:42px;font-weight:800;letter-spacing:0.3px;">CELLOG Mechanics Infographic</div>
-    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.98.1</div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v4.99.0</div>
   </div>
   <div style="font-size:18px;color:var(--text-dim);max-width:920px;line-height:1.55;">Every mechanic, threshold and formula behind the Excel esports manager sim — exactly as implemented in <code>game.js</code>, laid out as one connected system.</div>
 </div>
@@ -330,7 +330,7 @@ a{color:var(--skill);}
       <div style="font-size:13px;font-weight:700;">Outcome</div>
       <code>rating change = round(24 × (actual − P(win by rating gap, scale 300))) · actual: win 1, loss 0</code>
       <code>cash: win → round(60 + rating/20) · lose → 0 · champion +$1,000, +40 rating</code>
-      <div style="font-size:12.5px;color:var(--text-dim);">Team Manager trims rating lost on a loss and pads cash on a win. Rating floor/ceiling: <b>0–5000</b>, the same for every rival. Starting rating: <b>480</b>.</div>
+      <div style="font-size:12.5px;color:var(--text-dim);">Team Manager trims rating lost on a loss and negotiates coaches' wages down. Rating floor/ceiling: <b>0–5000</b>, the same for every rival. Starting rating: <b>480</b>.</div>
     </div>
   </div>
 
@@ -491,7 +491,7 @@ a{color:var(--skill);}
     <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
       <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">🧑‍💼 Team Manager</div>
       <table><tr><th>Lvl</th><th>Wage/wk</th><th>Effect while hired</th></tr>
-      <tr><td>1</td><td>$20</td><td>−10% rating lost on defeat</td></tr><tr><td>2</td><td>$32</td><td>−20% rating lost, +5% prizes</td></tr><tr><td>3</td><td>$50</td><td>−35% rating lost, +10% prizes</td></tr></table>
+      <tr><td>1</td><td>$20</td><td>−10% rating lost on defeat, −5% coach wages</td></tr><tr><td>2</td><td>$32</td><td>−20% rating lost, −10% coach wages</td></tr><tr><td>3</td><td>$50</td><td>−35% rating lost, −15% coach wages</td></tr></table>
     </div>
     <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:18px;">
       <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">💤 Sleep Coach App</div>

@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.98.1";
+const APP_VERSION = "4.99.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -830,9 +830,10 @@ Object.assign(UPGRADES, {
     name: "Team Manager",
     icon: "🧑‍💼",
     levels: [
-      { rankLossMult: 0.9, cashBonusMult: 1.0, desc: "-10% rating lost on defeat" },
-      { rankLossMult: 0.8, cashBonusMult: 1.05, desc: "-20% rating lost on defeat, +5% prize money" },
-      { rankLossMult: 0.65, cashBonusMult: 1.1, desc: "-35% rating lost on defeat, +10% prize money" },
+      // Negotiates the coaches' contracts: their wages drop while hired.
+      { rankLossMult: 0.9, coachWageMult: 0.95, desc: "-10% rating lost on defeat, -5% coach wages" },
+      { rankLossMult: 0.8, coachWageMult: 0.9, desc: "-20% rating lost on defeat, -10% coach wages" },
+      { rankLossMult: 0.65, coachWageMult: 0.85, desc: "-35% rating lost on defeat, -15% coach wages" },
     ],
   },
 });
@@ -871,9 +872,15 @@ function coachSaleActive() {
   return state.seasonPhase === "preseason";
 }
 // A level's weekly wage right now (after any preseason discount).
+// A hired Team Manager takes a share off coaches' wages, on top of it.
 function staffWage(key, level) {
   const wage = UPGRADES[key].levels[level - 1].wage;
-  return key.startsWith("coach_") && coachSaleActive() ? Math.ceil(wage * BAL.preseasonCoachPrice) : wage;
+  if (!key.startsWith("coach_")) return wage;
+  return Math.ceil(wage * (coachSaleActive() ? BAL.preseasonCoachPrice : 1) * coachWageMult());
+}
+function coachWageMult() {
+  const m = upgradeEffect("manager");
+  return m ? m.coachWageMult : 1;
 }
 // This week's wage for a level, pro-rated by the days left in the week
 // (today included) and rounded up to the dollar.
@@ -1019,7 +1026,8 @@ function staffWeekEnded(ended) {
   const rehired = [];
   const missed = [];
   let others = 0;
-  for (const key of Object.keys(ended)) {
+  // The manager first, so coaches rehired after get the discount.
+  for (const key of Object.keys(ended).sort((x, y) => (y === "manager") - (x === "manager"))) {
     const level = ended[key];
     const name = `${UPGRADES[key].name} Lv${level}`;
     if (!isAutoRehire(key)) {
@@ -2496,7 +2504,6 @@ function awardMatchXp(knockout) {
 function resolveMatch(opponent, { exhibition = false } = {}) {
   const managerEff = upgradeEffect("manager");
   const rankLossMult = managerEff ? managerEff.rankLossMult : 1.0;
-  const cashBonusMult = managerEff ? managerEff.cashBonusMult : 1.0;
   const rankBefore = state.rank;
 
   const breakdown = performanceBreakdown();
@@ -2536,7 +2543,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   const prizeFormula = { base: BAL.prizeWinBase, div: BAL.prizeRatingDiv, loss: BAL.prizeLoss };
   // The same prize is on offer every match: the winner takes it all.
   const fullPrize = prizeFormula.base + state.rank / prizeFormula.div;
-  const cashReward = exhibition ? 0 : Math.round((win ? fullPrize : prizeFormula.loss) * cashBonusMult);
+  const cashReward = exhibition ? 0 : Math.round(win ? fullPrize : prizeFormula.loss);
   state.cash += cashReward;
   state.yearCashFlow.matchCash += cashReward;
   if (!exhibition) {
@@ -2623,7 +2630,6 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
     ratingChange,
     ratingChangeRaw: Math.round(K * (actual - ratingProb)),
     rankLossMult,
-    cashBonusMult,
     rankBefore,
     rankAfterMatch: state.rank,
     prizeFormula,
@@ -4456,7 +4462,7 @@ function ratingCashExplainerHtml(result) {
       ? row(`Draw: half of $${pf.base} + your new rating (${fmt(result.rankAfterMatch)}) ÷ ${pf.div}`, `+${fmtMoney(Math.round(basePrize))}`)
       : row(pf.loss ? "Loss: flat prize" : "Loss: no prize money", `+${fmtMoney(pf.loss)}`),
   ];
-  if (result.cashBonusMult > 1) {
+  if (result.cashBonusMult > 1) { // older results: the manager used to add prize money
     cashRows.push(row(`🧑‍💼 Team Manager (+${Math.round((result.cashBonusMult - 1) * 100)}% prize money)`, `+${fmtMoney(result.cashReward - Math.round(basePrize))}`, "perf-sub"));
   }
   if (bonus.cash) cashRows.push(row("👑 Champion bonus", `+${fmtMoney(bonus.cash)}`, "perf-sub"));
@@ -4804,7 +4810,7 @@ function shopHtml(tab = shopTab) {
     </div>
     <div class="modal-section">
       <h3>Skill Coaches</h3>
-      ${coachSaleActive() ? `<div class="callout staff-sale">🏖️ <b>Half price all preseason</b> — every skill coach's wage is halved until the season starts.</div>` : ""}
+      ${coachSaleActive() ? `<div class="callout staff-sale">🏖️ <b>Half price all preseason</b> — every skill coach's wage is halved until the season starts.</div>` : ""}${coachWageMult() < 1 ? `<div class="callout staff-sale">🧑‍💼 <b>Team Manager</b> — coach wages ${Math.round((1 - coachWageMult()) * 100)}% off while they're hired.</div>` : ""}
       <p class="modal-sub">A hired coach lifts that skill's ceiling (never past your league cap: ${leagueSkillCap()} for a ⭐ specialisation, ${leagueSkillCap() - BAL.otherSkillCapGap} for the rest), speeds up its training, and stops it rusting — even in a week you don't train it. With no coach a skill trains up to ${BAL.skillShopCapBase}; above that, an hour a day holds it and less lets it slip. 🔁 Auto-rehire keeps a coach on each new week — even when their skill isn't in focus.</p>
       ${skillCards}
     </div>
