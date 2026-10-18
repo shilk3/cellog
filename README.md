@@ -123,11 +123,11 @@ Relax, and Food. Everything is connected:
   never costs you progress, but every not-yet-mastered technique costs 5%
   match performance.
 - **Cost of living**: $50/day, charged no matter what — employed or not,
-  every phase. Pay isn't flat: Work starts at $70/day and Pro Duties at
-  $100/day, each rising $10/year for your first 5 years in that role before
-  plateauing at $120 and $150. Lose the job or get dropped from Pro and
-  that role's pay resets to its minimum for next time — seniority isn't
-  carried over. The new-year screen includes a cash-flow summary of the
+  every phase. Pay isn't flat: Work starts at $70/day and rises $10 at
+  each year end up to $150; Pro Duties start at $150/day (or your work pay,
+  if higher) and rise $10 a year with no limit. Pay never drops: losing the
+  job keeps your rate for the next one, and losing the sponsor moves your
+  work rate up to your pro rate (as far as $150). The new-year screen includes a cash-flow summary of the
   year just finished — pay earned, match winnings, expenses paid, the net,
   and any raise you just earned.
 

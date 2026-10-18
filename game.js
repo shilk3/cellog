@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.97.4";
+const APP_VERSION = "4.98.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -166,16 +166,15 @@ const BAL = {
   // only what's "required" and what it's called changes with status.
   workHoursRequired: 9, // Employed: Work hours/day required to avoid a strike
   proDutyHoursRequired: 5, // Pro: Pro Duties hours/day required; hours above this master techniques
-  // Pay isn't flat: it starts at the minimum for whichever role you're in and
-  // rises $10/year for 5 years (then plateaus), tracked independently per
-  // role (state.employment.workPay / .proPay) so Pro pays more at every
-  // tenure than a day job does. Getting fired or dropped resets that one
-  // role's rate back to its minimum for next time — seniority is lost, not
-  // carried over.
-  workPayMin: 70, // Employed: starting (and reset) daily pay
-  proPayMin: 100, // Pro: starting (and reset) daily pay
+  // Pay isn't flat: it rises $10 at each year end in whichever role you're
+  // in, tracked per role (state.employment.workPay / .proPay). A day job's
+  // raises stop after payRaiseMaxYears ($150); a pro's never stop. Pay never
+  // drops: experience carries over, so losing a job or the sponsor keeps
+  // your rate, and going pro starts at proPayMin or your work pay if higher.
+  workPayMin: 70, // Employed: starting daily pay
+  proPayMin: 150, // Pro: starting daily pay (at least your work pay)
   payRaisePerYear: 10,
-  payRaiseMaxYears: 5, // raises stop after this many years of unbroken tenure in the same role
+  payRaiseMaxYears: 8, // a day job's raises stop after this many ($70 → $150); a pro's don't
   // Match prize: a win pays base + rating ÷ div; a loss pays nothing.
   prizeWinBase: 60,
   prizeRatingDiv: 20,
@@ -1393,6 +1392,15 @@ function findRival(id) {
 /* ---------------------------------------------------------------------- */
 /* State                                                                  */
 /* ---------------------------------------------------------------------- */
+// A day job's top rate: its start plus every raise it gets.
+function workPayCap() {
+  return BAL.workPayMin + BAL.payRaisePerYear * BAL.payRaiseMaxYears;
+}
+// Losing the sponsor: the next day job pays your pro rate, up to a day
+// job's top rate (pay never drops further than the job allows).
+function keepProPayForWork(emp) {
+  emp.workPay = Math.max(emp.workPay, Math.min(emp.proPay, workPayCap()));
+}
 function freshState() {
   const leagueTier = 5;
   const rivals = generateRivalRoster(leagueTier);
@@ -1480,8 +1488,8 @@ function freshState() {
       techniqueQueue: [], // Pro: [{name, hoursNeeded, hoursDone}], FIFO — only the front is "in progress"
       techniqueDayCounter: 0, // days elapsed toward the next technique; only ticks while Pro
       techniquesMastered: [], // names mastered so far — kept for good, even if pro status lapses
-      workPay: BAL.workPayMin, // current Employed daily pay — rises with tenure, resets on firing
-      proPay: BAL.proPayMin, // current Pro daily pay — rises with tenure, resets on being dropped
+      workPay: BAL.workPayMin, // current Employed daily pay — rises each year (to workPayCap), never drops
+      proPay: BAL.proPayMin, // current Pro daily pay — rises each year, never drops
     },
     activeSkills: rollActiveSkills(), // 1-3 skills trainable this round; rerolled weekly
     skillCycleDay: 0, // days elapsed in the current 7-day skill-focus cycle
@@ -1556,6 +1564,8 @@ function migrateSave(parsed) {
   const feats = fresh.completion.feats;
   if (fresh.leagueTier === TOP_TIER) feats.l1Table = feats.l1Champ = true;
   if (fresh.gameComplete) feats.topTable = feats.topChamp = true;
+  // Pro now starts at $150 — never below that, nor below the work rate.
+  fresh.employment.proPay = Math.max(fresh.employment.proPay || 0, BAL.proPayMin);
   fresh.saveVersion = SAVE_VERSION;
   // Slider maxes can drop between versions — never load a plan past them.
   const a = fresh.allocation;
@@ -1659,18 +1669,29 @@ function fmt(n) {
   return Math.round(n).toString();
 }
 
-// Short percentage for tight rows: one decimal under 10% ("2.5%"), whole
-// numbers from 10% up ("13%"), so it never grows past 4 characters.
 // A match chance as a whole percent. Luck means nothing's ever certain, so
 // it shows 1–99%, never 0% or 100% (99.6% would otherwise round up to 100).
 function oddsPct(prob) {
   return clamp(Math.round(prob * 100), 1, 99);
 }
+// Short percentage for tight rows: one decimal under 10% ("2.5%"), whole
+// numbers from 10% up ("13%"), so it never grows past 4 characters.
 function fmtPct(fraction) {
   const pct = fraction * 100;
   return pct < 10 ? `${+pct.toFixed(1)}%` : `${Math.round(pct)}%`;
 }
 
+// The top bar's cash: in full up to $9,999, then shortened so the chip
+// stays narrow — 10.0k, 99.9k, 100k, 1.25M. Rounded down, so it never
+// shows more than you have.
+function fmtCashShort(n) {
+  const a = Math.abs(n), sign = n < 0 ? "−" : "";
+  const down = (x, d) => (Math.floor(x * 10 ** d) / 10 ** d).toFixed(d);
+  if (a < 10000) return fmt(n);
+  if (a < 100000) return `${sign}${down(a / 1000, 1)}k`;
+  if (a < 1000000) return `${sign}${Math.floor(a / 1000)}k`;
+  return `${sign}${down(a / 1000000, 2)}M`;
+}
 function fmtMoney(n) {
   return `${n < 0 ? "−" : ""}$${fmt(Math.abs(n))}`;
 }
@@ -2098,10 +2119,8 @@ function resolveEmploymentDay() {
         emp.strikes = [];
         emp.jobSearchHours = 0;
         emp.jobSearchHoursNeeded = randInt(BAL.jobSearchHoursRange[0], BAL.jobSearchHoursRange[1]);
-        // Seniority is lost, not carried over — whichever role you were just
-        // dropped from starts back at its minimum next time you're in it.
-        if (isPro) emp.proPay = BAL.proPayMin;
-        else emp.workPay = BAL.workPayMin;
+        // Pay never drops: the next job pays at least what this one did.
+        if (isPro) keepProPayForWork(emp);
         events.push({
           type: "bad",
           text: isPro
@@ -2127,6 +2146,7 @@ function resolveEmploymentDay() {
 
   if (emp.status === "employed" && checkGoProEligible()) {
     emp.status = "pro";
+    emp.proPay = Math.max(emp.proPay, BAL.proPayMin, emp.workPay);
     emp.strikes = [];
     emp.techniqueDayCounter = 0;
     state.allocation.work = BAL.proDutyHoursRequired;
@@ -3351,21 +3371,20 @@ function startNewYear() {
       emp.jobSearchHours = 0;
       emp.jobSearchHoursNeeded = randInt(BAL.jobSearchHoursRange[0], BAL.jobSearchHoursRange[1]);
       emp.endedBy = "renewal";
+      keepProPayForWork(emp);
       yearSummary.proEnded = { avg: skillAverage(), bar: proAverageBar(), searchHours: emp.jobSearchHoursNeeded };
     } else {
       yearSummary.proRenewed = true;
     }
   }
 
-  // Annual raise — rises $10/year for 5 years of unbroken tenure in
-  // whichever role is currently held, then plateaus. Only the active
-  // role's rate moves; the other sits untouched until it's relevant.
-  const maxRaise = BAL.payRaisePerYear * BAL.payRaiseMaxYears;
+  // Annual raise: +$10 in whichever role is held now — a day job's up to
+  // workPayCap(), a pro's with no limit. The other role's rate waits.
   if (emp.status === "employed") {
-    emp.workPay = Math.min(emp.workPay + BAL.payRaisePerYear, BAL.workPayMin + maxRaise);
+    emp.workPay = Math.max(emp.workPay, Math.min(emp.workPay + BAL.payRaisePerYear, workPayCap()));
     yearSummary.newPayRate = emp.workPay;
   } else if (emp.status === "pro") {
-    emp.proPay = Math.min(emp.proPay + BAL.payRaisePerYear, BAL.proPayMin + maxRaise);
+    emp.proPay += BAL.payRaisePerYear;
     yearSummary.newPayRate = emp.proPay;
   }
 
@@ -3716,7 +3735,7 @@ function markerPct(threshold, max) {
 }
 
 function renderTopbar() {
-  $("cashVal").textContent = fmt(state.cash);
+  $("cashVal").textContent = fmtCashShort(state.cash);
   $("rankVal").textContent = fmt(state.rank);
   // Leagues button carries your table position, tinted like the table's own
   // zones: promotion (green), relegation (red), outside the playoffs (dim).
@@ -6504,12 +6523,12 @@ function openHowTo() {
 
   sec("money", "💼", "Work & money", `
     ${ul([
-      `Work <b>${B.workHoursRequired}h/day</b>, except on annual leave (below). Pay starts at $${B.workPayMin}/day, +$${B.payRaisePerYear} each year for ${B.payRaiseMaxYears} years. Living costs are <b>$${B.dailyExpenses}/day</b>, always.`,
+      `Work <b>${B.workHoursRequired}h/day</b>, except on annual leave (below). Pay starts at $${B.workPayMin}/day and rises $${B.payRaisePerYear} at each year end, up to $${workPayCap()}/day. Pay never drops: losing a job keeps your rate for the next one. Living costs are <b>$${B.dailyExpenses}/day</b>, always.`,
       `<b>🏖️ Annual leave:</b> the ${B.preseasonDays}-day preseason is paid time off — no Work or Pro Duties, full pay, no chances at risk, and used chances still come back on time. A job search carries on as normal. Skill coaches are half price.`,
       `<b>Overtime:</b> up to ${B.overtimeMaxHours}h extra at half your hourly rate ($${Math.round(B.workPayMin / B.workHoursRequired / 2)}/h at $${B.workPayMin}/day).`,
       `Short on Work hours? You keep your pay but lose part of a <b>chance</b> (back after ${B.strikeWindowDays} days). Lose all ${fmt1(B.strikesToFire)} and you're fired.`,
-      `Fired: the Work slider becomes <b>Job Search</b> — ${B.jobSearchHoursRange[0]}–${B.jobSearchHoursRange[1]}h in total gets you hired, at least ${B.jobSearchMinHours}h a day. Pay resets to the minimum.`,
-      `<b>Go pro</b> automatically once you've reached League ${B.goProLeagueTier} (ever) and your 7 skills average ${B.goProAverage[2]}+ (${B.goProAverage[1]}+ once you've reached League 1). You stay pro to the end of the year whatever your skills do; it's renewed only if they still average that when the year ends — if not, you're back to finding a job. Pro: ${B.proDutyHoursRequired}h/day of Pro Duties from $${B.proPayMin}/day.`,
+      `Fired: the Work slider becomes <b>Job Search</b> — ${B.jobSearchHoursRange[0]}–${B.jobSearchHoursRange[1]}h in total gets you hired, at least ${B.jobSearchMinHours}h a day. Your pay rate carries over to the new job.`,
+      `<b>Go pro</b> automatically once you've reached League ${B.goProLeagueTier} (ever) and your 7 skills average ${B.goProAverage[2]}+ (${B.goProAverage[1]}+ once you've reached League 1). You stay pro to the end of the year whatever your skills do; it's renewed only if they still average that when the year ends — if not, you're back to finding a job. Pro: ${B.proDutyHoursRequired}h/day of Pro Duties from $${B.proPayMin}/day (or your work pay, if that's higher), +$${B.payRaisePerYear} at each year end with no limit. Losing the sponsor never lowers your pay: the next job pays your pro rate, up to a day job's $${workPayCap()}.`,
     ])}
     ${tbl(["Prize money", ""], [
       ["Win", `$${B.prizeWinBase} + rating ÷ ${B.prizeRatingDiv}`],
