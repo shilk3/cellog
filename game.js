@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.97.2";
+const APP_VERSION = "4.97.3";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1887,6 +1887,8 @@ function resolveDay() {
     }
     const i = evCurrent(cev);
     if (i != null) events.push({ type: "neutral", text: `📚 ${E.skill.name} course: ${E.course[i].name} ${fmt(es.course[i])}/${evCourseHours(cev, i)}h` });
+    else events.push({ type: "neutral", text: `📚 ${E.skill.name} course done — its ${a[E.courseAct]}h are free to plan again.` });
+    freeFinishedCourse();
   }
 
   // ---- Physical health ----
@@ -3499,8 +3501,9 @@ function processDayEnd() {
           state.seasonPhase = "offseason";
           state.offseasonDays = campDays();
           state.offseasonReason = "missed";
+          clearSkillHours();
           const outcome = finalizeSeasonMovement(null);
-          phaseEvent = `📋 Regular season complete. Finished #${pos} of ${size} in ${lg(playedTier)} — missed the top ${playoffSizeFor(playedTier)} playoff cutoff.${outcome} ${state.offseasonDays}-day off-season starts now — at home, or at the all-inclusive 🏕️ training camp.`;
+          phaseEvent = `📋 Regular season complete. Finished #${pos} of ${size} in ${lg(playedTier)} — missed the top ${playoffSizeFor(playedTier)} playoff cutoff.${outcome} ${state.offseasonDays}-day off-season starts now — at home, or at the all-inclusive 🏕️ training camp. Skill hours are back to 0h for your new plan.`;
         }
       }
     }
@@ -3515,6 +3518,7 @@ function processDayEnd() {
       phaseEvent = result.summary;
       if (result.seasonOver) {
         state.seasonPhase = "offseason";
+        clearSkillHours();
         if (state.playoff.eliminated) {
           // Knocked out: training camp for the rest of the playoff window
           // — an early exit gets its time back as training, same as missing
@@ -3527,7 +3531,7 @@ function processDayEnd() {
         }
         phaseEvent += finalizeSeasonMovement(result.champion);
         if (state.offseasonDays > 0) {
-          phaseEvent += ` ${state.offseasonDays}-day off-season starts now — at home, or at the all-inclusive 🏕️ training camp.`;
+          phaseEvent += ` ${state.offseasonDays}-day off-season starts now — at home, or at the all-inclusive 🏕️ training camp. Skill hours are back to 0h for your new plan.`;
         } else {
           // The Final was the last day of the year — the new one starts now
           // (runDay rolls it over once this season's screen is built).
@@ -4120,7 +4124,18 @@ function renderPlannerRows() {
   $("plannerRows").innerHTML = rows.join("");
 }
 
+// A finished course's slider is locked, so its hours go back to the pool.
+function freeFinishedCourse() {
+  const cev = courseEvent(), a = state.allocation;
+  if (cev && evCurrent(cev) == null) a[EVENTS[cev].courseAct] = 0;
+}
+// The season's over: skill hours start from 0 for the off-season's plan.
+function clearSkillHours() {
+  Object.keys(state.allocation.skills).forEach((k) => (state.allocation.skills[k] = 0));
+}
+
 function renderPlanner() {
+  freeFinishedCourse();
   renderPlannerRows();
   const cap = todayHours();
   const left = cap - totalAssigned();
@@ -6470,7 +6485,7 @@ function openHowTo() {
       `<b>Preseason:</b> ${B.preseasonDays} days of training. <b>Regular season:</b> ${B.seasonRounds} rounds, one match a week, all scheduled in advance.`,
       `Top <b>${B.playoffSize}</b> of ${B.leagueSize} reach the knockout playoffs (${playoffFormatText()}).`,
       `Miss the playoffs: a ${B.trainingCampDays}-day <b>off-season</b>; knocked out: off-season for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
-      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at the best level your league allows and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day.`,
+      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at the best level your league allows and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day. Either way, every skill slider goes back to 0h when the season ends, so the off-season starts with a fresh plan.`,
       `${B.leagueCount} leagues — you start in League ${B.leagueCount}. <b>${B.relegationCount} go up</b> from each: the playoff champion plus the next ${B.promotionTablePlaces} highest in the table. Bottom ${B.relegationCount} go down.`,
       "Every rival plays real simulated matches — all tables are live. Tap a name to see their season.",
       `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b>: most wins first; players level are split by their games against each other, then by rating.`,

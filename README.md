@@ -223,7 +223,8 @@ you get a 28-day off-season up to it, so missing the cut is never a worse
 deal than qualifying and getting knocked out early. Get knocked out and you
 get the off-season too, for the rest of the playoff window (Round of 16
 exit: 21 days, Quarterfinal: 14, Semifinal: 7). Reach the Final, win or
-lose, and the new year starts straight after it.
+lose, and the new year starts straight after it. When the season ends every
+skill slider goes back to 0h, so the off-season starts with a fresh plan.
 
 **🏕️ Training camp** (optional, paid): spend the off-season at an
 all-inclusive camp instead — $60 a day for the days left, paid up front (it
