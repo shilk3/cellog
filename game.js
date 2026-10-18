@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.97.3";
+const APP_VERSION = "4.97.4";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1661,6 +1661,11 @@ function fmt(n) {
 
 // Short percentage for tight rows: one decimal under 10% ("2.5%"), whole
 // numbers from 10% up ("13%"), so it never grows past 4 characters.
+// A match chance as a whole percent. Luck means nothing's ever certain, so
+// it shows 1–99%, never 0% or 100% (99.6% would otherwise round up to 100).
+function oddsPct(prob) {
+  return clamp(Math.round(prob * 100), 1, 99);
+}
 function fmtPct(fraction) {
   const pct = fraction * 100;
   return pct < 10 ? `${+pct.toFixed(1)}%` : `${Math.round(pct)}%`;
@@ -2569,13 +2574,13 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
         oppSpec: mu.rival && mu.rival.specs ? mu.rival.specs.includes(k) : false,
       })),
     },
-    winProb: Math.round(winProb * 100),
+    winProb: oddsPct(winProb),
     deadHeatProb: Math.round(mu.deadHeatProb * 100),
     model: "skills", // older results (no model) were rating + performance
     perfWeight: w.perf, // what each point of performance was worth
     luckScale: w.luck,
     edgeWeight: w.edge,
-    ratingProb: Math.round(ratingProb * 100), // the chance rating changes were worked out on
+    ratingProb: oddsPct(ratingProb), // the chance rating changes were worked out on
     ratingChange,
     ratingChangeRaw: Math.round(K * (actual - ratingProb)),
     rankLossMult,
@@ -3021,7 +3026,7 @@ function nextEventGame() {
   exhibitionEvent = id;
   let winPct;
   try {
-    winPct = Math.round(winProbabilityAgainst({ rivalId: rival.id, name: rival.name }) * 100);
+    winPct = oddsPct(winProbabilityAgainst({ rivalId: rival.id, name: rival.name }));
   } finally {
     exhibitionEvent = null;
     state.activeSkills = saved;
@@ -3601,7 +3606,7 @@ function getNextMatchInfo() {
     const roundNum = s.roundIndex + 1;
     const liveRating = liveOpponentRating(fixture);
     const diff = difficultyLabel(liveRating, s.rank);
-    const winPct = Math.round(winProbabilityAgainst(fixture) * 100);
+    const winPct = oddsPct(winProbabilityAgainst(fixture));
     const oppRating = Math.round(liveRating);
     return {
       kind: "fixture",
@@ -3628,7 +3633,7 @@ function getNextMatchInfo() {
     const roundName = PLAYOFF_ROUND_NAMES[p.stage];
     const liveRating = opp ? liveOpponentRating(opp) : null;
     const diff = opp ? difficultyLabel(liveRating, s.rank) : null;
-    const winPct = opp ? Math.round(winProbabilityAgainst(opp) * 100) : null;
+    const winPct = opp ? oddsPct(winProbabilityAgainst(opp)) : null;
     const oppRating = opp ? Math.round(liveRating) : null;
     return {
       kind: "playoff",
@@ -4500,7 +4505,7 @@ function luckExplainerHtml(result) {
   const s = (result.luckScale || BAL.matchLuckScale) / Math.LN10;
   const xpLead = result.finish ? result.finish.youXp - result.finish.oppXp : 0;
   const chanceFor = (g) => {
-    if (result.finish) return { w: Math.round(outcomeOdds(g, { xpLead }).win * 100), d: 0 };
+    if (result.finish) return { w: oddsPct(outcomeOdds(g, { xpLead }).win), d: 0 };
     if (result.drawProb != null) {
       const win = sig((g - 30) / s), loss = 1 - sig((g + 30) / s), draw = 1 - win - loss;
       return withDraws ? { w: Math.round(win * 100), d: Math.round(draw * 100) } : { w: Math.round((win + draw / 2) * 100), d: 0 };
@@ -5587,7 +5592,7 @@ function upcomingHtml() {
   const s = state;
   // This week's match is judged on this week's focus skills; later ones,
   // whose focus isn't revealed yet, on all 7.
-  const winPct = (entry, known) => Math.round(winProbabilityAgainst(entry, known ? state.activeSkills : playSkillKeys()) * 100);
+  const winPct = (entry, known) => oddsPct(winProbabilityAgainst(entry, known ? state.activeSkills : playSkillKeys()));
   const row = (round, name, rivalId, rating, pos, next, entry = null) => `
     <div class="hist-row up-row${next ? " up-next" : ""}" ${rivalId != null ? `data-rival="${rivalId}"` : ""}>
       <span class="hist-round">${round}</span>
