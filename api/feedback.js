@@ -68,7 +68,8 @@ async function playerNote(issue) {
   if (!issue.comments) return "";
   const comments = await gh(`/issues/${issue.number}/comments?per_page=100`);
   const note = comments.reverse().find((c) => (c.body || "").trim().startsWith("📣"));
-  return note ? note.body.trim().replace(/^📣\s*/, "").slice(0, 300) : "";
+  // (minus any signature footer under a --- rule)
+  return note ? note.body.trim().replace(/^📣\s*/, "").replace(/\n+-{3,}\n[\s\S]*$/, "").trim().slice(0, 300) : "";
 }
 
 async function status(req, res) {
