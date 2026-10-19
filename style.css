@@ -954,3 +954,17 @@ details.match-more[open] { padding-bottom: 8px; }
 /* Training camp: the plan's first row while you're there */
 .camp-card { line-height: 1.45; }
 .camp-card .modal-sub { display: inline; font-size: 12.5px; }
+
+/* Report a bug or suggestion */
+.feedback-type { margin-bottom: 10px; }
+.feedback-text { resize: vertical; min-height: 110px; font-family: inherit; }
+.feedback-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); margin: 2px 0 12px; }
+.feedback-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.feedback-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.feedback-privacy { margin-top: 10px; }
+.feedback-report { padding: 9px 0; border-top: 1px solid var(--border); }
+.feedback-report:first-child { border-top: none; }
+.feedback-report-top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.feedback-report-n { color: var(--text-dim); flex: none; }
+.feedback-report-status { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+.feedback-report-note { font-size: 13px; color: var(--text); margin-top: 4px; padding: 6px 8px; background: var(--bg-elev-2); border-radius: 8px; }

@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "4.99.0";
+const APP_VERSION = "5.0.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4889,6 +4889,7 @@ function openMenu() {
     <div class="menu-row" id="menuGames"><span>🎮 Games <span class="menu-note">${gameLengthInfo(state.gameLength).icon} ${gameLengthInfo(state.gameLength).name} game</span></span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuSaveTransfer"><span>💾 Export / Import Save</span><span class="arrow">›</span></div>
     <div class="menu-row" id="menuInstall"><span>📲 Add to Home Screen</span><span class="arrow">›</span></div>
+    <div class="menu-row" id="menuFeedback"><span>🐞 Report a bug or suggestion${feedbackLoad(FEEDBACK_KEYS.reports, []).length ? ` <span class="menu-note">📬 my reports</span>` : ""}</span><span class="arrow">›</span></div>
     <button class="ghost-btn" id="menuReset">Restart this ${gameLengthInfo(state.gameLength).name} game</button>
     <div class="version-tag">CELLOG v${APP_VERSION}</div>
   `;
@@ -4902,6 +4903,7 @@ function openMenu() {
   $("menuHow").addEventListener("click", openHowTo);
   $("menuTutorial").addEventListener("click", () => openTutorial(0));
   $("menuInstall").addEventListener("click", openInstall);
+  $("menuFeedback").addEventListener("click", () => openFeedback());
   // The guides are separate pages: save on the way out (nothing's lost anyway).
   document.querySelectorAll(".guide-link").forEach((a) => a.addEventListener("click", () => saveState()));
   $("menuSaveTransfer").addEventListener("click", () => openSaveTransfer(state.gameLength));
@@ -7324,8 +7326,213 @@ function renderAll() {
   }
 }
 
+/* ---------------------------------------------------------------------- */
+/* Feedback: report a bug or suggest something                            */
+/* ---------------------------------------------------------------------- */
+// Reports go to the developer's private log (api/feedback.js files each one
+// as a GitHub issue). No accounts: this device remembers which report
+// numbers are yours, for 📬 My reports. Offline — or if the log can't be
+// reached — a report waits in an outbox and sends itself later.
+const FEEDBACK_API = /(^|\.)vercel\.app$/.test(location.hostname) ? "/api/feedback" : "https://cellog.vercel.app/api/feedback";
+const FEEDBACK_KEYS = { reports: "cellog_reports", outbox: "cellog_outbox", email: "cellog_feedback_email" };
+const FEEDBACK_STATUS = {
+  sending: "📤 Waiting to send",
+  open: "🟡 Received",
+  progress: "🔧 Being worked on",
+  fixed: "✅ Fixed",
+  wontdo: "⚪ Not planned",
+  closed: "✔️ Closed",
+  unknown: "🟡 Received",
+};
+function feedbackLoad(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return v == null ? fallback : v;
+  } catch (e) {
+    return fallback;
+  }
+}
+function feedbackStore(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+// What the developer needs to reproduce it, sent with every report.
+function feedbackContext() {
+  const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+  return {
+    Version: `v${APP_VERSION}`,
+    Game: gameLengthInfo(state.gameLength).name,
+    Where: `Year ${state.year} · ${phaseLabelText()} · Day ${state.day}`,
+    Cash: fmtMoney(state.cash),
+    Job: state.employment.status,
+    Site: `${location.host}${standalone ? " (Home Screen app)" : ""}`,
+    Screen: `${window.innerWidth}×${window.innerHeight}`,
+    Device: navigator.userAgent,
+  };
+}
+function feedbackLog() {
+  const div = document.createElement("div");
+  return state.logEntries.slice(-20).map((e) => {
+    div.innerHTML = e.html || "";
+    return div.textContent;
+  });
+}
+// One try at sending. "sent" (with its number), "rejected" (the log said
+// no — say why, don't retry) or "failed" (offline / unreachable — keep it).
+async function feedbackSend(report) {
+  const ctrl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctrl && setTimeout(() => ctrl.abort(), 20000);
+  try {
+    const res = await fetch(FEEDBACK_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(report), signal: ctrl && ctrl.signal });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return { result: "sent", number: data.number };
+    if (res.status === 400) return { result: "rejected", error: data.error || "That report couldn't be sent." };
+    return { result: "failed", error: data.error };
+  } catch (e) {
+    return { result: "failed" };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+function feedbackRemember(report, number) {
+  const reports = feedbackLoad(FEEDBACK_KEYS.reports, []);
+  reports.unshift({ n: number || null, type: report.type, title: report.text.split("\n")[0].slice(0, 80), at: report.at, status: "open", note: "" });
+  feedbackStore(FEEDBACK_KEYS.reports, reports.slice(0, 50));
+}
+// Into the outbox — without the save if there isn't room for it.
+function feedbackQueue(report) {
+  const box = feedbackLoad(FEEDBACK_KEYS.outbox, []);
+  if (!feedbackStore(FEEDBACK_KEYS.outbox, box.concat([report]))) feedbackStore(FEEDBACK_KEYS.outbox, box.concat([{ ...report, save: "" }]));
+}
+let feedbackFlushing = false;
+async function flushFeedbackOutbox() {
+  if (feedbackFlushing) return;
+  const box = feedbackLoad(FEEDBACK_KEYS.outbox, []);
+  if (!box.length || (navigator.onLine === false)) return;
+  feedbackFlushing = true;
+  const left = [];
+  let sent = 0;
+  for (const report of box) {
+    const r = left.length ? { result: "failed" } : await feedbackSend(report);
+    if (r.result === "sent") {
+      feedbackRemember(report, r.number);
+      sent++;
+    } else if (r.result === "failed") left.push(report);
+  }
+  feedbackStore(FEEDBACK_KEYS.outbox, left);
+  feedbackFlushing = false;
+  if (sent) appendLog(`📬 ${sent === 1 ? "Your waiting report was" : `${sent} waiting reports were`} sent — thanks! Follow ${sent === 1 ? "it" : "them"} in ☰ → 🐞 Report a bug or suggestion.`, "event-good");
+}
+// Fresh status for the reports this device sent (quietly keeps the old one
+// if the log can't be reached).
+async function refreshFeedbackStatus() {
+  const reports = feedbackLoad(FEEDBACK_KEYS.reports, []);
+  const ids = reports.filter((r) => r.n).map((r) => r.n);
+  if (!ids.length) return false;
+  try {
+    const res = await fetch(`${FEEDBACK_API}?ids=${ids.join(",")}`);
+    if (!res.ok) return false;
+    const { reports: fresh = [] } = await res.json();
+    const byN = Object.fromEntries(fresh.map((x) => [x.n, x]));
+    reports.forEach((r) => {
+      const f = byN[r.n];
+      if (f && f.status !== "unknown") Object.assign(r, { status: f.status, note: f.note || "" });
+    });
+    feedbackStore(FEEDBACK_KEYS.reports, reports);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+function feedbackReportsHtml() {
+  const waiting = feedbackLoad(FEEDBACK_KEYS.outbox, []).map((r) => ({ n: null, type: r.type, title: r.text.split("\n")[0].slice(0, 80), at: r.at, status: "sending" }));
+  const all = waiting.concat(feedbackLoad(FEEDBACK_KEYS.reports, []));
+  if (!all.length) return `<p class="save-transfer-note">Nothing sent from this device yet.</p>`;
+  return all
+    .map(
+      (r) => `<div class="feedback-report">
+        <div class="feedback-report-top"><span>${r.type === "suggestion" ? "💡" : "🐞"} ${escapeHtml(r.title)}</span><span class="feedback-report-n">${r.n ? `#${r.n}` : ""}</span></div>
+        <div class="feedback-report-status">${FEEDBACK_STATUS[r.status] || FEEDBACK_STATUS.open} · ${new Date(r.at).toLocaleDateString()}</div>
+        ${r.note ? `<div class="feedback-report-note">📣 ${escapeHtml(r.note)}</div>` : ""}
+      </div>`
+    )
+    .join("");
+}
+function openFeedback(type = "bug") {
+  const email = feedbackLoad(FEEDBACK_KEYS.email, "");
+  const html = `
+    <h2>🐞 Report a bug or suggestion</h2>
+    <div class="league-tabs feedback-type">
+      <button class="league-tab ${type === "bug" ? "active" : ""}" data-fb-type="bug">🐞 Bug</button>
+      <button class="league-tab ${type === "suggestion" ? "active" : ""}" data-fb-type="suggestion">💡 Suggestion</button>
+    </div>
+    <p class="save-transfer-note">${type === "bug" ? "What happened, and what did you expect? The more detail, the easier it is to fix." : "What would make CELLOG better?"}</p>
+    <textarea id="fbText" class="name-input feedback-text" rows="5" maxlength="4000" placeholder="${type === "bug" ? "e.g. I joined training camp but the sliders didn't hide" : "e.g. A button to repeat last week's plan"}"></textarea>
+    <input id="fbEmail" class="name-input" type="email" inputmode="email" autocomplete="email" maxlength="200" placeholder="Your email (optional — only so I can reply)" value="${escapeHtml(email)}" />
+    <label class="feedback-check"><input type="checkbox" id="fbSave" /> 💾 Attach my save (lets me load your exact game)</label>
+    <div class="feedback-trap" aria-hidden="true"><input id="fbWebsite" tabindex="-1" autocomplete="off" /></div>
+    <button class="primary-btn" id="fbSend">Send ${type === "bug" ? "bug report" : "suggestion"}</button>
+    <div class="save-transfer-status" id="fbStatus"></div>
+    <p class="save-transfer-note feedback-privacy">No account needed. Reports go privately to the developer. Sent with it: the game version, your league and season, your device, and your last 20 log lines.</p>
+    <div class="modal-section">
+      <h3>📬 My reports</h3>
+      <div id="fbReports">${feedbackReportsHtml()}</div>
+    </div>`;
+  openModal(html);
+  document.querySelectorAll("[data-fb-type]").forEach((b) => b.addEventListener("click", () => {
+    const text = $("fbText").value;
+    openFeedback(b.dataset.fbType);
+    $("fbText").value = text;
+  }));
+  $("fbSend").addEventListener("click", async () => {
+    const status = $("fbStatus");
+    const text = $("fbText").value.trim();
+    const mail = $("fbEmail").value.trim();
+    status.classList.remove("bad");
+    if (text.length < 5) {
+      status.classList.add("bad");
+      status.textContent = "Please say a little more first.";
+      return;
+    }
+    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
+      status.classList.add("bad");
+      status.textContent = "That email doesn't look right — or leave it empty.";
+      return;
+    }
+    feedbackStore(FEEDBACK_KEYS.email, mail);
+    $("fbSend").disabled = true;
+    status.textContent = "Sending…";
+    const report = { type, text, email: mail, website: $("fbWebsite").value, context: feedbackContext(), log: feedbackLog(), at: Date.now() };
+    if ($("fbSave").checked) report.save = await encodeSaveCode();
+    const r = navigator.onLine === false ? { result: "failed" } : await feedbackSend(report);
+    if (r.result === "rejected") {
+      $("fbSend").disabled = false;
+      status.classList.add("bad");
+      status.textContent = r.error;
+      return;
+    }
+    if (r.result === "sent") feedbackRemember(report, r.number);
+    else feedbackQueue(report);
+    $("fbText").value = "";
+    status.textContent = r.result === "sent" ? `✅ Sent — thank you! It's report #${r.number}; follow it below.` : "📤 Saved on this device — it'll send by itself next time you're online.";
+    $("fbReports").innerHTML = feedbackReportsHtml();
+    $("fbSend").disabled = false;
+  });
+  // Pick up any status changes (and send anything waiting) while it's open.
+  flushFeedbackOutbox().then(refreshFeedbackStatus).then((changed) => {
+    if (changed && $("fbReports")) $("fbReports").innerHTML = feedbackReportsHtml();
+  });
+}
+
 function init() {
   if (!state.phaseStart) state.phaseStart = phaseSnapshot();
+  // Reports written offline go out as soon as there's a connection.
+  window.addEventListener("online", flushFeedbackOutbox);
+  setTimeout(flushFeedbackOutbox, 3000);
   wireInputs();
   renderAll();
 

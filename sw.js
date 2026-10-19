@@ -1,6 +1,6 @@
 // Bump this on every deploy that changes cached files — it's what makes the
 // browser notice this file changed and install a new service worker.
-const CACHE_NAME = "cellog-v183";
+const CACHE_NAME = "cellog-v184";
 const ASSETS = [
   "./",
   "index.html",
@@ -34,6 +34,8 @@ self.addEventListener("activate", (event) => {
 // Our own cache is only ever read as an offline fallback.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // Bug reports and their status are always live — never cached.
+  if (new URL(event.request.url).pathname.startsWith("/api/")) return;
   event.respondWith(
     fetch(event.request, { cache: "no-store" })
       .then((response) => {

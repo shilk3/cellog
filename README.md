@@ -9,6 +9,17 @@ also on GitHub Pages at [shilk3.github.io/cellog](https://shilk3.github.io/cello
 (the repository was renamed from `excel-run-sim`; the old Pages address no
 longer works). The cellog.website domain has been retired.
 
+**🐞 Report a bug or suggestion** (☰ menu): no account needed. Each report
+becomes an issue in the private `shilk3/cellog-feedback` repo, filed by
+`api/feedback.js` (a Vercel function using the `FEEDBACK_GITHUB_TOKEN`
+environment variable: a fine-grained token with Issues read/write on that
+repo only). It carries the version, league and season, device and the last
+20 log lines, plus the save if the player ticks the box. The game remembers
+which report numbers are the player's and shows their status in 📬 My
+reports (labels: bug, suggestion, in progress, fixed, won't do); a comment
+starting with 📣 shows there as a note to the player. Reports written offline
+wait on the device and send themselves later.
+
 **Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.vercel.app/guide/map.html)
 — every mechanic as a box with arrows for what it pushes on (tap one to
 trace it) — and 📊 [Mechanics Infographic](https://cellog.vercel.app/guide/infographic.html),
