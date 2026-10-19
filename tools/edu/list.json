@@ -1,0 +1,2572 @@
+[
+ {
+  "label": "ABS",
+  "href": "functions/abs-function",
+  "cat_desc": "Math and trigonometry: Returns the absolute value of a number"
+ },
+ {
+  "label": "ACCRINT",
+  "href": "functions/accrint-function",
+  "cat_desc": "Financial: Returns the accrued interest for a security that pays periodic interest"
+ },
+ {
+  "label": "ACCRINTM",
+  "href": "functions/accrintm-function",
+  "cat_desc": "Financial: Returns the accrued interest for a security that pays interest at maturity"
+ },
+ {
+  "label": "ACOS",
+  "href": "functions/acos-function",
+  "cat_desc": "Math and trigonometry: Returns the arccosine of a number"
+ },
+ {
+  "label": "ACOSH",
+  "href": "functions/acosh-function",
+  "cat_desc": "Math and trigonometry: Returns the inverse hyperbolic cosine of a number"
+ },
+ {
+  "label": "ACOT (2013)",
+  "href": "functions/acot-function",
+  "cat_desc": "Math and trigonometry: Returns the arccotangent of a number"
+ },
+ {
+  "label": "ACOTH (2013)",
+  "href": "functions/acoth-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic arccotangent of a number"
+ },
+ {
+  "label": "AGGREGATE",
+  "href": "functions/aggregate-function",
+  "cat_desc": "Math and trigonometry: Returns an aggregate in a list or database"
+ },
+ {
+  "label": "ADDRESS",
+  "href": "functions/address-function",
+  "cat_desc": "Lookup and reference: Returns a reference as text to a single cell in a worksheet"
+ },
+ {
+  "label": "AMORDEGRC",
+  "href": "functions/amordegrc-function",
+  "cat_desc": "Financial: Returns the depreciation for each accounting period by using a depreciation coefficient"
+ },
+ {
+  "label": "AMORLINC",
+  "href": "functions/amorlinc-function",
+  "cat_desc": "Financial: Returns the depreciation for each accounting period"
+ },
+ {
+  "label": "AND",
+  "href": "functions/and-function",
+  "cat_desc": "Logical: Returns TRUE if all of its arguments are TRUE"
+ },
+ {
+  "label": "ARABIC (2013)",
+  "href": "functions/arabic-function",
+  "cat_desc": "Math and trigonometry: Converts a Roman number to Arabic, as a number"
+ },
+ {
+  "label": "AREAS",
+  "href": "functions/areas-function",
+  "cat_desc": "Lookup and reference: Returns the number of areas in a reference"
+ },
+ {
+  "label": "ARRAYTOTEXT (2021)",
+  "href": "functions/arraytotext-function",
+  "cat_desc": "Text: Returns an array of text values from any specified range"
+ },
+ {
+  "label": "ASC",
+  "href": "functions/asc-function",
+  "cat_desc": "Text: Changes full-width (double-byte) English letters or katakana within a character string to half-width (single-byte) characters"
+ },
+ {
+  "label": "ASIN",
+  "href": "functions/asin-function",
+  "cat_desc": "Math and trigonometry: Returns the arcsine of a number"
+ },
+ {
+  "label": "ASINH",
+  "href": "functions/asinh-function",
+  "cat_desc": "Math and trigonometry: Returns the inverse hyperbolic sine of a number"
+ },
+ {
+  "label": "ATAN",
+  "href": "functions/atan-function",
+  "cat_desc": "Math and trigonometry: Returns the arctangent of a number"
+ },
+ {
+  "label": "ATAN2",
+  "href": "functions/atan2-function",
+  "cat_desc": "Math and trigonometry: Returns the arctangent from x- and y-coordinates"
+ },
+ {
+  "label": "ATANH",
+  "href": "functions/atanh-function",
+  "cat_desc": "Math and trigonometry: Returns the inverse hyperbolic tangent of a number"
+ },
+ {
+  "label": "AVEDEV",
+  "href": "functions/avedev-function",
+  "cat_desc": "Statistical: Returns the average of the absolute deviations of data points from their mean"
+ },
+ {
+  "label": "AVERAGE",
+  "href": "functions/average-function",
+  "cat_desc": "Statistical: Returns the average of its arguments"
+ },
+ {
+  "label": "AVERAGEA",
+  "href": "functions/averagea-function",
+  "cat_desc": "Statistical: Returns the average of its arguments, including numbers, text, and logical values"
+ },
+ {
+  "label": "AVERAGEIF",
+  "href": "functions/averageif-function",
+  "cat_desc": "Statistical: Returns the average (arithmetic mean) of all the cells in a range that meet a given criteria"
+ },
+ {
+  "label": "AVERAGEIFS",
+  "href": "functions/averageifs-function",
+  "cat_desc": "Statistical: Returns the average (arithmetic mean) of all cells that meet multiple criteria."
+ },
+ {
+  "label": "BAHTTEXT",
+  "href": "functions/bahttext-function",
+  "cat_desc": "Text: Converts a number to text, using the \u00df (baht) currency format"
+ },
+ {
+  "label": "BASE",
+  "href": "functions/base-function",
+  "cat_desc": "Math and trigonometry: Converts a number into a text representation with the given radix (base)"
+ },
+ {
+  "label": "BESSELI",
+  "href": "functions/besseli-function",
+  "cat_desc": "Engineering: Returns the modified Bessel function In(x)"
+ },
+ {
+  "label": "BESSELJ",
+  "href": "functions/besselj-function",
+  "cat_desc": "Engineering: Returns the Bessel function Jn(x)"
+ },
+ {
+  "label": "BESSELK",
+  "href": "functions/besselk-function",
+  "cat_desc": "Engineering: Returns the modified Bessel function Kn(x)"
+ },
+ {
+  "label": "BESSELY",
+  "href": "functions/bessely-function",
+  "cat_desc": "Engineering: Returns the Bessel function Yn(x)"
+ },
+ {
+  "label": "BETADIST",
+  "href": "functions/betadist-function",
+  "cat_desc": "Compatibility: Returns the beta cumulative distribution function"
+ },
+ {
+  "label": "BETA.DIST (2010)",
+  "href": "functions/beta-dist-function",
+  "cat_desc": "Statistical: Returns the beta cumulative distribution function"
+ },
+ {
+  "label": "BETAINV",
+  "href": "functions/betainv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the cumulative distribution function for a specified beta distribution"
+ },
+ {
+  "label": "BETA.INVn (2010)",
+  "href": "functions/beta-inv-function",
+  "cat_desc": "Statistical: Returns the inverse of the cumulative distribution function for a specified beta distribution"
+ },
+ {
+  "label": "BIN2DEC",
+  "href": "functions/bin2dec-function",
+  "cat_desc": "Engineering: Converts a binary number to decimal"
+ },
+ {
+  "label": "BIN2HEX",
+  "href": "functions/bin2hex-function",
+  "cat_desc": "Engineering: Converts a binary number to hexadecimal"
+ },
+ {
+  "label": "BIN2OCT",
+  "href": "functions/bin2oct-function",
+  "cat_desc": "Engineering: Converts a binary number to octal"
+ },
+ {
+  "label": "BINOMDIST",
+  "href": "functions/binomdist-function",
+  "cat_desc": "Compatibility: Returns the individual term binomial distribution probability"
+ },
+ {
+  "label": "BINOM.DIST (2010)",
+  "href": "functions/binom-dist-function",
+  "cat_desc": "Statistical: Returns the individual term binomial distribution probability"
+ },
+ {
+  "label": "BINOM.DIST.RANGE (2013)",
+  "href": "functions/binom-dist-range-function",
+  "cat_desc": "Statistical: Returns the probability of a trial result using a binomial distribution"
+ },
+ {
+  "label": "BINOM.INV (2010)",
+  "href": "functions/binom-inv-function",
+  "cat_desc": "Statistical: Returns the smallest value for which the cumulative binomial distribution is less than or equal to a criterion value"
+ },
+ {
+  "label": "BITAND (2013)",
+  "href": "functions/bitand-function",
+  "cat_desc": "Engineering: Returns a 'Bitwise And' of two numbers"
+ },
+ {
+  "label": "BITLSHIFT (2013)",
+  "href": "functions/bitlshift-function",
+  "cat_desc": "Engineering: Returns a value number shifted left by shift_amount bits"
+ },
+ {
+  "label": "BITOR (2013)",
+  "href": "functions/bitor-function",
+  "cat_desc": "Engineering: Returns a bitwise OR of 2 numbers"
+ },
+ {
+  "label": "BITRSHIFT (2013)",
+  "href": "functions/bitrshift-function",
+  "cat_desc": "Engineering: Returns a value number shifted right by shift_amount bits"
+ },
+ {
+  "label": "BITXOR (2013)",
+  "href": "functions/bitxor-function",
+  "cat_desc": "Engineering: Returns a bitwise 'Exclusive Or' of two numbers"
+ },
+ {
+  "label": "BYCOL (2024)",
+  "href": "functions/bycol-function",
+  "cat_desc": "Logical: Applies a LAMBDA to each column and returns an array of the results"
+ },
+ {
+  "label": "BYROW (2024)",
+  "href": "functions/byrow-function",
+  "cat_desc": "Logical: Applies a LAMBDA to each row and returns an array of the results"
+ },
+ {
+  "label": "CALL",
+  "href": "functions/call-function",
+  "cat_desc": "Add-in and Automation: Calls a procedure in a dynamic link library or code resource"
+ },
+ {
+  "label": "CEILING",
+  "href": "functions/ceiling-function",
+  "cat_desc": "Compatibility: Rounds a number to the nearest integer or to the nearest multiple of significance"
+ },
+ {
+  "label": "CEILING.MATH (2013)",
+  "href": "functions/ceiling-math-function",
+  "cat_desc": "Math and trigonometry: Rounds a number up, to the nearest integer or to the nearest multiple of significance"
+ },
+ {
+  "label": "CEILING.PRECISE",
+  "href": "functions/ceiling-precise-function",
+  "cat_desc": "Math and trigonometry: Rounds a number the nearest integer or to the nearest multiple of significance. Regardless of the sign of the number, the number is rounded up."
+ },
+ {
+  "label": "CELL",
+  "href": "functions/cell-function",
+  "cat_desc": "Information: Returns information about the formatting, location, or contents of a cell This function is not available in Excel for the web."
+ },
+ {
+  "label": "CHAR",
+  "href": "functions/char-function",
+  "cat_desc": "Text: Returns the character specified by the code number"
+ },
+ {
+  "label": "CHIDIST",
+  "href": "functions/chidist-function",
+  "cat_desc": "Compatibility: Returns the one-tailed probability of the chi-squared distribution"
+ },
+ {
+  "label": "CHIINV",
+  "href": "functions/chiinv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the one-tailed probability of the chi-squared distribution"
+ },
+ {
+  "label": "CHITEST",
+  "href": "functions/chitest-function",
+  "cat_desc": "Compatibility: Returns the test for independence"
+ },
+ {
+  "label": "CHISQ.DIST (2010)",
+  "href": "functions/chisq-dist-function",
+  "cat_desc": "Statistical: Returns the cumulative beta probability density function"
+ },
+ {
+  "label": "CHISQ.DIST.RT (2010)",
+  "href": "functions/chisq-dist-rt-function",
+  "cat_desc": "Statistical: Returns the one-tailed probability of the chi-squared distribution"
+ },
+ {
+  "label": "CHISQ.INV (2010)",
+  "href": "functions/chisq-inv-function",
+  "cat_desc": "Statistical: Returns the cumulative beta probability density function"
+ },
+ {
+  "label": "CHISQ.INV.RT (2010)",
+  "href": "functions/chisq-inv-rt-function",
+  "cat_desc": "Statistical: Returns the inverse of the one-tailed probability of the chi-squared distribution"
+ },
+ {
+  "label": "CHISQ.TEST (2010)",
+  "href": "functions/chisq-test-function",
+  "cat_desc": "Statistical: Returns the test for independence"
+ },
+ {
+  "label": "CHOOSE",
+  "href": "functions/choose-function",
+  "cat_desc": "Lookup and reference: Chooses a value from a list of values"
+ },
+ {
+  "label": "CHOOSECOLS (2024)",
+  "href": "functions/choosecols-function",
+  "cat_desc": "Lookup and reference: Returns the specified columns from an array"
+ },
+ {
+  "label": "CHOOSEROWS (2024)",
+  "href": "functions/chooserows-function",
+  "cat_desc": "Lookup and reference: Returns the specified rows from an array"
+ },
+ {
+  "label": "CLEAN",
+  "href": "functions/clean-function",
+  "cat_desc": "Text: Removes all nonprintable characters from text"
+ },
+ {
+  "label": "CODE",
+  "href": "functions/code-function",
+  "cat_desc": "Text: Returns a numeric code for the first character in a text string"
+ },
+ {
+  "label": "COLUMN",
+  "href": "functions/column-function",
+  "cat_desc": "Lookup and reference: Returns the column number of a reference"
+ },
+ {
+  "label": "COLUMNS",
+  "href": "functions/columns-function",
+  "cat_desc": "Lookup and reference: Returns the number of columns in a reference"
+ },
+ {
+  "label": "COMBIN",
+  "href": "functions/combin-function",
+  "cat_desc": "Math and trigonometry: Returns the number of combinations for a given number of objects"
+ },
+ {
+  "label": "COMBINA (2013)",
+  "href": "functions/combina-function",
+  "cat_desc": "Math and trigonometry: Returns the number of combinations with repetitions for a given number of items"
+ },
+ {
+  "label": "COMPLEX",
+  "href": "functions/complex-function",
+  "cat_desc": "Engineering: Converts real and imaginary coefficients into a complex number"
+ },
+ {
+  "label": "CONCAT (2019)",
+  "href": "functions/concat-function",
+  "cat_desc": "Text: Combines the text from multiple ranges and/or strings, but it doesn't provide the delimiter or IgnoreEmpty arguments."
+ },
+ {
+  "label": "CONCATENATE",
+  "href": "functions/concatenate-function",
+  "cat_desc": "Text: Joins several text items into one text item"
+ },
+ {
+  "label": "CONFIDENCE",
+  "href": "functions/confidence-function",
+  "cat_desc": "Compatibility: Returns the confidence interval for a population mean"
+ },
+ {
+  "label": "CONFIDENCE.NORM (2010)",
+  "href": "functions/confidence-norm-function",
+  "cat_desc": "Statistical: Returns the confidence interval for a population mean"
+ },
+ {
+  "label": "CONFIDENCE.T (2010)",
+  "href": "functions/confidence-t-function",
+  "cat_desc": "Statistical: Returns the confidence interval for a population mean, using a Student's t distribution"
+ },
+ {
+  "label": "CONVERT",
+  "href": "functions/convert-function",
+  "cat_desc": "Engineering: Converts a number from one measurement system to another"
+ },
+ {
+  "label": "CORREL",
+  "href": "functions/correl-function",
+  "cat_desc": "Statistical: Returns the correlation coefficient between two data sets"
+ },
+ {
+  "label": "COS",
+  "href": "functions/cos-function",
+  "cat_desc": "Math and trigonometry: Returns the cosine of a number"
+ },
+ {
+  "label": "COSH",
+  "href": "functions/cosh-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic cosine of a number"
+ },
+ {
+  "label": "COT (2013)",
+  "href": "functions/cot-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic cosine of a number"
+ },
+ {
+  "label": "COTH (2013)",
+  "href": "functions/coth-function",
+  "cat_desc": "Math and trigonometry: Returns the cotangent of an angle"
+ },
+ {
+  "label": "COUNT",
+  "href": "functions/count-function",
+  "cat_desc": "Statistical: Counts how many numbers are in the list of arguments"
+ },
+ {
+  "label": "COUNTA",
+  "href": "functions/counta-function",
+  "cat_desc": "Statistical: Counts how many values are in the list of arguments"
+ },
+ {
+  "label": "COUNTBLANK",
+  "href": "functions/countblank-function",
+  "cat_desc": "Statistical: Counts the number of blank cells within a range"
+ },
+ {
+  "label": "COUNTIF",
+  "href": "get-started/use-the-countif-function-in-microsoft-excel",
+  "cat_desc": "Statistical: Counts the number of cells within a range that meet the given criteria"
+ },
+ {
+  "label": "COUNTIFS",
+  "href": "functions/countifs-function",
+  "cat_desc": "Statistical: Counts the number of cells within a range that meet multiple criteria"
+ },
+ {
+  "label": "COUPDAYBS",
+  "href": "functions/coupdaybs-function",
+  "cat_desc": "Financial: Returns the number of days from the beginning of the coupon period to the settlement date"
+ },
+ {
+  "label": "COUPDAYS",
+  "href": "functions/coupdays-function",
+  "cat_desc": "Financial: Returns the number of days in the coupon period that contains the settlement date"
+ },
+ {
+  "label": "COUPDAYSNC",
+  "href": "functions/coupdaysnc-function",
+  "cat_desc": "Financial: Returns the number of days from the settlement date to the next coupon date"
+ },
+ {
+  "label": "COUPNCD",
+  "href": "functions/coupncd-function",
+  "cat_desc": "Financial: Returns the next coupon date after the settlement date"
+ },
+ {
+  "label": "COUPNUM",
+  "href": "functions/coupnum-function",
+  "cat_desc": "Financial: Returns the number of coupons payable between the settlement date and maturity date"
+ },
+ {
+  "label": "COUPPCD",
+  "href": "functions/couppcd-function",
+  "cat_desc": "Financial: Returns the previous coupon date before the settlement date"
+ },
+ {
+  "label": "COVAR",
+  "href": "functions/covar-function",
+  "cat_desc": "Compatibility: Returns covariance, the average of the products of paired deviations"
+ },
+ {
+  "label": "COVARIANCE.P (2010)",
+  "href": "functions/covariance-p-function",
+  "cat_desc": "Statistical: Returns covariance, the average of the products of paired deviations"
+ },
+ {
+  "label": "COVARIANCE.S (2010)",
+  "href": "functions/covariance-s-function",
+  "cat_desc": "Statistical: Returns the sample covariance, the average of the products deviations for each data point pair in two data sets"
+ },
+ {
+  "label": "CRITBINOM",
+  "href": "functions/critbinom-function",
+  "cat_desc": "Compatibility: Returns the smallest value for which the cumulative binomial distribution is less than or equal to a criterion value"
+ },
+ {
+  "label": "CSC (2013)",
+  "href": "functions/csc-function",
+  "cat_desc": "Math and trigonometry: Returns the cosecant of an angle"
+ },
+ {
+  "label": "CSCH (2013)",
+  "href": "functions/csch-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic cosecant of an angle"
+ },
+ {
+  "label": "CUBEKPIMEMBER",
+  "href": "functions/cubekpimember-function",
+  "cat_desc": "Cube: Returns a key performance indicator (KPI) name, property, and measure, and displays the name and property in the cell. A KPI is a quantifiable measurement, such as monthly gross profit or quarterly employee turnover, used to monitor an organization's performance."
+ },
+ {
+  "label": "CUBEMEMBER",
+  "href": "functions/cubemember-function",
+  "cat_desc": "Cube: Returns a member or tuple in a cube hierarchy. Use to validate that the member or tuple exists in the cube."
+ },
+ {
+  "label": "CUBEMEMBERPROPERTY",
+  "href": "functions/cubememberproperty-function",
+  "cat_desc": "Cube: Returns the value of a member property in the cube. Use to validate that a member name exists within the cube and to return the specified property for this member."
+ },
+ {
+  "label": "CUBERANKEDMEMBER",
+  "href": "functions/cuberankedmember-function",
+  "cat_desc": "Cube: Returns the nth, or ranked, member in a set. Use to return one or more elements in a set, such as the top sales performer or top 10 students."
+ },
+ {
+  "label": "CUBESET",
+  "href": "functions/cubeset-function",
+  "cat_desc": "Cube: Defines a calculated set of members or tuples by sending a set expression to the cube on the server, which creates the set, and then returns that set to Microsoft Office Excel."
+ },
+ {
+  "label": "CUBESETCOUNT",
+  "href": "functions/cubesetcount-function",
+  "cat_desc": "Cube: Returns the number of items in a set."
+ },
+ {
+  "label": "CUBEVALUE",
+  "href": "functions/cubevalue-function",
+  "cat_desc": "Cube: Returns an aggregated value from a cube."
+ },
+ {
+  "label": "CUMIPMT",
+  "href": "functions/cumipmt-function",
+  "cat_desc": "Financial: Returns the cumulative interest paid between two periods"
+ },
+ {
+  "label": "CUMPRINC",
+  "href": "functions/cumprinc-function",
+  "cat_desc": "Financial: Returns the cumulative principal paid on a loan between two periods"
+ },
+ {
+  "label": "DATE",
+  "href": "functions/date-function",
+  "cat_desc": "Date and time: Returns the serial number of a particular date"
+ },
+ {
+  "label": "DATEDIF",
+  "href": "functions/datedif-function",
+  "cat_desc": "Date and time: Calculates the number of days, months, or years between two dates. This function is useful in formulas where you need to calculate an age."
+ },
+ {
+  "label": "DATEVALUE",
+  "href": "functions/datevalue-function",
+  "cat_desc": "Date and time: Converts a date in the form of text to a serial number"
+ },
+ {
+  "label": "DAVERAGE",
+  "href": "functions/daverage-function",
+  "cat_desc": "Database: Returns the average of selected database entries"
+ },
+ {
+  "label": "DAY",
+  "href": "functions/day-function",
+  "cat_desc": "Date and time: Converts a serial number to a day of the month"
+ },
+ {
+  "label": "DAYS (2013)",
+  "href": "functions/days-function",
+  "cat_desc": "Date and time: Returns the number of days between two dates"
+ },
+ {
+  "label": "DAYS360",
+  "href": "functions/days360-function",
+  "cat_desc": "Date and time: Calculates the number of days between two dates based on a 360-day year"
+ },
+ {
+  "label": "DB",
+  "href": "functions/db-function",
+  "cat_desc": "Financial: Returns the depreciation of an asset for a specified period by using the fixed-declining balance method"
+ },
+ {
+  "label": "DBCS (2013)",
+  "href": "functions/dbcs-function",
+  "cat_desc": "Text: Changes half-width (single-byte) English letters or katakana within a character string to full-width (double-byte) characters"
+ },
+ {
+  "label": "DCOUNT",
+  "href": "functions/dcount-function",
+  "cat_desc": "Database: Counts the cells that contain numbers in a database"
+ },
+ {
+  "label": "DCOUNTA",
+  "href": "functions/dcounta-function",
+  "cat_desc": "Database: Counts nonblank cells in a database"
+ },
+ {
+  "label": "DDB",
+  "href": "functions/ddb-function",
+  "cat_desc": "Financial: Returns the depreciation of an asset for a specified period by using the double-declining balance method or some other method that you specify"
+ },
+ {
+  "label": "DEC2BIN",
+  "href": "functions/dec2bin-function",
+  "cat_desc": "Engineering: Converts a decimal number to binary"
+ },
+ {
+  "label": "DEC2HEX",
+  "href": "functions/dec2hex-function",
+  "cat_desc": "Engineering: Converts a decimal number to hexadecimal"
+ },
+ {
+  "label": "DEC2OCT",
+  "href": "functions/dec2oct-function",
+  "cat_desc": "Engineering: Converts a decimal number to octal"
+ },
+ {
+  "label": "DECIMAL (2013)",
+  "href": "functions/decimal-function",
+  "cat_desc": "Math and trigonometry: Converts a text representation of a number in a given base into a decimal number"
+ },
+ {
+  "label": "DEGREES",
+  "href": "functions/degrees-function",
+  "cat_desc": "Math and trigonometry: Converts radians to degrees"
+ },
+ {
+  "label": "DELTA",
+  "href": "functions/delta-function",
+  "cat_desc": "Engineering: Tests whether two values are equal"
+ },
+ {
+  "label": "DETECTLANGUAGE (Microsoft 365)",
+  "href": "functions/detectlanguage-function",
+  "cat_desc": "Text: Identifies the language of a specified text"
+ },
+ {
+  "label": "DEVSQ",
+  "href": "functions/devsq-function",
+  "cat_desc": "Statistical: Returns the sum of squares of deviations"
+ },
+ {
+  "label": "DGET",
+  "href": "functions/dget-function",
+  "cat_desc": "Database: Extracts from a database a single record that matches the specified criteria"
+ },
+ {
+  "label": "DISC",
+  "href": "functions/disc-function",
+  "cat_desc": "Financial: Returns the discount rate for a security"
+ },
+ {
+  "label": "DMAX",
+  "href": "functions/dmax-function",
+  "cat_desc": "Database: Returns the maximum value from selected database entries"
+ },
+ {
+  "label": "DMIN",
+  "href": "functions/dmin-function",
+  "cat_desc": "Database: Returns the minimum value from selected database entries"
+ },
+ {
+  "label": "DOLLAR",
+  "href": "functions/dollar-function",
+  "cat_desc": "Text: Converts a number to text, using the $ (dollar) currency format"
+ },
+ {
+  "label": "DOLLARDE",
+  "href": "functions/dollarde-function",
+  "cat_desc": "Financial: Converts a dollar price, expressed as a fraction, into a dollar price, expressed as a decimal number"
+ },
+ {
+  "label": "DOLLARFR",
+  "href": "functions/dollarfr-function",
+  "cat_desc": "Financial: Converts a dollar price, expressed as a decimal number, into a dollar price, expressed as a fraction"
+ },
+ {
+  "label": "DPRODUCT",
+  "href": "functions/dproduct-function",
+  "cat_desc": "Database: Multiplies the values in a particular field of records that match the criteria in a database"
+ },
+ {
+  "label": "DROP (2024)",
+  "href": "functions/drop-function",
+  "cat_desc": "Lookup and reference: Excludes a specified number of rows or columns from the start or end of an array"
+ },
+ {
+  "label": "DSTDEV",
+  "href": "functions/dstdev-function",
+  "cat_desc": "Database: Estimates the standard deviation based on a sample of selected database entries"
+ },
+ {
+  "label": "DSTDEVP",
+  "href": "functions/dstdevp-function",
+  "cat_desc": "Database: Calculates the standard deviation based on the entire population of selected database entries"
+ },
+ {
+  "label": "DSUM",
+  "href": "functions/dsum-function",
+  "cat_desc": "Database: Adds the numbers in the field column of records in the database that match the criteria"
+ },
+ {
+  "label": "DURATION",
+  "href": "functions/duration-function",
+  "cat_desc": "Financial: Returns the annual duration of a security with periodic interest payments"
+ },
+ {
+  "label": "DVAR",
+  "href": "functions/dvar-function",
+  "cat_desc": "Database: Estimates variance based on a sample from selected database entries"
+ },
+ {
+  "label": "DVARP",
+  "href": "functions/dvarp-function",
+  "cat_desc": "Database: Calculates variance based on the entire population of selected database entries"
+ },
+ {
+  "label": "EDATE",
+  "href": "functions/edate-function",
+  "cat_desc": "Date and time: Returns the serial number of the date that is the indicated number of months before or after the start date"
+ },
+ {
+  "label": "EFFECT",
+  "href": "functions/effect-function",
+  "cat_desc": "Financial: Returns the effective annual interest rate"
+ },
+ {
+  "label": "ENCODEURL (2013)",
+  "href": "functions/encodeurl-function",
+  "cat_desc": "Web: Returns a URL-encoded string This function is not available in Excel for the web."
+ },
+ {
+  "label": "EOMONTH",
+  "href": "functions/eomonth-function",
+  "cat_desc": "Date and time: Returns the serial number of the last day of the month before or after a specified number of months"
+ },
+ {
+  "label": "ERF",
+  "href": "functions/erf-function",
+  "cat_desc": "Engineering: Returns the error function"
+ },
+ {
+  "label": "ERF.PRECISE (2010)",
+  "href": "functions/erf-precise-function",
+  "cat_desc": "Engineering: Returns the error function"
+ },
+ {
+  "label": "ERFC",
+  "href": "functions/erfc-function",
+  "cat_desc": "Engineering: Returns the complementary error function"
+ },
+ {
+  "label": "ERFC.PRECISE (2010)",
+  "href": "functions/erfc-precise-function",
+  "cat_desc": "Engineering: Returns the complementary ERF function integrated between x and infinity"
+ },
+ {
+  "label": "ERROR.TYPE",
+  "href": "functions/error-type-function",
+  "cat_desc": "Information: Returns a number corresponding to an error type"
+ },
+ {
+  "label": "EUROCONVERT",
+  "href": "functions/euroconvert-function",
+  "cat_desc": "Add-in and Automation: Converts a number to euros, converts a number from euros to a euro member currency, or converts a number from one euro member currency to another by using the euro as an intermediary (triangulation)."
+ },
+ {
+  "label": "EVEN",
+  "href": "functions/even-function",
+  "cat_desc": "Math and trigonometry: Rounds a number up to the nearest even integer"
+ },
+ {
+  "label": "EXACT",
+  "href": "functions/exact-function",
+  "cat_desc": "Text: Checks to see if two text values are identical"
+ },
+ {
+  "label": "EXP",
+  "href": "functions/exp-function",
+  "cat_desc": "Math and trigonometry: Returns e raised to the power of a given number"
+ },
+ {
+  "label": "EXPAND (2024)",
+  "href": "functions/expand-function",
+  "cat_desc": "Lookup and reference: Expands or pads an array to specified row and column dimensions"
+ },
+ {
+  "label": "EXPON.DIST (2010)",
+  "href": "functions/expon-dist-function",
+  "cat_desc": "Statistical: Returns the exponential distribution"
+ },
+ {
+  "label": "EXPONDIST",
+  "href": "functions/expondist-function",
+  "cat_desc": "Compatibility: Returns the exponential distribution"
+ },
+ {
+  "label": "FACT",
+  "href": "functions/fact-function",
+  "cat_desc": "Math and trigonometry: Returns the factorial of a number"
+ },
+ {
+  "label": "FACTDOUBLE",
+  "href": "functions/factdouble-function",
+  "cat_desc": "Math and trigonometry: Returns the double factorial of a number"
+ },
+ {
+  "label": "FALSE",
+  "href": "functions/false-function",
+  "cat_desc": "Logical: Returns the logical value FALSE"
+ },
+ {
+  "label": "F.DIST (2010)",
+  "href": "functions/f-dist-function",
+  "cat_desc": "Statistical: Returns the F probability distribution"
+ },
+ {
+  "label": "FDIST",
+  "href": "functions/fdist-function",
+  "cat_desc": "Compatibility: Returns the F probability distribution"
+ },
+ {
+  "label": "F.DIST.RT (2010)",
+  "href": "functions/f-dist-rt-function",
+  "cat_desc": "Statistical: Returns the F probability distribution"
+ },
+ {
+  "label": "FILTER (2021)",
+  "href": "functions/filter-function",
+  "cat_desc": "Lookup and reference: Filters a range of data based on criteria you define"
+ },
+ {
+  "label": "FILTERXML (2013)",
+  "href": "functions/filterxml-function",
+  "cat_desc": "Web: Returns specific data from the XML content by using the specified XPath This function is not available in Excel for the web."
+ },
+ {
+  "label": "FIND, FINDB",
+  "href": "/en-us/topic/c7912941-af2a-4bdf-a553-d0d89b0a0628",
+  "cat_desc": "Text: Finds one text value within another (case-sensitive)"
+ },
+ {
+  "label": "F.INV (2010)",
+  "href": "functions/f-inv-function",
+  "cat_desc": "Statistical: Returns the inverse of the F probability distribution"
+ },
+ {
+  "label": "F.INV.RT (2010)",
+  "href": "functions/f-inv-rt-function",
+  "cat_desc": "Statistical: Returns the inverse of the F probability distribution"
+ },
+ {
+  "label": "FINV",
+  "href": "functions/finv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the F probability distribution"
+ },
+ {
+  "label": "FISHER",
+  "href": "functions/fisher-function",
+  "cat_desc": "Statistical: Returns the Fisher transformation"
+ },
+ {
+  "label": "FISHERINV",
+  "href": "functions/fisherinv-function",
+  "cat_desc": "Statistical: Returns the inverse of the Fisher transformation"
+ },
+ {
+  "label": "FIXED",
+  "href": "functions/fixed-function",
+  "cat_desc": "Text: Formats a number as text with a fixed number of decimals"
+ },
+ {
+  "label": "FLOOR",
+  "href": "functions/floor-function",
+  "cat_desc": "Compatibility: Rounds a number down, toward zero"
+ },
+ {
+  "label": "FLOOR.MATH (2013)",
+  "href": "functions/floor-math-function",
+  "cat_desc": "Math and trigonometry: Rounds a number down, to the nearest integer or to the nearest multiple of significance"
+ },
+ {
+  "label": "FLOOR.PRECISE",
+  "href": "functions/floor-precise-function",
+  "cat_desc": "Math and trigonometry: Rounds a number the nearest integer or to the nearest multiple of significance. Regardless of the sign of the number, the number is rounded up."
+ },
+ {
+  "label": "FORECAST",
+  "href": "forecast-and-forecast-linear-functions",
+  "cat_desc": "Statistical: Returns a value along a linear trend This function has been replaced with FORECAST.LINEAR as part of the new Forecasting , but it's still available for compatibility with earlier versions."
+ },
+ {
+  "label": "FORECAST.ETS (2016)",
+  "href": "forecasting-functions-reference#_forecast.ets",
+  "cat_desc": "Statistical: Returns a future value based on existing (historical) values by using the AAA version of the Exponential Smoothing (ETS) algorithm"
+ },
+ {
+  "label": "FORECAST.ETS.CONFINT (2016)",
+  "href": "forecasting-functions-reference#_forecast.ets.confint",
+  "cat_desc": "Statistical: Returns a confidence interval for the forecast value at the specified target date"
+ },
+ {
+  "label": "FORECAST.ETS.SEASONALITY (2016)",
+  "href": "forecasting-functions-reference#_forecast.ets.seasonality",
+  "cat_desc": "Statistical: Returns the length of the repetitive pattern Excel detects for the specified time series"
+ },
+ {
+  "label": "FORECAST.ETS.STAT (2016)",
+  "href": "forecasting-functions-reference#_forecast.ets.stat",
+  "cat_desc": "Statistical: Returns a statistical value as a result of time series forecasting"
+ },
+ {
+  "label": "FORECAST.LINEAR (2016)",
+  "href": "forecasting-functions-reference#_forecast.linear",
+  "cat_desc": "Statistical: Returns a future value based on existing values"
+ },
+ {
+  "label": "FORMULATEXT (2013)",
+  "href": "functions/formulatext-function",
+  "cat_desc": "Lookup and reference: Returns the formula at the given reference as text"
+ },
+ {
+  "label": "FREQUENCY",
+  "href": "functions/frequency-function",
+  "cat_desc": "Statistical: Returns a frequency distribution as a vertical array"
+ },
+ {
+  "label": "F.TEST (2010)",
+  "href": "functions/f-test-function",
+  "cat_desc": "Statistical: Returns the result of an F-test"
+ },
+ {
+  "label": "FTEST",
+  "href": "functions/ftest-function",
+  "cat_desc": "Compatibility: Returns the result of an F-test"
+ },
+ {
+  "label": "FV",
+  "href": "functions/fv-function",
+  "cat_desc": "Financial: Returns the future value of an investment"
+ },
+ {
+  "label": "FVSCHEDULE",
+  "href": "functions/fvschedule-function",
+  "cat_desc": "Financial: Returns the future value of an initial principal after applying a series of compound interest rates"
+ },
+ {
+  "label": "GAMMA (2013)",
+  "href": "functions/gamma-function",
+  "cat_desc": "Statistical: Returns the Gamma function value"
+ },
+ {
+  "label": "GAMMA.DIST (2010)",
+  "href": "functions/gamma-dist-function",
+  "cat_desc": "Statistical: Returns the gamma distribution"
+ },
+ {
+  "label": "GAMMADIST",
+  "href": "functions/gammadist-function",
+  "cat_desc": "Compatibility: Returns the gamma distribution"
+ },
+ {
+  "label": "GAMMA.INV (2010)",
+  "href": "functions/gamma-inv-function",
+  "cat_desc": "Statistical: Returns the inverse of the gamma cumulative distribution"
+ },
+ {
+  "label": "GAMMAINV",
+  "href": "functions/gammainv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the gamma cumulative distribution"
+ },
+ {
+  "label": "GAMMALN",
+  "href": "functions/gammaln-function",
+  "cat_desc": "Statistical: Returns the natural logarithm of the gamma function, \u0393(x)"
+ },
+ {
+  "label": "GAMMALN.PRECISE (2010)",
+  "href": "functions/gammaln-precise-function",
+  "cat_desc": "Statistical: Returns the natural logarithm of the gamma function, \u0393(x)"
+ },
+ {
+  "label": "GAUSS (2013)",
+  "href": "functions/gauss-function",
+  "cat_desc": "Statistical: Returns 0.5 less than the standard normal cumulative distribution"
+ },
+ {
+  "label": "GCD",
+  "href": "functions/gcd-function",
+  "cat_desc": "Math and trigonometry: Returns the greatest common divisor"
+ },
+ {
+  "label": "GEOMEAN",
+  "href": "functions/geomean-function",
+  "cat_desc": "Statistical: Returns the geometric mean"
+ },
+ {
+  "label": "GESTEP",
+  "href": "functions/gestep-function",
+  "cat_desc": "Engineering: Tests whether a number is greater than a threshold value"
+ },
+ {
+  "label": "GETPIVOTDATA",
+  "href": "functions/getpivotdata-function",
+  "cat_desc": "Lookup and reference: Returns data stored in a PivotTable report"
+ },
+ {
+  "label": "GROUPBY (Microsoft 365)",
+  "href": "functions/groupby-function",
+  "cat_desc": "Lookup and reference: Helps a user group, aggregate, sort, and filter data based on the fields you specify"
+ },
+ {
+  "label": "GROWTH",
+  "href": "functions/growth-function",
+  "cat_desc": "Statistical: Returns values along an exponential trend"
+ },
+ {
+  "label": "HARMEAN",
+  "href": "functions/harmean-function",
+  "cat_desc": "Statistical: Returns the harmonic mean"
+ },
+ {
+  "label": "HEX2BIN",
+  "href": "functions/hex2bin-function",
+  "cat_desc": "Engineering: Converts a hexadecimal number to binary"
+ },
+ {
+  "label": "HEX2DEC",
+  "href": "functions/hex2dec-function",
+  "cat_desc": "Engineering: Converts a hexadecimal number to decimal"
+ },
+ {
+  "label": "HEX2OCT",
+  "href": "functions/hex2oct-function",
+  "cat_desc": "Engineering: Converts a hexadecimal number to octal"
+ },
+ {
+  "label": "HLOOKUP",
+  "href": "functions/hlookup-function",
+  "cat_desc": "Lookup and reference: Looks in the top row of an array and returns the value of the indicated cell"
+ },
+ {
+  "label": "HOUR",
+  "href": "functions/hour-function",
+  "cat_desc": "Date and time: Converts a serial number to an hour"
+ },
+ {
+  "label": "HSTACK (2024)",
+  "href": "functions/hstack-function",
+  "cat_desc": "Lookup and reference: Appends arrays horizontally and in sequence to return a larger array"
+ },
+ {
+  "label": "HYPERLINK",
+  "href": "functions/hyperlink-function",
+  "cat_desc": "Lookup and reference: Creates a shortcut or jump that opens a document stored on a network server, an intranet, or the Internet"
+ },
+ {
+  "label": "HYPGEOM.DIST",
+  "href": "functions/hypgeom-dist-function",
+  "cat_desc": "Statistical: Returns the hypergeometric distribution"
+ },
+ {
+  "label": "HYPGEOMDIST",
+  "href": "functions/hypgeomdist-function",
+  "cat_desc": "Compatibility: Returns the hypergeometric distribution"
+ },
+ {
+  "label": "IF",
+  "href": "functions/if-function",
+  "cat_desc": "Logical: Specifies a logical test to perform"
+ },
+ {
+  "label": "IFERROR",
+  "href": "functions/iferror-function",
+  "cat_desc": "Logical: Returns a value you specify if a formula evaluates to an error; otherwise, returns the result of the formula"
+ },
+ {
+  "label": "IFNA (2013)",
+  "href": "functions/ifna-function",
+  "cat_desc": "Logical: Returns the value you specify if the expression resolves to #N/A, otherwise returns the result of the expression"
+ },
+ {
+  "label": "IFS (2019)",
+  "href": "functions/ifs-function",
+  "cat_desc": "Logical: Checks whether one or more conditions are met and returns a value that corresponds to the first TRUE condition."
+ },
+ {
+  "label": "IMABS",
+  "href": "functions/imabs-function",
+  "cat_desc": "Engineering: Returns the absolute value (modulus) of a complex number"
+ },
+ {
+  "label": "IMAGE (2024)",
+  "href": "functions/image-function",
+  "cat_desc": "Lookup and reference: Returns an image from a given source"
+ },
+ {
+  "label": "IMAGINARY",
+  "href": "functions/imaginary-function",
+  "cat_desc": "Engineering: Returns the imaginary coefficient of a complex number"
+ },
+ {
+  "label": "IMARGUMENT",
+  "href": "functions/imargument-function",
+  "cat_desc": "Engineering: Returns the argument theta, an angle expressed in radians"
+ },
+ {
+  "label": "IMCONJUGATE",
+  "href": "functions/imconjugate-function",
+  "cat_desc": "Engineering: Returns the complex conjugate of a complex number"
+ },
+ {
+  "label": "IMCOS",
+  "href": "functions/imcos-function",
+  "cat_desc": "Engineering: Returns the cosine of a complex number"
+ },
+ {
+  "label": "IMCOSH (2013)",
+  "href": "functions/imcosh-function",
+  "cat_desc": "Engineering: Returns the hyperbolic cosine of a complex number"
+ },
+ {
+  "label": "IMCOT (2013)",
+  "href": "functions/imcot-function",
+  "cat_desc": "Engineering: Returns the cotangent of a complex number"
+ },
+ {
+  "label": "IMCSC (2013)",
+  "href": "functions/imcsc-function",
+  "cat_desc": "Engineering: Returns the cosecant of a complex number"
+ },
+ {
+  "label": "IMCSCH (2013)",
+  "href": "functions/imcsch-function",
+  "cat_desc": "Engineering: Returns the hyperbolic cosecant of a complex number"
+ },
+ {
+  "label": "IMDIV",
+  "href": "functions/imdiv-function",
+  "cat_desc": "Engineering: Returns the quotient of two complex numbers"
+ },
+ {
+  "label": "IMEXP",
+  "href": "functions/imexp-function",
+  "cat_desc": "Engineering: Returns the exponential of a complex number"
+ },
+ {
+  "label": "IMLN",
+  "href": "functions/imln-function",
+  "cat_desc": "Engineering: Returns the natural logarithm of a complex number"
+ },
+ {
+  "label": "IMLOG10",
+  "href": "functions/imlog10-function",
+  "cat_desc": "Engineering: Returns the base-10 logarithm of a complex number"
+ },
+ {
+  "label": "IMLOG2",
+  "href": "functions/imlog2-function",
+  "cat_desc": "Engineering: Returns the base-2 logarithm of a complex number"
+ },
+ {
+  "label": "IMPOWER",
+  "href": "functions/impower-function",
+  "cat_desc": "Engineering: Returns a complex number raised to an integer power"
+ },
+ {
+  "label": "IMPRODUCT",
+  "href": "functions/improduct-function",
+  "cat_desc": "Engineering: Returns the product of complex numbers"
+ },
+ {
+  "label": "IMREAL",
+  "href": "functions/imreal-function",
+  "cat_desc": "Engineering: Returns the real coefficient of a complex number"
+ },
+ {
+  "label": "IMSEC (2013)",
+  "href": "functions/imsec-function",
+  "cat_desc": "Engineering: Returns the secant of a complex number"
+ },
+ {
+  "label": "IMSECH (2013)",
+  "href": "functions/imsech-function",
+  "cat_desc": "Engineering: Returns the hyperbolic secant of a complex number"
+ },
+ {
+  "label": "IMSIN",
+  "href": "functions/imsin-function",
+  "cat_desc": "Engineering: Returns the sine of a complex number"
+ },
+ {
+  "label": "IMSINH (2013)",
+  "href": "functions/imsinh-function",
+  "cat_desc": "Engineering: Returns the hyperbolic sine of a complex number"
+ },
+ {
+  "label": "IMSQRT",
+  "href": "functions/imsqrt-function",
+  "cat_desc": "Engineering: Returns the square root of a complex number"
+ },
+ {
+  "label": "IMSUB",
+  "href": "functions/imsub-function",
+  "cat_desc": "Engineering: Returns the difference between two complex numbers"
+ },
+ {
+  "label": "IMSUM",
+  "href": "functions/imsum-function",
+  "cat_desc": "Engineering: Returns the sum of complex numbers"
+ },
+ {
+  "label": "IMTAN (2013)",
+  "href": "functions/imtan-function",
+  "cat_desc": "Engineering: Returns the tangent of a complex number"
+ },
+ {
+  "label": "INDEX",
+  "href": "functions/index-function",
+  "cat_desc": "Lookup and reference: Uses an index to choose a value from a reference or array"
+ },
+ {
+  "label": "INDIRECT",
+  "href": "functions/indirect-function",
+  "cat_desc": "Lookup and reference: Returns a reference indicated by a text value"
+ },
+ {
+  "label": "INFO",
+  "href": "functions/info-function",
+  "cat_desc": "Information: Returns information about the current operating environment This function is not available in Excel for the web."
+ },
+ {
+  "label": "INT",
+  "href": "functions/int-function",
+  "cat_desc": "Math and trigonometry: Rounds a number down to the nearest integer"
+ },
+ {
+  "label": "INTERCEPT",
+  "href": "functions/intercept-function",
+  "cat_desc": "Statistical: Returns the intercept of the linear regression line"
+ },
+ {
+  "label": "INTRATE",
+  "href": "functions/intrate-function",
+  "cat_desc": "Financial: Returns the interest rate for a fully invested security"
+ },
+ {
+  "label": "IPMT",
+  "href": "functions/ipmt-function",
+  "cat_desc": "Financial: Returns the interest payment for an investment for a given period"
+ },
+ {
+  "label": "IRR",
+  "href": "functions/irr-function",
+  "cat_desc": "Financial: Returns the internal rate of return for a series of cash flows"
+ },
+ {
+  "label": "ISBLANK",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is blank"
+ },
+ {
+  "label": "ISERR",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is any error value except #N/A"
+ },
+ {
+  "label": "ISERROR",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is any error value"
+ },
+ {
+  "label": "ISEVEN",
+  "href": "functions/iseven-function",
+  "cat_desc": "Information: Returns TRUE if the number is even"
+ },
+ {
+  "label": "ISFORMULA (2013)",
+  "href": "functions/isformula-function",
+  "cat_desc": "Information: Returns TRUE if there is a reference to a cell that contains a formula"
+ },
+ {
+  "label": "ISLOGICAL",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is a logical value"
+ },
+ {
+  "label": "ISNA",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is the #N/A error value"
+ },
+ {
+  "label": "ISNONTEXT",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is not text"
+ },
+ {
+  "label": "ISNUMBER",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is a number"
+ },
+ {
+  "label": "ISODD",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the number is odd"
+ },
+ {
+  "label": "ISOMITTED (2024)",
+  "href": "functions/isomitted-function",
+  "cat_desc": "Information: Checks whether the value in a LAMBDA is missing and returns TRUE or FALSE"
+ },
+ {
+  "label": "ISREF",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is a reference"
+ },
+ {
+  "label": "ISTEXT",
+  "href": "is-functions",
+  "cat_desc": "Information: Returns TRUE if the value is text"
+ },
+ {
+  "label": "ISO.CEILING (2013)",
+  "href": "functions/iso-ceiling-function",
+  "cat_desc": "Math and trigonometry: Returns a number that is rounded up to the nearest integer or to the nearest multiple of significance"
+ },
+ {
+  "label": "ISOWEEKNUM (2013)",
+  "href": "functions/isoweeknum-function",
+  "cat_desc": "Date and time: Returns the number of the ISO week number of the year for a given date"
+ },
+ {
+  "label": "ISPMT",
+  "href": "functions/ispmt-function",
+  "cat_desc": "Financial: Calculates the interest paid during a specific period of an investment"
+ },
+ {
+  "label": "JIS",
+  "href": "functions/jis-function",
+  "cat_desc": "Text: Changes half-width (single-byte) characters within a string to full-width (double-byte) characters"
+ },
+ {
+  "label": "KURT",
+  "href": "functions/kurt-function",
+  "cat_desc": "Statistical: Returns the kurtosis of a data set"
+ },
+ {
+  "label": "LAMBDA (2024)",
+  "href": "functions/lambda-function",
+  "cat_desc": "Logical: Create custom, reusable and call them by a friendly name"
+ },
+ {
+  "label": "LARGE",
+  "href": "functions/large-function",
+  "cat_desc": "Statistical: Returns the k-th largest value in a data set"
+ },
+ {
+  "label": "LCM",
+  "href": "functions/lcm-function",
+  "cat_desc": "Math and trigonometry: Returns the least common multiple"
+ },
+ {
+  "label": "LEFT, LEFTB",
+  "href": "functions/left-function",
+  "cat_desc": "Text: Returns the leftmost characters from a text value"
+ },
+ {
+  "label": "LEN, LENB",
+  "href": "functions/len-function",
+  "cat_desc": "Text: Returns the number of characters in a text string"
+ },
+ {
+  "label": "LET (2021)",
+  "href": "functions/let-function",
+  "cat_desc": "Logical: Assigns names to calculation results"
+ },
+ {
+  "label": "LINEST",
+  "href": "functions/linest-function",
+  "cat_desc": "Statistical: Returns the parameters of a linear trend"
+ },
+ {
+  "label": "LN",
+  "href": "functions/ln-function",
+  "cat_desc": "Math and trigonometry: Returns the natural logarithm of a number"
+ },
+ {
+  "label": "LOG",
+  "href": "functions/log-function",
+  "cat_desc": "Math and trigonometry: Returns the logarithm of a number to a specified base"
+ },
+ {
+  "label": "LOG10",
+  "href": "functions/log10-function",
+  "cat_desc": "Math and trigonometry: Returns the base-10 logarithm of a number"
+ },
+ {
+  "label": "LOGEST",
+  "href": "functions/logest-function",
+  "cat_desc": "Statistical: Returns the parameters of an exponential trend"
+ },
+ {
+  "label": "LOGINV",
+  "href": "functions/loginv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the lognormal cumulative distribution"
+ },
+ {
+  "label": "LOGNORM.DIST (2010)",
+  "href": "functions/lognorm-dist-function",
+  "cat_desc": "Statistical: Returns the cumulative lognormal distribution"
+ },
+ {
+  "label": "LOGNORMDIST",
+  "href": "functions/lognormdist-function",
+  "cat_desc": "Compatibility: Returns the cumulative lognormal distribution"
+ },
+ {
+  "label": "LOGNORM.INV (2010)",
+  "href": "functions/lognorm-inv-function",
+  "cat_desc": "Statistical: Returns the inverse of the lognormal cumulative distribution"
+ },
+ {
+  "label": "LOOKUP",
+  "href": "functions/lookup-function",
+  "cat_desc": "Lookup and reference: Looks up values in a vector or array"
+ },
+ {
+  "label": "LOWER",
+  "href": "functions/lower-function",
+  "cat_desc": "Text: Converts text to lowercase"
+ },
+ {
+  "label": "MAKEARRAY (2024)",
+  "href": "functions/makearray-function",
+  "cat_desc": "Logical: Returns a calculated array of a specified row and column size, by applying a LAMBDA"
+ },
+ {
+  "label": "MAP (2024)",
+  "href": "functions/map-function",
+  "cat_desc": "Logical: Returns an array formed by mapping each value in the array(s) to a new value by applying a LAMBDA to create a new value"
+ },
+ {
+  "label": "MATCH",
+  "href": "functions/match-function",
+  "cat_desc": "Lookup and reference: Looks up values in a reference or array"
+ },
+ {
+  "label": "MAX",
+  "href": "functions/max-function",
+  "cat_desc": "Statistical: Returns the maximum value in a list of arguments"
+ },
+ {
+  "label": "MAXA",
+  "href": "functions/maxa-function",
+  "cat_desc": "Statistical: Returns the maximum value in a list of arguments, including numbers, text, and logical values"
+ },
+ {
+  "label": "MAXIFS (2019)",
+  "href": "functions/maxifs-function",
+  "cat_desc": "Statistical: Returns the maximum value among cells specified by a given set of conditions or criteria"
+ },
+ {
+  "label": "MDETERM",
+  "href": "functions/mdeterm-function",
+  "cat_desc": "Math and trigonometry: Returns the matrix determinant of an array"
+ },
+ {
+  "label": "MDURATION",
+  "href": "functions/mduration-function",
+  "cat_desc": "Financial: Returns the Macauley modified duration for a security with an assumed par value of $100"
+ },
+ {
+  "label": "MEDIAN",
+  "href": "functions/median-function",
+  "cat_desc": "Statistical: Returns the median of the given numbers"
+ },
+ {
+  "label": "MID, MIDB",
+  "href": "functions/mid-function",
+  "cat_desc": "Text: Returns a specific number of characters from a text string starting at the position you specify"
+ },
+ {
+  "label": "MIN",
+  "href": "functions/min-function",
+  "cat_desc": "Statistical: Returns the minimum value in a list of arguments"
+ },
+ {
+  "label": "MINIFS (2019)",
+  "href": "functions/minifs-function",
+  "cat_desc": "Statistical: Returns the minimum value among cells specified by a given set of conditions or criteria."
+ },
+ {
+  "label": "MINA",
+  "href": "functions/mina-function",
+  "cat_desc": "Statistical: Returns the smallest value in a list of arguments, including numbers, text, and logical values"
+ },
+ {
+  "label": "MINUTE",
+  "href": "functions/minute-function",
+  "cat_desc": "Date and time: Converts a serial number to a minute"
+ },
+ {
+  "label": "MINVERSE",
+  "href": "functions/minverse-function",
+  "cat_desc": "Math and trigonometry: Returns the matrix inverse of an array"
+ },
+ {
+  "label": "MIRR",
+  "href": "functions/mirr-function",
+  "cat_desc": "Financial: Returns the internal rate of return where positive and negative cash flows are financed at different rates"
+ },
+ {
+  "label": "MMULT",
+  "href": "functions/mmult-function",
+  "cat_desc": "Math and trigonometry: Returns the matrix product of two arrays"
+ },
+ {
+  "label": "MOD",
+  "href": "functions/mod-function",
+  "cat_desc": "Math and trigonometry: Returns the remainder from division"
+ },
+ {
+  "label": "MODE",
+  "href": "functions/mode-function",
+  "cat_desc": "Compatibility: Returns the most common value in a data set"
+ },
+ {
+  "label": "MODE.MULT (2010)",
+  "href": "functions/mode-mult-function",
+  "cat_desc": "Statistical: Returns a vertical array of the most frequently occurring, or repetitive values in an array or range of data"
+ },
+ {
+  "label": "MODE.SNGL (2010)",
+  "href": "functions/mode-sngl-function",
+  "cat_desc": "Statistical: Returns the most common value in a data set"
+ },
+ {
+  "label": "MONTH",
+  "href": "functions/month-function",
+  "cat_desc": "Date and time: Converts a serial number to a month"
+ },
+ {
+  "label": "MROUND",
+  "href": "functions/mround-function",
+  "cat_desc": "Math and trigonometry: Returns a number rounded to the desired multiple"
+ },
+ {
+  "label": "MULTINOMIAL",
+  "href": "functions/multinomial-function",
+  "cat_desc": "Math and trigonometry: Returns the multinomial of a set of numbers"
+ },
+ {
+  "label": "MUNIT (2013)",
+  "href": "functions/munit-function",
+  "cat_desc": "Math and trigonometry: Returns the unit matrix or the specified dimension"
+ },
+ {
+  "label": "N",
+  "href": "functions/n-function",
+  "cat_desc": "Information: Returns a value converted to a number"
+ },
+ {
+  "label": "NA",
+  "href": "functions/na-function",
+  "cat_desc": "Information: Returns the error value #N/A"
+ },
+ {
+  "label": "NEGBINOM.DIST (2010)",
+  "href": "functions/negbinom-dist-function",
+  "cat_desc": "Statistical: Returns the negative binomial distribution"
+ },
+ {
+  "label": "NEGBINOMDIST",
+  "href": "functions/negbinomdist-function",
+  "cat_desc": "Compatibility: Returns the negative binomial distribution"
+ },
+ {
+  "label": "NETWORKDAYS",
+  "href": "functions/networkdays-function",
+  "cat_desc": "Date and time: Returns the number of whole workdays between two dates"
+ },
+ {
+  "label": "NETWORKDAYS.INTL (2010)",
+  "href": "functions/networkdays-intl-function",
+  "cat_desc": "Date and time: Returns the number of whole workdays between two dates using parameters to indicate which and how many days are weekend days"
+ },
+ {
+  "label": "NOMINAL",
+  "href": "functions/nominal-function",
+  "cat_desc": "Financial: Returns the annual nominal interest rate"
+ },
+ {
+  "label": "NORM.DIST (2010)",
+  "href": "functions/norm-dist-function",
+  "cat_desc": "Statistical: Returns the normal cumulative distribution"
+ },
+ {
+  "label": "NORMDIST",
+  "href": "functions/normdist-function",
+  "cat_desc": "Compatibility: Returns the normal cumulative distribution"
+ },
+ {
+  "label": "NORMINV",
+  "href": "functions/norminv-function",
+  "cat_desc": "Statistical: Returns the inverse of the normal cumulative distribution"
+ },
+ {
+  "label": "NORM.INV (2010)",
+  "href": "functions/norm-inv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the normal cumulative distribution"
+ },
+ {
+  "label": "NORM.S.DIST (2010)",
+  "href": "functions/norm-s-dist-function",
+  "cat_desc": "Statistical: Returns the standard normal cumulative distribution"
+ },
+ {
+  "label": "NORMSDIST",
+  "href": "functions/normsdist-function",
+  "cat_desc": "Compatibility: Returns the standard normal cumulative distribution"
+ },
+ {
+  "label": "NORM.S.INV (2010)",
+  "href": "functions/norm-s-inv-function",
+  "cat_desc": "Statistical: Returns the inverse of the standard normal cumulative distribution"
+ },
+ {
+  "label": "NORMSINV",
+  "href": "functions/normsinv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the standard normal cumulative distribution"
+ },
+ {
+  "label": "NOT",
+  "href": "functions/not-function",
+  "cat_desc": "Logical: Reverses the logic of its argument"
+ },
+ {
+  "label": "NOW",
+  "href": "functions/now-function",
+  "cat_desc": "Date and time: Returns the serial number of the current date and time"
+ },
+ {
+  "label": "NPER",
+  "href": "functions/nper-function",
+  "cat_desc": "Financial: Returns the number of periods for an investment"
+ },
+ {
+  "label": "NPV",
+  "href": "functions/npv-function",
+  "cat_desc": "Financial: Returns the net present value of an investment based on a series of periodic cash flows and a discount rate"
+ },
+ {
+  "label": "NUMBERVALUE (2013)",
+  "href": "functions/numbervalue-function",
+  "cat_desc": "Text: Converts text to number in a locale-independent manner"
+ },
+ {
+  "label": "OCT2BIN",
+  "href": "functions/oct2bin-function",
+  "cat_desc": "Engineering: Converts an octal number to binary"
+ },
+ {
+  "label": "OCT2DEC",
+  "href": "functions/oct2dec-function",
+  "cat_desc": "Engineering: Converts an octal number to decimal"
+ },
+ {
+  "label": "OCT2HEX",
+  "href": "functions/oct2hex-function",
+  "cat_desc": "Engineering: Converts an octal number to hexadecimal"
+ },
+ {
+  "label": "ODD",
+  "href": "functions/odd-function",
+  "cat_desc": "Math and trigonometry: Rounds a number up to the nearest odd integer"
+ },
+ {
+  "label": "ODDFPRICE",
+  "href": "functions/oddfprice-function",
+  "cat_desc": "Financial: Returns the price per $100 face value of a security with an odd first period"
+ },
+ {
+  "label": "ODDFYIELD",
+  "href": "functions/oddfyield-function",
+  "cat_desc": "Financial: Returns the yield of a security with an odd first period"
+ },
+ {
+  "label": "ODDLPRICE",
+  "href": "functions/oddlprice-function",
+  "cat_desc": "Financial: Returns the price per $100 face value of a security with an odd last period"
+ },
+ {
+  "label": "ODDLYIELD",
+  "href": "functions/oddlyield-function",
+  "cat_desc": "Financial: Returns the yield of a security with an odd last period"
+ },
+ {
+  "label": "OFFSET",
+  "href": "functions/offset-function",
+  "cat_desc": "Lookup and reference: Returns a reference offset from a given reference"
+ },
+ {
+  "label": "OR",
+  "href": "functions/or-function",
+  "cat_desc": "Logical: Returns TRUE if any argument is TRUE"
+ },
+ {
+  "label": "PDURATION (2013)",
+  "href": "functions/pduration-function",
+  "cat_desc": "Financial: Returns the number of periods required by an investment to reach a specified value"
+ },
+ {
+  "label": "PEARSON",
+  "href": "functions/pearson-function",
+  "cat_desc": "Statistical: Returns the Pearson product moment correlation coefficient"
+ },
+ {
+  "label": "PERCENTILE.EXC (2010)",
+  "href": "functions/percentile-exc-function",
+  "cat_desc": "Statistical: Returns the k-th percentile of values in a range, where k is in the range 0..1, exclusive"
+ },
+ {
+  "label": "PERCENTILE.INC (2010)",
+  "href": "functions/percentile-inc-function",
+  "cat_desc": "Statistical: Returns the k-th percentile of values in a range"
+ },
+ {
+  "label": "PERCENTILE",
+  "href": "functions/percentile-function",
+  "cat_desc": "Compatibility: Returns the k-th percentile of values in a range"
+ },
+ {
+  "label": "PERCENTOF (Microsoft 365)",
+  "href": "functions/percentof-function",
+  "cat_desc": "Math and trigonometry: Sums the values in the subset and divides it by all the values"
+ },
+ {
+  "label": "PERCENTRANK.EXC (2010)",
+  "href": "functions/percentrank-exc-function",
+  "cat_desc": "Statistical: Returns the rank of a value in a data set as a percentage (0..1, exclusive) of the data set"
+ },
+ {
+  "label": "PERCENTRANK.INC (2010)",
+  "href": "functions/percentrank-inc-function",
+  "cat_desc": "Statistical: Returns the percentage rank of a value in a data set"
+ },
+ {
+  "label": "PERCENTRANK",
+  "href": "functions/percentrank-function",
+  "cat_desc": "Compatibility: Returns the percentage rank of a value in a data set"
+ },
+ {
+  "label": "PERMUT",
+  "href": "functions/permut-function",
+  "cat_desc": "Statistical: Returns the number of permutations for a given number of objects"
+ },
+ {
+  "label": "PERMUTATIONA (2013)",
+  "href": "functions/permutationa-function",
+  "cat_desc": "Statistical: Returns the number of permutations for a given number of objects (with repetitions) that can be selected from the total objects"
+ },
+ {
+  "label": "PHI (2013)",
+  "href": "functions/phi-function",
+  "cat_desc": "Statistical: Returns the value of the density function for a standard normal distribution"
+ },
+ {
+  "label": "PHONETIC",
+  "href": "functions/phonetic-function",
+  "cat_desc": "Text: Extracts the phonetic (furigana) characters from a text string"
+ },
+ {
+  "label": "PI",
+  "href": "functions/pi-function",
+  "cat_desc": "Math and trigonometry: Returns the value of pi"
+ },
+ {
+  "label": "PIVOTBY (Microsoft 365)",
+  "href": "functions/pivotby-function",
+  "cat_desc": "Lookup and reference: Helps a user group, aggregate, sort, and filter data based on the row and column fields that you specify"
+ },
+ {
+  "label": "PMT",
+  "href": "functions/pmt-function",
+  "cat_desc": "Financial: Returns the periodic payment for an annuity"
+ },
+ {
+  "label": "POISSON.DIST (2010)",
+  "href": "functions/poisson-dist-function",
+  "cat_desc": "Statistical: Returns the Poisson distribution"
+ },
+ {
+  "label": "POISSON",
+  "href": "functions/poisson-function",
+  "cat_desc": "Compatibility: Returns the Poisson distribution"
+ },
+ {
+  "label": "POWER",
+  "href": "functions/power-function",
+  "cat_desc": "Math and trigonometry: Returns the result of a number raised to a power"
+ },
+ {
+  "label": "PPMT",
+  "href": "functions/ppmt-function",
+  "cat_desc": "Financial: Returns the payment on the principal for an investment for a given period"
+ },
+ {
+  "label": "PRICE",
+  "href": "functions/price-function",
+  "cat_desc": "Financial: Returns the price per $100 face value of a security that pays periodic interest"
+ },
+ {
+  "label": "PRICEDISC",
+  "href": "functions/pricedisc-function",
+  "cat_desc": "Financial: Returns the price per $100 face value of a discounted security"
+ },
+ {
+  "label": "PRICEMAT",
+  "href": "functions/pricemat-function",
+  "cat_desc": "Financial: Returns the price per $100 face value of a security that pays interest at maturity"
+ },
+ {
+  "label": "PROB",
+  "href": "functions/prob-function",
+  "cat_desc": "Statistical: Returns the probability that values in a range are between two limits"
+ },
+ {
+  "label": "PRODUCT",
+  "href": "functions/product-function",
+  "cat_desc": "Math and trigonometry: Multiplies its arguments"
+ },
+ {
+  "label": "PROPER",
+  "href": "functions/proper-function",
+  "cat_desc": "Text: Capitalizes the first letter in each word of a text value"
+ },
+ {
+  "label": "PV",
+  "href": "functions/pv-function",
+  "cat_desc": "Financial: Returns the present value of an investment"
+ },
+ {
+  "label": "QUARTILE",
+  "href": "functions/quartile-function",
+  "cat_desc": "Compatibility: Returns the quartile of a data set"
+ },
+ {
+  "label": "QUARTILE.EXC (2010)",
+  "href": "functions/quartile-exc-function",
+  "cat_desc": "Statistical: Returns the quartile of the data set, based on percentile values from 0..1, exclusive"
+ },
+ {
+  "label": "QUARTILE.INC (2010)",
+  "href": "functions/quartile-inc-function",
+  "cat_desc": "Statistical: Returns the quartile of a data set"
+ },
+ {
+  "label": "QUOTIENT",
+  "href": "functions/quotient-function",
+  "cat_desc": "Math and trigonometry: Returns the integer portion of a division"
+ },
+ {
+  "label": "RADIANS",
+  "href": "functions/radians-function",
+  "cat_desc": "Math and trigonometry: Converts degrees to radians"
+ },
+ {
+  "label": "RAND",
+  "href": "functions/rand-function",
+  "cat_desc": "Math and trigonometry: Returns a random number between 0 and 1"
+ },
+ {
+  "label": "RANDARRAY (2021)",
+  "href": "functions/randarray-function",
+  "cat_desc": "Math and trigonometry: Returns an array of random numbers between 0 and 1. However, you can specify the number of rows and columns to fill, minimum and maximum values, and whether to return whole numbers or decimal values."
+ },
+ {
+  "label": "RANDBETWEEN",
+  "href": "functions/randbetween-function",
+  "cat_desc": "Math and trigonometry: Returns a random number between the numbers you specify"
+ },
+ {
+  "label": "RANK.AVG (2010)",
+  "href": "functions/rank-avg-function",
+  "cat_desc": "Statistical: Returns the rank of a number in a list of numbers"
+ },
+ {
+  "label": "RANK.EQ (2010)",
+  "href": "functions/rank-eq-function",
+  "cat_desc": "Statistical: Returns the rank of a number in a list of numbers"
+ },
+ {
+  "label": "RANK",
+  "href": "functions/rank-function",
+  "cat_desc": "Compatibility: Returns the rank of a number in a list of numbers"
+ },
+ {
+  "label": "RATE",
+  "href": "functions/rate-function",
+  "cat_desc": "Financial: Returns the interest rate per period of an annuity"
+ },
+ {
+  "label": "RECEIVED",
+  "href": "functions/received-function",
+  "cat_desc": "Financial: Returns the amount received at maturity for a fully invested security"
+ },
+ {
+  "label": "REDUCE (2024)",
+  "href": "functions/reduce-function",
+  "cat_desc": "Logical: Reduces an array to an accumulated value by applying a LAMBDA to each value and returning the total value in the accumulator"
+ },
+ {
+  "label": "REGEXEXTRACT (Microsoft 365)",
+  "href": "functions/regexextract-function",
+  "cat_desc": "Text: Extracts strings within the provided text that matches the pattern"
+ },
+ {
+  "label": "REGEXREPLACE (Microsoft 365)",
+  "href": "functions/regexreplace-function",
+  "cat_desc": "Text: Replaces strings within the provided text that matches the pattern with replacement"
+ },
+ {
+  "label": "REGEXTEST (Microsoft 365)",
+  "href": "functions/regextest-function",
+  "cat_desc": "Text: Determines whether any part of text matches the pattern"
+ },
+ {
+  "label": "REGISTER.ID",
+  "href": "functions/register-id-function",
+  "cat_desc": "Add-in and Automation: Returns the register ID of the specified dynamic link library (DLL) or code resource that has been previously registered"
+ },
+ {
+  "label": "REPLACE, REPLACEB",
+  "href": "functions/replace-function",
+  "cat_desc": "Text: Replaces characters within text"
+ },
+ {
+  "label": "REPT",
+  "href": "functions/rept-function",
+  "cat_desc": "Text: Repeats text a given number of times"
+ },
+ {
+  "label": "RIGHT, RIGHTB",
+  "href": "functions/right-function",
+  "cat_desc": "Text: Returns the rightmost characters from a text value"
+ },
+ {
+  "label": "ROMAN",
+  "href": "functions/roman-function",
+  "cat_desc": "Math and trigonometry: Converts an arabic numeral to roman, as text"
+ },
+ {
+  "label": "ROUND",
+  "href": "functions/round-function",
+  "cat_desc": "Math and trigonometry: Rounds a number to a specified number of digits"
+ },
+ {
+  "label": "ROUNDDOWN",
+  "href": "functions/rounddown-function",
+  "cat_desc": "Math and trigonometry: Rounds a number down, toward zero"
+ },
+ {
+  "label": "ROUNDUP",
+  "href": "functions/roundup-function",
+  "cat_desc": "Math and trigonometry: Rounds a number up, away from zero"
+ },
+ {
+  "label": "ROW",
+  "href": "functions/row-function",
+  "cat_desc": "Lookup and reference: Returns the row number of a reference"
+ },
+ {
+  "label": "ROWS",
+  "href": "functions/rows-function",
+  "cat_desc": "Lookup and reference: Returns the number of rows in a reference"
+ },
+ {
+  "label": "RRI (2013)",
+  "href": "functions/rri-function",
+  "cat_desc": "Financial: Returns an equivalent interest rate for the growth of an investment"
+ },
+ {
+  "label": "RSQ",
+  "href": "functions/rsq-function",
+  "cat_desc": "Statistical: Returns the square of the Pearson product moment correlation coefficient"
+ },
+ {
+  "label": "RTD",
+  "href": "functions/rtd-function",
+  "cat_desc": "Lookup and reference: Retrieves real-time data from a program that supports COM automation"
+ },
+ {
+  "label": "SCAN (2024)",
+  "href": "functions/scan-function",
+  "cat_desc": "Logical: Scans an array by applying a LAMBDA to each value and returns an array that has each intermediate value"
+ },
+ {
+  "label": "SEARCH, SEARCHB",
+  "href": "functions/search-function",
+  "cat_desc": "Text: Finds one text value within another (not case-sensitive)"
+ },
+ {
+  "label": "SEC (2013)",
+  "href": "functions/sec-function",
+  "cat_desc": "Math and trigonometry: Returns the secant of an angle"
+ },
+ {
+  "label": "SECH (2013)",
+  "href": "functions/sech-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic secant of an angle"
+ },
+ {
+  "label": "SECOND",
+  "href": "functions/second-function",
+  "cat_desc": "Date and time: Converts a serial number to a second"
+ },
+ {
+  "label": "SEQUENCE (2021)",
+  "href": "functions/sequence-function",
+  "cat_desc": "Math and trigonometry: Generates a list of sequential numbers in an array, such as 1, 2, 3, 4"
+ },
+ {
+  "label": "SERIESSUM",
+  "href": "functions/seriessum-function",
+  "cat_desc": "Math and trigonometry: Returns the sum of a power series based on the formula"
+ },
+ {
+  "label": "SHEET (2013)",
+  "href": "functions/sheet-function",
+  "cat_desc": "Information: Returns the sheet number of the referenced sheet"
+ },
+ {
+  "label": "SHEETS (2013)",
+  "href": "functions/sheets-function",
+  "cat_desc": "Information: Returns the number of sheets in a reference"
+ },
+ {
+  "label": "SIGN",
+  "href": "functions/sign-function",
+  "cat_desc": "Math and trigonometry: Returns the sign of a number"
+ },
+ {
+  "label": "SIN",
+  "href": "functions/sin-function",
+  "cat_desc": "Math and trigonometry: Returns the sine of the given angle"
+ },
+ {
+  "label": "SINH",
+  "href": "functions/sinh-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic sine of a number"
+ },
+ {
+  "label": "SKEW",
+  "href": "functions/skew-function",
+  "cat_desc": "Statistical: Returns the skewness of a distribution"
+ },
+ {
+  "label": "SKEW.P (2013)",
+  "href": "functions/skew-p-function",
+  "cat_desc": "Statistical: Returns the skewness of a distribution based on a population: a characterization of the degree of asymmetry of a distribution around its mean"
+ },
+ {
+  "label": "SLN",
+  "href": "functions/sln-function",
+  "cat_desc": "Financial: Returns the straight-line depreciation of an asset for one period"
+ },
+ {
+  "label": "SLOPE",
+  "href": "functions/slope-function",
+  "cat_desc": "Statistical: Returns the slope of the linear regression line"
+ },
+ {
+  "label": "SMALL",
+  "href": "functions/small-function",
+  "cat_desc": "Statistical: Returns the k-th smallest value in a data set"
+ },
+ {
+  "label": "SORT (2021)",
+  "href": "functions/sort-function",
+  "cat_desc": "Lookup and reference: Sorts the contents of a range or array"
+ },
+ {
+  "label": "SORTBY (2021)",
+  "href": "functions/sortby-function",
+  "cat_desc": "Lookup and reference: Sorts the contents of a range or array based on the values in a corresponding range or array"
+ },
+ {
+  "label": "SQRT",
+  "href": "functions/sqrt-function",
+  "cat_desc": "Math and trigonometry: Returns a positive square root"
+ },
+ {
+  "label": "SQRTPI",
+  "href": "functions/sqrtpi-function",
+  "cat_desc": "Math and trigonometry: Returns the square root of (number * pi)"
+ },
+ {
+  "label": "STANDARDIZE",
+  "href": "functions/standardize-function",
+  "cat_desc": "Statistical: Returns a normalized value"
+ },
+ {
+  "label": "STDEV",
+  "href": "functions/stdev-function",
+  "cat_desc": "Compatibility: Estimates standard deviation based on a sample"
+ },
+ {
+  "label": "STDEV.P (2010)",
+  "href": "functions/stdev-p-function",
+  "cat_desc": "Statistical: Calculates standard deviation based on the entire population"
+ },
+ {
+  "label": "STDEV.S (2010)",
+  "href": "functions/stdev-s-function",
+  "cat_desc": "Statistical: Estimates standard deviation based on a sample"
+ },
+ {
+  "label": "STDEVA",
+  "href": "functions/stdeva-function",
+  "cat_desc": "Statistical: Estimates standard deviation based on a sample, including numbers, text, and logical values"
+ },
+ {
+  "label": "STDEVP",
+  "href": "functions/stdevp-function",
+  "cat_desc": "Compatibility: Calculates standard deviation based on the entire population"
+ },
+ {
+  "label": "STDEVPA",
+  "href": "functions/stdevpa-function",
+  "cat_desc": "Statistical: Calculates standard deviation based on the entire population, including numbers, text, and logical values"
+ },
+ {
+  "label": "STEYX",
+  "href": "functions/steyx-function",
+  "cat_desc": "Statistical: Returns the standard error of the predicted y-value for each x in the regression"
+ },
+ {
+  "label": "STOCKHISTORY",
+  "href": "functions/stockhistory-function",
+  "cat_desc": "Information: Retrieves historical data about a financial instrument and loads it as an array"
+ },
+ {
+  "label": "SUBSTITUTE",
+  "href": "functions/substitute-function",
+  "cat_desc": "Text: Substitutes new text for old text in a text string"
+ },
+ {
+  "label": "SUBTOTAL",
+  "href": "functions/subtotal-function",
+  "cat_desc": "Math and trigonometry: Returns a subtotal in a list or database"
+ },
+ {
+  "label": "SUM",
+  "href": "functions/sum-function",
+  "cat_desc": "Math and trigonometry: Adds its arguments"
+ },
+ {
+  "label": "SUMIF",
+  "href": "functions/sumif-function",
+  "cat_desc": "Math and trigonometry: Adds the cells specified by a given criteria"
+ },
+ {
+  "label": "SUMIFS",
+  "href": "functions/sumifs-function",
+  "cat_desc": "Math and trigonometry: Adds the cells in a range that meet multiple criteria"
+ },
+ {
+  "label": "SUMPRODUCT",
+  "href": "functions/sumproduct-function",
+  "cat_desc": "Math and trigonometry: Returns the sum of the products of corresponding array components"
+ },
+ {
+  "label": "SUMSQ",
+  "href": "functions/sumsq-function",
+  "cat_desc": "Math and trigonometry: Returns the sum of the squares of the arguments"
+ },
+ {
+  "label": "SUMX2MY2",
+  "href": "functions/sumx2my2-function",
+  "cat_desc": "Math and trigonometry: Returns the sum of the difference of squares of corresponding values in two arrays"
+ },
+ {
+  "label": "SUMX2PY2",
+  "href": "functions/sumx2py2-function",
+  "cat_desc": "Math and trigonometry: Returns the sum of the sum of squares of corresponding values in two arrays"
+ },
+ {
+  "label": "SUMXMY2",
+  "href": "functions/sumxmy2-function",
+  "cat_desc": "Math and trigonometry: Returns the sum of squares of differences of corresponding values in two arrays"
+ },
+ {
+  "label": "SWITCH (2019)",
+  "href": "functions/switch-function",
+  "cat_desc": "Logical: Evaluates an expression against a list of values and returns the result corresponding to the first matching value. If there is no match, an optional default value may be returned."
+ },
+ {
+  "label": "SYD",
+  "href": "functions/syd-function",
+  "cat_desc": "Financial: Returns the sum-of-years' digits depreciation of an asset for a specified period"
+ },
+ {
+  "label": "T",
+  "href": "functions/t-function",
+  "cat_desc": "Text: Converts its arguments to text"
+ },
+ {
+  "label": "TAN",
+  "href": "functions/tan-function",
+  "cat_desc": "Math and trigonometry: Returns the tangent of a number"
+ },
+ {
+  "label": "TANH",
+  "href": "functions/tanh-function",
+  "cat_desc": "Math and trigonometry: Returns the hyperbolic tangent of a number"
+ },
+ {
+  "label": "TAKE (2024)",
+  "href": "functions/take-function",
+  "cat_desc": "Lookup and reference: Returns a specified number of contiguous rows or columns from the start or end of an array"
+ },
+ {
+  "label": "TBILLEQ",
+  "href": "functions/tbilleq-function",
+  "cat_desc": "Financial: Returns the bond-equivalent yield for a Treasury bill"
+ },
+ {
+  "label": "TBILLPRICE",
+  "href": "functions/tbillprice-function",
+  "cat_desc": "Financial: Returns the price per $100 face value for a Treasury bill"
+ },
+ {
+  "label": "TBILLYIELD",
+  "href": "functions/tbillyield-function",
+  "cat_desc": "Financial: Returns the yield for a Treasury bill"
+ },
+ {
+  "label": "T.DIST (2010)",
+  "href": "functions/t-dist-function",
+  "cat_desc": "Statistical: Returns the Percentage Points (probability) for the Student t-distribution"
+ },
+ {
+  "label": "T.DIST.2T (2010)",
+  "href": "functions/t-dist-2t-function",
+  "cat_desc": "Statistical: Returns the Percentage Points (probability) for the Student t-distribution"
+ },
+ {
+  "label": "T.DIST.RT (2010)",
+  "href": "functions/t-dist-rt-function",
+  "cat_desc": "Statistical: Returns the Student's t-distribution"
+ },
+ {
+  "label": "TDIST",
+  "href": "functions/tdist-function",
+  "cat_desc": "Compatibility: Returns the Student's t-distribution"
+ },
+ {
+  "label": "TEXT",
+  "href": "functions/text-function",
+  "cat_desc": "Text: Formats a number and converts it to text"
+ },
+ {
+  "label": "TEXTAFTER (2024)",
+  "href": "functions/textafter-function",
+  "cat_desc": "Text: Returns text that occurs after given character or string"
+ },
+ {
+  "label": "TEXTBEFORE (2024)",
+  "href": "functions/textbefore-function",
+  "cat_desc": "Text: Returns text that occurs before a given character or string"
+ },
+ {
+  "label": "TEXTJOIN (2019)",
+  "href": "functions/textjoin-function",
+  "cat_desc": "Text: Combines the text from multiple ranges and/or strings"
+ },
+ {
+  "label": "TEXTSPLIT (2024)",
+  "href": "functions/textsplit-function",
+  "cat_desc": "Text: Splits text strings by using column and row delimiters"
+ },
+ {
+  "label": "TIME",
+  "href": "functions/time-function",
+  "cat_desc": "Date and time: Returns the serial number of a particular time"
+ },
+ {
+  "label": "TIMEVALUE",
+  "href": "functions/timevalue-function",
+  "cat_desc": "Date and time: Converts a time in the form of text to a serial number"
+ },
+ {
+  "label": "T.INV (2010)",
+  "href": "functions/t-inv-function",
+  "cat_desc": "Statistical: Returns the t-value of the Student's t-distribution as a function of the probability and the degrees of freedom"
+ },
+ {
+  "label": "T.INV.2T (2010)",
+  "href": "functions/t-inv-2t-function",
+  "cat_desc": "Statistical: Returns the inverse of the Student's t-distribution"
+ },
+ {
+  "label": "TINV",
+  "href": "functions/tinv-function",
+  "cat_desc": "Compatibility: Returns the inverse of the Student's t-distribution"
+ },
+ {
+  "label": "TOCOL (2024)",
+  "href": "functions/tocol-function",
+  "cat_desc": "Lookup and reference: Returns the array in a single column"
+ },
+ {
+  "label": "TOROW (2024)",
+  "href": "functions/torow-function",
+  "cat_desc": "Lookup and reference: Returns the array in a single row"
+ },
+ {
+  "label": "TODAY",
+  "href": "functions/today-function",
+  "cat_desc": "Date and time: Returns the serial number of today's date"
+ },
+ {
+  "label": "TRANSLATE (Microsoft 365)",
+  "href": "functions/translate-function",
+  "cat_desc": "Text: Translates a text from one language to another"
+ },
+ {
+  "label": "TRANSPOSE",
+  "href": "functions/transpose-function",
+  "cat_desc": "Lookup and reference: Returns the transpose of an array"
+ },
+ {
+  "label": "TREND",
+  "href": "functions/trend-function",
+  "cat_desc": "Statistical: Returns values along a linear trend"
+ },
+ {
+  "label": "TRIM",
+  "href": "functions/trim-function",
+  "cat_desc": "Text: Removes spaces from text"
+ },
+ {
+  "label": "TRIMMEAN",
+  "href": "functions/trimmean-function",
+  "cat_desc": "Statistical: Returns the mean of the interior of a data set"
+ },
+ {
+  "label": "TRIMRANGE (Microsoft 365)",
+  "href": "functions/trimrange-function",
+  "cat_desc": "Lookup and reference: Scans in from the edges of a range or array until it finds a non-blank cell (or value), it then excludes those blank rows or columns"
+ },
+ {
+  "label": "TRUE",
+  "href": "functions/true-function",
+  "cat_desc": "Logical: Returns the logical value TRUE"
+ },
+ {
+  "label": "TRUNC",
+  "href": "functions/trunc-function",
+  "cat_desc": "Math and trigonometry: Truncates a number to an integer"
+ },
+ {
+  "label": "T.TEST (2010)",
+  "href": "functions/t-test-function",
+  "cat_desc": "Statistical: Returns the probability associated with a Student's t-test"
+ },
+ {
+  "label": "TTEST",
+  "href": "functions/ttest-function",
+  "cat_desc": "Compatibility: Returns the probability associated with a Student's t-test"
+ },
+ {
+  "label": "TYPE",
+  "href": "functions/type-function",
+  "cat_desc": "Information: Returns a number indicating the data type of a value"
+ },
+ {
+  "label": "UNICHAR (2013)",
+  "href": "functions/unichar-function",
+  "cat_desc": "Text: Returns the Unicode character that is references by the given numeric value"
+ },
+ {
+  "label": "UNICODE (2013)",
+  "href": "functions/unicode-function",
+  "cat_desc": "Text: Returns the number (code point) that corresponds to the first character of the text"
+ },
+ {
+  "label": "UNIQUE (2021)",
+  "href": "functions/unique-function",
+  "cat_desc": "Lookup and reference: Returns a list of unique values in a list or range"
+ },
+ {
+  "label": "UPPER",
+  "href": "functions/upper-function",
+  "cat_desc": "Text: Converts text to uppercase"
+ },
+ {
+  "label": "VALUE",
+  "href": "functions/value-function",
+  "cat_desc": "Text: Converts a text argument to a number"
+ },
+ {
+  "label": "VALUETOTEXT (2021)",
+  "href": "functions/valuetotext-function",
+  "cat_desc": "Text: Returns text from any specified value"
+ },
+ {
+  "label": "VAR",
+  "href": "functions/var-function",
+  "cat_desc": "Compatibility: Estimates variance based on a sample"
+ },
+ {
+  "label": "VAR.P (2010)",
+  "href": "functions/var-p-function",
+  "cat_desc": "Statistical: Calculates variance based on the entire population"
+ },
+ {
+  "label": "VAR.S (2010)",
+  "href": "functions/var-s-function",
+  "cat_desc": "Statistical: Estimates variance based on a sample"
+ },
+ {
+  "label": "VARA",
+  "href": "functions/vara-function",
+  "cat_desc": "Statistical: Estimates variance based on a sample, including numbers, text, and logical values"
+ },
+ {
+  "label": "VARP",
+  "href": "functions/varp-function",
+  "cat_desc": "Compatibility: Calculates variance based on the entire population"
+ },
+ {
+  "label": "VARPA",
+  "href": "functions/varpa-function",
+  "cat_desc": "Statistical: Calculates variance based on the entire population, including numbers, text, and logical values"
+ },
+ {
+  "label": "VDB",
+  "href": "functions/vdb-function",
+  "cat_desc": "Financial: Returns the depreciation of an asset for a specified or partial period by using a declining balance method"
+ },
+ {
+  "label": "VLOOKUP",
+  "href": "functions/vlookup-function",
+  "cat_desc": "Lookup and reference: Looks in the first column of an array and moves across the row to return the value of a cell"
+ },
+ {
+  "label": "VSTACK (2024)",
+  "href": "functions/vstack-function",
+  "cat_desc": "Look and reference: Appends arrays vertically and in sequence to return a larger array"
+ },
+ {
+  "label": "WEBSERVICE (2013)",
+  "href": "functions/webservice-function",
+  "cat_desc": "Web: Returns data from a web service. This function is not available in Excel for the web."
+ },
+ {
+  "label": "WEEKDAY",
+  "href": "functions/weekday-function",
+  "cat_desc": "Date and time: Converts a serial number to a day of the week"
+ },
+ {
+  "label": "WEEKNUM",
+  "href": "functions/weeknum-function",
+  "cat_desc": "Date and time: Converts a serial number to a number representing where the week falls numerically with a year"
+ },
+ {
+  "label": "WEIBULL",
+  "href": "functions/weibull-function",
+  "cat_desc": "Compatibility: Calculates variance based on the entire population, including numbers, text, and logical values"
+ },
+ {
+  "label": "WEIBULL.DIST (2010)",
+  "href": "functions/weibull-dist-function",
+  "cat_desc": "Statistical: Returns the Weibull distribution"
+ },
+ {
+  "label": "WORKDAY",
+  "href": "functions/workday-function",
+  "cat_desc": "Date and time: Returns the serial number of the date before or after a specified number of workdays"
+ },
+ {
+  "label": "WORKDAY.INTL (2010)",
+  "href": "functions/workday-intl-function",
+  "cat_desc": "Date and time: Returns the serial number of the date before or after a specified number of workdays using parameters to indicate which and how many days are weekend days"
+ },
+ {
+  "label": "WRAPCOLS (2024)",
+  "href": "functions/wrapcols-function",
+  "cat_desc": "Look and reference: Wraps the provided row or column of values by columns after a specified number of elements"
+ },
+ {
+  "label": "WRAPROWS (2024)",
+  "href": "functions/wraprows-function",
+  "cat_desc": "Look and reference: Wraps the provided row or column of values by rows after a specified number of elements"
+ },
+ {
+  "label": "XIRR",
+  "href": "functions/xirr-function",
+  "cat_desc": "Financial: Returns the internal rate of return for a schedule of cash flows that is not necessarily periodic"
+ },
+ {
+  "label": "XLOOKUP (2021)",
+  "href": "functions/xlookup-function",
+  "cat_desc": "Lookup and reference: Searches a range or an array, and returns an item corresponding to the first match it finds. If a match doesn't exist, then XLOOKUP can return the closest (approximate) match."
+ },
+ {
+  "label": "XMATCH (2021)",
+  "href": "functions/xmatch-function",
+  "cat_desc": "Lookup and reference: Returns the relative position of an item in an array or range of cells."
+ },
+ {
+  "label": "XNPV",
+  "href": "functions/xnpv-function",
+  "cat_desc": "Financial: Returns the net present value for a schedule of cash flows that is not necessarily periodic"
+ },
+ {
+  "label": "XOR (2013)",
+  "href": "functions/xor-function",
+  "cat_desc": "Logical: Returns a logical exclusive OR of all arguments"
+ },
+ {
+  "label": "YEAR",
+  "href": "functions/year-function",
+  "cat_desc": "Date and time: Converts a serial number to a year"
+ },
+ {
+  "label": "YEARFRAC",
+  "href": "functions/yearfrac-function",
+  "cat_desc": "Date and time: Returns the year fraction representing the number of whole days between start_date and end_date"
+ },
+ {
+  "label": "YIELD",
+  "href": "functions/yield-function",
+  "cat_desc": "Financial: Returns the yield on a security that pays periodic interest"
+ },
+ {
+  "label": "YIELDDISC",
+  "href": "functions/yielddisc-function",
+  "cat_desc": "Financial: Returns the annual yield for a discounted security; for example, a Treasury bill"
+ },
+ {
+  "label": "YIELDMAT",
+  "href": "functions/yieldmat-function",
+  "cat_desc": "Financial: Returns the annual yield of a security that pays interest at maturity"
+ },
+ {
+  "label": "Z.TEST (2010)",
+  "href": "functions/z-test-function",
+  "cat_desc": "Statistical: Returns the one-tailed probability-value of a z-test"
+ },
+ {
+  "label": "ZTEST",
+  "href": "functions/ztest-function",
+  "cat_desc": "Compatibility: Returns the one-tailed probability-value of a z-test"
+ }
+]

@@ -1,0 +1,105 @@
+<title>CELLOG Function Bank</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a worksheet — a sticky formula bar of filters over one long table of functions, a column per question type. */
+:root {
+  --bg: #f3f6f2;
+  --sheet: #ffffff;
+  --grid: #e1e7df;
+  --ink: #17221b;
+  --dim: #5b6a61;
+  --head: #e8eee6;
+  --accent: #1f7a4f;
+  --opt: #8a5a12;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0f1612; --sheet: #151e18; --grid: #26332b; --ink: #e4ece6; --dim: #93a39a; --head: #1b2620; --accent: #4fc28a; --opt: #e0a94a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0f1612; --sheet: #151e18; --grid: #26332b; --ink: #e4ece6; --dim: #93a39a; --head: #1b2620; --accent: #4fc28a; --opt: #e0a94a; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 800 26px/1.15 var(--f-display); margin: 0 0 6px; text-wrap: balance; letter-spacing: 0.2px; }
+.lede { color: var(--dim); max-width: 68ch; margin: 0 0 14px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--grid); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.fx { font: 600 13px var(--f-mono); color: var(--accent); }
+input, select { font: 14px var(--f-body); color: var(--ink); background: var(--sheet); border: 1px solid var(--grid); border-radius: 6px; padding: 7px 9px; }
+input { flex: 1 1 180px; min-width: 0; }
+input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.count { font: 13px var(--f-mono); color: var(--dim); font-variant-numeric: tabular-nums; margin-left: auto; }
+.legend { font-size: 12.5px; color: var(--dim); margin: 10px 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.legend code, td code { font-family: var(--f-mono); }
+.opt { color: var(--opt); }
+.tablebox { overflow-x: auto; background: var(--sheet); border: 1px solid var(--grid); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { background: var(--head); font: 600 11.5px var(--f-body); text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); position: sticky; top: 0; }
+td.name { font: 600 13px var(--f-mono); white-space: nowrap; }
+td.num { font: 13px var(--f-mono); font-variant-numeric: tabular-nums; text-align: center; color: var(--dim); }
+td.args code { font-size: 12.5px; }
+.chip { display: inline-block; font: 600 11px var(--f-body); padding: 2px 7px; border-radius: 999px; background: var(--head); color: var(--dim); white-space: nowrap; }
+.empty { padding: 24px; color: var(--dim); text-align: center; }
+</style>
+<div class="wrap">
+  <h1>CELLOG Function Bank</h1>
+  <p class="lede">Every Excel function 📘 Education mode can ask about, taken from Microsoft's function reference. Check the arguments and descriptions; anything that looks wrong, tell me the function name.</p>
+  <div class="bar">
+    <span class="fx">fx</span>
+    <input id="q" type="search" placeholder="Search a function, argument or description" aria-label="Search">
+    <select id="league" aria-label="League">
+      <option value="all">All leagues</option>
+      <option value="5">League 5</option><option value="4">League 4</option><option value="3">League 3</option>
+      <option value="2">League 2</option><option value="1">League 1</option><option value="0">Titan</option>
+    </select>
+    <select id="skill" aria-label="Skill">
+      <option value="all">All skills</option>
+      <option value="data">📈 Data Analysis</option><option value="map">🗺️ Mapping</option><option value="text">📝 Text Processing</option>
+      <option value="games">🎲 Game Logic</option><option value="math">🔢 Math &amp; Formulas</option><option value="time">⏱️ Time &amp; Dates</option>
+      <option value="cards">🃏 Cards &amp; Random</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="legend">
+    <span>League = the first league it can be asked in (Titan: its own Titan skill below the name)</span>
+    <span><code class="opt">[optional]</code> arguments in brackets</span>
+    <span><code>…</code> = repeats</span>
+    <span>Questions = 2 counts + one per argument + the description</span>
+  </div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Function</th><th>League</th><th>Skill</th><th>Mand.</th><th>Opt.</th><th>Arguments</th><th>Description</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+<script>
+__DATA__
+const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Random" };
+const TITAN = { lambda: "LAMBDA Craft", single: "Single-Cell", speed: "Speed & Shortcuts" };
+const LEAGUE = { 5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan" };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const rows = EDU_FUNCS.map(([name, skill, titan, tier, desc, args]) => {
+  const list = args ? args.split("|") : [];
+  const mand = list.filter((a) => !a.startsWith("[") && a !== "...").length;
+  const opt = list.filter((a) => a.startsWith("[")).length;
+  const rep = list.includes("...");
+  return { name, skill, titan, tier, desc, list, mand, opt: rep ? opt + "+…" : String(opt), hay: (name + " " + args + " " + desc).toLowerCase() };
+});
+const $ = (id) => document.getElementById(id);
+function render() {
+  const q = $("q").value.trim().toLowerCase(), lg = $("league").value, sk = $("skill").value;
+  const shown = rows.filter((r) => (lg === "all" || String(r.tier) === lg) && (sk === "all" || r.skill === sk) && (!q || r.hay.includes(q)));
+  $("count").textContent = `${shown.length} of ${rows.length}`;
+  $("rows").innerHTML = shown.length
+    ? shown.map((r) => `<tr><td class="name">${esc(r.name)}</td><td><span class="chip">${LEAGUE[r.tier]}</span><br><span class="chip">Titan: ${TITAN[r.titan]}</span></td><td>${SKILL[r.skill]}</td><td class="num">${r.mand}</td><td class="num">${r.opt}</td><td class="args"><code>${r.list.length ? r.list.map((a) => a.startsWith("[") ? `<span class="opt">${esc(a)}</span>` : a === "..." ? "…" : esc(a)).join(", ") : "(none)"}</code></td><td>${esc(r.desc)}</td></tr>`).join("")
+    : `<tr><td colspan="7" class="empty">No functions match. Clear the search or pick "All leagues".</td></tr>`;
+}
+["q", "league", "skill"].forEach((id) => $(id).addEventListener("input", render));
+render();
+</script>
