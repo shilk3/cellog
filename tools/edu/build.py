@@ -58,7 +58,7 @@ rows = []
 for c in sorted(C, key=lambda c: c["name"]):
     d = DESC.get(c["name"]) or tidy(c["desc"])
     assert len(d) <= 110, (c["name"], len(d), d)
-    rows.append([c["name"], c["skill"], c["titan"], c["tier"], d, spec(c["args"])])
+    rows.append([c["name"], c["skill"], c["titan"], c["tier"], d, spec(c["args"]), c["cat"]])
 
 js = """// Excel's functions for 📘 Education mode — built by tools/build_edu.py
 // from Microsoft's function reference (support.microsoft.com, Excel
@@ -66,8 +66,15 @@ js = """// Excel's functions for 📘 Education mode — built by tools/build_ed
 // exactly as Excel shows them; descriptions are Microsoft's, some shortened
 // to fit a phone. Compatibility versions and add-in functions are left out.
 // Each row: [name, skill, Titan skill, league tier (5 easiest … 0 Titan),
-//            description, arguments ("[x]" optional, "..." repeats)].
+//            description, arguments ("[x]" optional, "..." repeats),
+//            Microsoft's category].
 const EDU_FUNCS = [
 """ + "".join("  " + json.dumps(r, ensure_ascii=False) + ",\n" for r in rows) + "];\n"
+pandas = json.load(open("pandas.json"))
+js += """// The 🐍 Python Invitational's set: Python in Excel's PY() and xl(), and the
+// pandas commands most used with it — their main arguments (pandas 2), in
+// order. Each row: [name, description, arguments].
+const EDU_PANDAS = [
+""" + "".join("  " + json.dumps(r, ensure_ascii=False) + ",\n" for r in pandas) + "];\n"
 open(sys.argv[1] if len(sys.argv) > 1 else "edu-functions.js", "w").write(js)
 print(len(rows), "functions,", len(js), "bytes")

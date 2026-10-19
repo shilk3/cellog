@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.0.1";
+const APP_VERSION = "5.1.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -22,7 +22,7 @@ const SAVE_VERSION = 7;
 // new career's defaults, keeping everything the save already has.
 const SAVE_DEFAULT_PATHS = [
   "stats", "stats.skills", "stats.xp", "allocation", "allocation.skills", "employment", "staff", "items", "items.crash",
-  "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades", "completion",
+  "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades", "completion", "edu",
 ];
 
 /* ---------------------------------------------------------------------- */
@@ -580,6 +580,18 @@ function completionGoals(stage = completionStage()) {
       flag("topChamp", "👑", `${TOP_LEAGUE_NAME} Champion`, feats.topChamp),
       flag("unbeaten", "🛡️", "Unbeaten regular season", state.trophies.unbeaten.length > 0),
     );
+  }
+  // 📘 Education mode only: every function you can be asked so far, mastered
+  // (the total grows with your best league, so its id does too — the goal
+  // can drop like the stages do).
+  if (eduOn()) {
+    const avail = eduAvailable();
+    const done = eduMasteredCount(avail);
+    goals.push(goal(`formulas${state.peakLeagueTier}`, "📘", "Formulas mastered", EDU.masteryWeight, (EDU.masteryWeight * done) / Math.max(1, avail.length), done, avail.length));
+    if (stage >= 2 && state.python && state.python.revealed) {
+      const py = eduMasteredCount(EDU_PY);
+      goals.push(goal("pandas", "🐍", "Python functions mastered", EDU.pandasWeight, (EDU.pandasWeight * py) / EDU_PY.length, py, EDU_PY.length));
+    }
   }
   if (stage >= 2 && state.python) {
     const course = PY_COURSE.reduce((a, t, i) => a + (pyMastered().includes(t.name) ? 1 : Math.min(1, (state.python.course[i] || 0) / pyCourseHours(i))), 0);
@@ -1467,6 +1479,9 @@ function freshState() {
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
     camp: null, // { year, joined, price, days } — this off-season's all-inclusive training camp (joinCamp)
+    // 📘 Education mode: on/off, each function's record (seen, mastered), the
+    // quiz in progress and the last one finished (for its match).
+    edu: { on: false, fns: {}, current: null, quiz: null, asked: 0, correct: 0 },
     staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
@@ -2232,12 +2247,17 @@ function performanceBreakdown(keys = state.activeSkills) {
   keys = playSkillKeys();
   const skillAvg = activeSkillAverage(keys);
   const skillComponent = skillAvg * composureMult;
+  const W = perfWeights();
   const weighted = {
-    skill: skillComponent * PERF_WEIGHTS.skill,
-    phys: s.phys * PERF_WEIGHTS.phys,
-    composure: Math.min(100, s.composure) * PERF_WEIGHTS.composure,
-    rest: s.rest * PERF_WEIGHTS.rest,
+    skill: skillComponent * W.skill,
+    phys: s.phys * W.phys,
+    composure: Math.min(100, s.composure) * W.composure,
+    rest: s.rest * W.rest,
   };
+  // 📘 Education mode: this match's quiz (a guess until it's taken).
+  const quizAcc = W.quiz ? eduMatchAcc() : null;
+  const quiz = W.quiz ? eduValue(quizAcc, eduNeutral(skillComponent, s.phys)) : null;
+  if (W.quiz) weighted.quiz = quiz * W.quiz;
   // Raw inputs, snapshotted for the match result table.
   const raw = {
     skills: keys.map((k) => ({ key: k, value: s.skills[k] })),
@@ -2246,8 +2266,10 @@ function performanceBreakdown(keys = state.activeSkills) {
     phys: s.phys,
     composure: Math.min(100, s.composure),
     rest: s.rest,
+    quiz,
+    quizAcc,
   };
-  let score = clamp(weighted.skill + weighted.phys + weighted.composure + weighted.rest, 0, 100);
+  let score = clamp(weighted.skill + weighted.phys + weighted.composure + weighted.rest + (weighted.quiz || 0), 0, 100);
   // Pros who fall behind on current technique compete at a real disadvantage
   // — every not-yet-mastered entry in the queue costs match performance,
   // not training. Capped so a long backlog can't go negative.
@@ -2260,7 +2282,7 @@ function performanceBreakdown(keys = state.activeSkills) {
   // Signature moves (top tier) can add a little on top.
   const movesBonus = inTop() ? movesPerf(playerTopMoves()) : 0;
   score = clamp(score + movesBonus, 0, 100);
-  return { weighted, raw, composureMult, techniquePenaltyMult, movesBonus, score };
+  return { weighted, raw, weights: W, composureMult, techniquePenaltyMult, movesBonus, score };
 }
 
 function performanceScore(keys) {
@@ -2312,7 +2334,10 @@ function rivalPerformance(r) {
   const keys = ev ? [EVENTS[ev].skill.key] : r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
   const avg = keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length;
   const condition = ev ? rivalEventProfile(r).condition : BAL.rivalCondition;
-  return clamp(PERF_WEIGHTS.skill * avg + (1 - PERF_WEIGHTS.skill) * condition + movesPerf(rivalTopMoves(r)), 0, 100);
+  const W = perfWeights();
+  // 📘 Education mode: their quiz, at their league's rate of right answers.
+  const quiz = W.quiz ? W.quiz * eduValue(eduRivalAcc(r), eduNeutral(avg, condition)) : 0;
+  return clamp(W.skill * avg + (W.phys + W.composure + W.rest) * condition + quiz + movesPerf(rivalTopMoves(r)), 0, 100);
 }
 // The week's focus keys for a rival-vs-rival match: the top tier's three
 // for its players; the seven for everyone else (the week's own focus,
@@ -2509,6 +2534,9 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   const breakdown = performanceBreakdown();
   const perf = breakdown.score;
   const mu = matchup(opponent);
+  // 📘 This match's quiz is now spent.
+  const eduQuiz = eduOn() && state.edu.quiz && !state.edu.quiz.used ? state.edu.quiz : null;
+  if (eduQuiz) eduQuiz.used = true;
   const opponentRating = mu.oppRating;
   const matchRating = mu.yourMatch;
   const opponentMatchRating = mu.oppMatch;
@@ -2593,6 +2621,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   const oppFinalShown = oppPerfShown + oppEdgeShown + oppLuckShown;
 
   return {
+    edu: eduQuiz ? { fn: eduQuiz.fn.replace(/^py:/, ""), right: eduQuiz.right, total: eduQuiz.total } : null,
     win,
     draw, // always false now — older results may hold a draw
     decidedOnTime, // a dead heat settled by the faster finish
@@ -4352,7 +4381,8 @@ function performanceTableHtml(b) {
     if (raw.skills.length > 1) skillDetail += sub("Average", one(raw.skillAvg));
     if (b.composureMult < 1) skillDetail += sub(`😰 Low Calm (under ${BAL.composureMatchMid})`, `×${b.composureMult.toFixed(2)}`).replace("perf-sub", "perf-sub perf-warn");
   }
-  const subtotal = b.weighted.skill + b.weighted.phys + b.weighted.composure + b.weighted.rest;
+  const subtotal = b.weighted.skill + b.weighted.phys + b.weighted.composure + b.weighted.rest + (b.weighted.quiz || 0);
+  const W = b.weights || PERF_WEIGHTS;
   const techRow =
     b.techniquePenaltyMult < 1
       ? `<tr class="perf-main perf-warn"><td>📘 Unmastered techniques</td><td>×${b.techniquePenaltyMult.toFixed(2)}</td><td></td><td>−${one(subtotal * (1 - b.techniquePenaltyMult))}</td></tr>`
@@ -4362,11 +4392,12 @@ function performanceTableHtml(b) {
     <table class="perf-table">
       <thead><tr><th>Performance</th><th>Value</th><th>Weight</th><th>Points</th></tr></thead>
       <tbody>
-        ${row("🧠 Skill", raw ? one(raw.skillComponent) : "", PERF_WEIGHTS.skill, b.weighted.skill)}
+        ${row("🧠 Skill", raw ? one(raw.skillComponent) : "", W.skill, b.weighted.skill)}
         ${skillDetail}
-        ${row("🏃 Health", raw ? fmt(raw.phys) : "", PERF_WEIGHTS.phys, b.weighted.phys)}
-        ${row("🎮 Calm", raw ? fmt(raw.composure) : "", PERF_WEIGHTS.composure, b.weighted.composure)}
-        ${row("🌙 Rest", raw ? fmt(raw.rest) : "", PERF_WEIGHTS.rest, b.weighted.rest)}
+        ${row("🏃 Health", raw ? fmt(raw.phys) : "", W.phys, b.weighted.phys)}
+        ${row("🎮 Calm", raw ? fmt(raw.composure) : "", W.composure, b.weighted.composure)}
+        ${row("🌙 Rest", raw ? fmt(raw.rest) : "", W.rest, b.weighted.rest)}
+        ${b.weighted.quiz != null ? row(`📘 Quiz${raw && raw.quizAcc != null ? ` (${Math.round(raw.quizAcc * 100)}% right)` : " (not taken: a guess)"}`, raw ? fmt(raw.quiz) : "", W.quiz, b.weighted.quiz) : ""}
         ${techRow}
         ${movesRow}
       </tbody>
@@ -4974,6 +5005,7 @@ function gameCardHtml(len, { first = false } = {}) {
     const phase = PHASE_NAMES[s.seasonPhase] || s.seasonPhase;
     status = `<div class="staff-line staff-stat">${s.playerName ? escapeHtml(s.playerName) + " · " : ""}Year ${s.year} · ${lg(s.leagueTier)} · ${phase} · Day ${s.day}</div>`;
     buttons = `${current ? `<span class="staff-hired">▶ Playing now</span>` : `<button class="staff-chip" data-game-play="${len}">Continue</button>`}<button class="staff-chip staff-unlock" data-game-restart="${len}">Restart</button>`;
+    if (current) status += `<div class="staff-line"><button class="staff-chip" id="eduToggle">📘 Education mode: ${eduOn() ? "on" : "off"}</button></div>`;
   } else {
     buttons = `<button class="staff-chip" data-game-new="${len}">New ${g.name} game</button>`;
   }
@@ -5004,6 +5036,7 @@ function openGames({ first = false } = {}) {
   openModal(html, first ? { onDismiss: () => needsGamePick && openGames({ first: true }) } : { ownClose: true, page: { key: "games", reopen: () => openGames() } });
   const body = $("modalBody");
   if (!first) $("gamesXfer").addEventListener("click", () => openSaveTransfer(state.gameLength));
+  if ($("eduToggle")) $("eduToggle").addEventListener("click", () => openEduModeInfo());
   body.querySelectorAll("[data-game-new]").forEach((b) => b.addEventListener("click", () => startNewGame(b.dataset.gameNew)));
   body.querySelectorAll("[data-game-play]").forEach((b) => b.addEventListener("click", () => switchToGame(b.dataset.gamePlay)));
   body.querySelectorAll("[data-game-restart]").forEach((b) =>
@@ -5083,6 +5116,7 @@ function openNameModal(isFirstTime) {
     <div class="modal-section">
       <p>${isFirstTime ? "What should we call your Excel esports pro?" : "Enter a new name:"}</p>
       <input type="text" id="playerNameInput" maxlength="20" placeholder="Your name" value="${state.playerName ? escapeHtml(state.playerName) : ""}" class="name-input" />
+      ${isFirstTime ? `<label class="feedback-check"><input type="checkbox" id="eduModeInput" ${eduOn() ? "checked" : ""} /> 📘 Education mode — answer questions about real Excel functions before every match (you can change this later in 🎮 Games)</label>` : ""}
       <button class="primary-btn" id="nameSaveBtn">Save</button>
     </div>`;
   openModal(html);
@@ -5092,6 +5126,7 @@ function openNameModal(isFirstTime) {
     const val = input.value.trim().slice(0, 20);
     if (!val) return;
     state.playerName = val;
+    if ($("eduModeInput")) state.edu.on = $("eduModeInput").checked;
     saveState();
     closeModal();
     if (!state.specialisations) openSpecialisations({ required: true, onDone: () => !state.tutorialSeen && openTutorial(0) });
@@ -5331,6 +5366,7 @@ function openCareer() {
     </div>
     ${pySection}
     ${mobSection}
+    ${eduCareerHtml()}
     <div class="modal-section">
       <h3>Current Stats</h3>
       ${currentStatsHtml()}
@@ -6543,6 +6579,15 @@ function openHowTo() {
       "<b>Match History</b> shows your <b>upcoming</b> matches (the rest of the season, then your playoff path), your past matches, and every league result for this season and last.",
     ])}`);
 
+  sec("edu", "📘", "Education mode", ul([
+    `Optional, per game: turn it on when you start one, or any time in ☰ → 🎮 Games. It's <b>${eduOn() ? "on" : "off"}</b> for this game.`,
+    "Before every match you're asked about one real Excel function (all of Excel's, from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
+    `Your share right is <b>${Math.round(EDU.weight * 100)}% of match performance</b> — taken ${Math.round(EDU.fromSkill * 100)}% from Skill and ${Math.round(EDU.fromPhys * 100)}% from Health. Guessing (1 in 4 right) scores exactly what those would have, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues.`,
+    "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
+    "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
+    "End Day or End Week asks first whenever the days they'd run reach a match. Close the quiz and it waits where you left it.",
+  ]));
+
   sec("completion", "📈", "Completion", ul([
     `<b>Completion</b> (in Career) is how much of CELLOG you've done: every goal listed there counts — partly done counts partly. It never goes back down while a goal slips (rust, a lost title); each goal keeps its best.`,
     `Each pro technique${inTop() ? " and signature move" : ""} counts half a goal.`,
@@ -7084,6 +7129,9 @@ function endDay() {
   // Defensive: the button is disabled whenever this is true, but guard the
   // action itself too in case it's ever reachable another way.
   if (endDayBlocker()) return;
+  // 📘 A match as today ends: its quiz first.
+  const quiz = eduQuizDue(1);
+  if (quiz) return openEduQuiz(quiz, endDay);
   const before = weekSnapshot();
   const { matchResult, splashes } = runDay();
   finishTurn();
@@ -7137,6 +7185,10 @@ function weekSnapshot() {
 function endWeek() {
   if (endDayBlocker()) return;
   const planned = daysLeftInWeek();
+  // 📘 The week reaches a match: its quiz first (it's about what you know,
+  // so taking it before the days run changes nothing).
+  const quiz = eduQuizDue(planned);
+  if (quiz) return openEduQuiz(quiz, endWeek);
   const start = weekSnapshot();
   const startPhase = state.seasonPhase;
   let daysRun = 0;
@@ -7324,6 +7376,360 @@ function renderAll() {
       "event-bad"
     );
   }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 📘 Education mode: real Excel functions, quizzed before every match    */
+/* ---------------------------------------------------------------------- */
+// Optional, per game. Before each match you're asked about one function
+// (edu-functions.js, from Microsoft's reference): how many mandatory and
+// optional arguments, each argument in order, then what it does. The
+// share you get right is 15% of match performance — taken 10% from Skill
+// and 5% from Health — scaled so guessing (1 in 4) scores exactly what
+// those would have, and knowing them is an edge.
+const EDU = {
+  weight: 0.15,
+  fromSkill: 0.1,
+  fromPhys: 0.05,
+  guess: 0.25, // four options a question
+  masteryWeight: 7, // completion weight of "Formulas mastered"
+  pandasWeight: 2, // …and of the Python Invitational's set
+};
+// How often rivals get them right, by league (5 … 1, 0 = the top tier).
+const EDU_RIVAL_ACC = { 5: 0.45, 4: 0.5, 3: 0.55, 2: 0.6, 1: 0.65, 0: 0.75 };
+const EDU_EVENT_ACC = 0.7;
+const EDU_SKILL_NAMES = { lambda: "LAMBDA Craft", single: "Single-Cell Solutions", speed: "Speed & Shortcuts" };
+const EDU_CATS = ["Financial", "Logical", "Text", "Date and time", "Lookup and reference", "Math and trigonometry", "Statistical", "Engineering", "Information", "Database", "Cube", "Web"];
+
+function eduParseArgs(spec) {
+  return (spec ? spec.split("|") : []).map((label) => ({ label, rep: label === "...", opt: label === "..." || label.startsWith("["), n: label.replace(/[[\]]/g, "") }));
+}
+const EDU_LIST = (typeof EDU_FUNCS === "undefined" ? [] : EDU_FUNCS).map(([name, skill, titan, tier, desc, args, cat]) => ({ name, skill, titan, tier, desc, cat, args: eduParseArgs(args) }));
+const EDU_PY = (typeof EDU_PANDAS === "undefined" ? [] : EDU_PANDAS).map(([name, desc, args]) => ({ name, skill: "python", titan: "python", tier: 0, desc, cat: "Python", args: eduParseArgs(args), py: true }));
+const eduRecKey = (f) => (f.py ? `py:${f.name}` : f.name);
+
+function eduOn(s) {
+  s = s || liveState();
+  return !!(s && s.edu && s.edu.on);
+}
+// Functions you can be asked about at a stage of your career: everything
+// up to your best league's level (the top tier: all of them).
+function eduAvailable(tier = state.peakLeagueTier) {
+  return EDU_LIST.filter((f) => f.tier >= tier);
+}
+function eduMasteredCount(list) {
+  const rec = state.edu.fns;
+  return list.filter((f) => rec[eduRecKey(f)] && rec[eduRecKey(f)].mastered).length;
+}
+
+// The next match, if there is one within `days` days (today included).
+function eduNextMatch(days) {
+  const info = getNextMatchInfo();
+  if (!["event", "fixture", "playoff"].includes(info.kind) || info.daysUntil > days) return null;
+  const ev = info.kind === "event" ? nextEventGame() : null;
+  return { info, event: ev ? ev.id : null, key: `${state.year}·${state.seasonPhase}·${ev ? ev.id + ev.n : state.seasonPhase === "playoffs" ? state.playoff.stage : state.roundIndex}` };
+}
+// A quiz is due before running `days` days if a match falls in them and
+// this match's quiz hasn't been taken yet.
+function eduQuizDue(days) {
+  if (!eduOn()) return null;
+  const m = eduNextMatch(days);
+  if (!m) return null;
+  const q = state.edu.quiz;
+  return q && q.key === m.key ? null : m;
+}
+
+// What you can be asked before a match: the week's focus skills, up to
+// your league's level (the top tier: its own three skills, every
+// function). The Python Invitational asks its own set; the Mobile one asks
+// from your league's functions, plus which menu category each is in.
+function eduPool(m) {
+  if (m.event === "py") return EDU_PY;
+  const tier = state.leagueTier;
+  const upTo = EDU_LIST.filter((f) => f.tier >= tier);
+  if (m.event === "mob") return upTo;
+  const keys = state.activeSkills || [];
+  const pool = upTo.filter((f) => (inTop() ? keys.includes(f.titan) : keys.includes(f.skill)));
+  return pool.length ? pool : upTo;
+}
+// Not yet mastered first (those you got wrong before, half the time), and
+// your own league's newer functions more often; once all are mastered,
+// the ones asked longest ago.
+function eduPickFunction(pool) {
+  const rec = state.edu.fns;
+  const r = (f) => rec[eduRecKey(f)];
+  const open = pool.filter((f) => !(r(f) && r(f).mastered));
+  if (!open.length) {
+    const oldest = pool.slice().sort((a, b) => ((r(a) && r(a).last) || 0) - ((r(b) && r(b).last) || 0)).slice(0, 5);
+    return oldest[randInt(0, oldest.length - 1)];
+  }
+  const wrong = open.filter((f) => r(f) && r(f).seen);
+  const fresh = open.filter((f) => !(r(f) && r(f).seen));
+  let cand = wrong.length && (!fresh.length || Math.random() < 0.5) ? wrong : fresh;
+  const own = cand.filter((f) => f.tier === state.leagueTier);
+  if (own.length && Math.random() < 0.6) cand = own;
+  return cand[randInt(0, cand.length - 1)];
+}
+
+function eduShuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(0, i);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+// Three wrong answers from a candidate list: never the right one (or
+// anything that reads the same), never twice.
+function eduPickWrong(right, candidates, norm = (x) => x.toLowerCase()) {
+  const seen = new Set([norm(right)]);
+  const out = [];
+  for (const c of eduShuffle(candidates.slice())) {
+    if (out.length === 3) break;
+    if (seen.has(norm(c))) continue;
+    seen.add(norm(c));
+    out.push(c);
+  }
+  return out;
+}
+const eduArgNorm = (x) => x.replace(/[[\]]/g, "").toLowerCase();
+const EDU_REPEAT = "… (repeats)";
+function eduCountOptions(right, max) {
+  const near = [];
+  for (let d = 1; near.length < 8 && d < 10; d++) [right - d, right + d].forEach((v) => v >= 0 && v <= Math.max(max, 3) && near.push(v));
+  return eduShuffle([right, ...near.slice(0, 5).sort(() => Math.random() - 0.5).slice(0, 3)].map(String));
+}
+// The optional count: a number, or "N + repeats" when a group repeats.
+function eduOptLabel(n, rep) {
+  return rep ? `${n} + repeats` : String(n);
+}
+
+// One function's questions. Wrong answers get closer to the right one as
+// you climb: random at League 5–4, the same skill at 3–2, the same
+// function's other arguments and look-alikes at League 1 and the top.
+function eduBuildQuiz(f, m) {
+  const tier = m.event === "py" ? 1 : state.leagueTier;
+  const hard = tier <= 1, mid = tier <= 3;
+  const source = f.py ? EDU_PY : EDU_LIST;
+  const near = mid ? source.filter((g) => g.skill === f.skill && g !== f) : source.filter((g) => g !== f);
+  const pool = near.length >= 8 ? near : source.filter((g) => g !== f);
+  const mand = f.args.filter((a) => !a.opt).length;
+  const opt = f.args.filter((a) => a.opt && !a.rep).length;
+  const rep = f.args.some((a) => a.rep);
+  const qs = [];
+  if (m.event === "mob" && f.cat) {
+    qs.push({ k: "cat", a: f.cat, o: eduShuffle([f.cat, ...eduPickWrong(f.cat, EDU_CATS)]) });
+  }
+  qs.push({ k: "mand", a: String(mand), o: eduCountOptions(mand, 6) });
+  const optRight = eduOptLabel(opt, rep);
+  const nearOpt = [];
+  for (let n = Math.max(0, opt - 2); n <= opt + 2; n++) nearOpt.push(String(n), eduOptLabel(n, true));
+  const optWrong = eduPickWrong(optRight, nearOpt);
+  qs.push({ k: "opt", a: optRight, o: eduShuffle([optRight, ...optWrong]) });
+  const allArgs = [...new Set(pool.flatMap((g) => g.args.filter((a) => !a.rep).map((a) => a.label)))];
+  f.args.forEach((arg, i) => {
+    const shown = f.args.slice(0, i).map((a) => a.label);
+    const right = arg.rep ? EDU_REPEAT : arg.label;
+    let cands = allArgs.filter((x) => !shown.some((s) => eduArgNorm(s) === eduArgNorm(x)));
+    if (hard) {
+      // The function's own later arguments, then names sharing a word.
+      const own = f.args.slice(i + 1).filter((a) => !a.rep).map((a) => a.label);
+      const words = arg.n.split(/[_\d]+/).filter((w) => w.length > 2);
+      const alike = cands.filter((x) => words.some((w) => x.toLowerCase().includes(w)));
+      cands = [...eduShuffle(own), ...eduShuffle(alike), ...eduShuffle(cands)];
+      if (rep && !arg.rep) cands.unshift(EDU_REPEAT);
+    }
+    const wrong = hard ? eduPickWrongOrdered(right, cands) : eduPickWrong(right, cands, eduArgNorm);
+    qs.push({ k: "arg", i, a: right, o: eduShuffle([right, ...wrong]) });
+  });
+  const descs = pool.map((g) => g.desc);
+  qs.push({ k: "desc", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrong(f.desc, descs)]) });
+  return { key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] };
+}
+// Like eduPickWrong, but keeps the candidates' order (best look-alikes first).
+function eduPickWrongOrdered(right, candidates) {
+  const seen = new Set([eduArgNorm(right)]);
+  const out = [];
+  for (const c of candidates) {
+    if (out.length === 3) break;
+    if (seen.has(eduArgNorm(c))) continue;
+    seen.add(eduArgNorm(c));
+    out.push(c);
+  }
+  return out;
+}
+function eduFnByKey(key) {
+  return key.startsWith("py:") ? EDU_PY.find((f) => f.name === key.slice(3)) : EDU_LIST.find((f) => f.name === key);
+}
+
+// A finished quiz: its score for the match, and the function's record —
+// mastered once every question is right in one go.
+function eduFinishQuiz(cur) {
+  const right = cur.picks.filter((p, i) => p === cur.qs[i].a).length;
+  const total = cur.qs.length;
+  const rec = (state.edu.fns[cur.fn] = state.edu.fns[cur.fn] || { seen: 0, right: 0, mastered: false, last: 0 });
+  rec.seen += 1;
+  rec.last = state.day;
+  const full = right === total;
+  const newly = full && !rec.mastered;
+  if (full) rec.mastered = true;
+  if (full) rec.right += 1;
+  state.edu.asked = (state.edu.asked || 0) + total;
+  state.edu.correct = (state.edu.correct || 0) + right;
+  state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly };
+  state.edu.current = null;
+  return state.edu.quiz;
+}
+
+// The quiz's points for a match: guessing (1 in 4) is worth what the 10%
+// Skill and 5% Health it replaces would have been — `neutral` — and every
+// right answer above that moves it towards 100 (below it, towards 0).
+function eduValue(acc, neutral) {
+  if (acc == null) return neutral;
+  return acc >= EDU.guess ? neutral + (100 - neutral) * ((acc - EDU.guess) / (1 - EDU.guess)) : neutral * (acc / EDU.guess);
+}
+function eduNeutral(skill, phys) {
+  return (EDU.fromSkill * skill + EDU.fromPhys * phys) / EDU.weight;
+}
+// This match's quiz, if you've taken it (otherwise it counts as a guess).
+function eduMatchAcc() {
+  const q = state.edu && state.edu.quiz;
+  return q && !q.used ? q.acc : null;
+}
+// A rival's knowledge: their league's rate, a little more or less with
+// their rating; invitational opponents know their own material well.
+function eduRivalAcc(r) {
+  if (!r) return EDU_RIVAL_ACC[5];
+  if (rivalEvent(r)) return EDU_EVENT_ACC;
+  const tier = r.top ? TOP_TIER : r.league;
+  const base = EDU_RIVAL_ACC[tier] != null ? EDU_RIVAL_ACC[tier] : EDU_RIVAL_ACC[5];
+  return clamp(base + (r.rating - leagueRatingMid(r.top ? TOP_TIER : r.league)) * 0.0003, 0.2, 0.95);
+}
+// Performance weights in play: Education mode moves 15% to the quiz.
+function perfWeights() {
+  const r2 = (x) => Math.round(x * 100) / 100;
+  return eduOn() ? { skill: r2(PERF_WEIGHTS.skill - EDU.fromSkill), phys: r2(PERF_WEIGHTS.phys - EDU.fromPhys), composure: PERF_WEIGHTS.composure, rest: PERF_WEIGHTS.rest, quiz: EDU.weight } : PERF_WEIGHTS;
+}
+
+/* ---- The quiz screen ---- */
+function eduPrompt(f, q) {
+  if (q.k === "cat") return `📱 In the function picker, which category is <code>${escapeHtml(f.name)}</code> in?`;
+  if (q.k === "mand") return `How many <b>mandatory</b> arguments does <code>${escapeHtml(f.name)}</code> have?`;
+  if (q.k === "opt") return `How many <b>optional</b> arguments does <code>${escapeHtml(f.name)}</code> have?`;
+  if (q.k === "desc") return `What does <code>${escapeHtml(f.name)}</code> do?`;
+  const shown = f.args.slice(0, q.i).map((a) => (a.rep ? "…" : a.label));
+  const nth = q.i + 1;
+  const ord = nth === 1 ? "1st" : nth === 2 ? "2nd" : nth === 3 ? "3rd" : `${nth}th`;
+  return `What's the <b>${ord}</b> argument?<div class="edu-syntax"><code>${escapeHtml(f.name)}(${shown.map(escapeHtml).join(", ")}${shown.length ? ", " : ""}<span class="edu-blank">?</span>)</code></div>`;
+}
+function eduSyntaxHtml(f, picks, qs) {
+  const marks = {};
+  qs.forEach((q, i) => q.k === "arg" && (marks[q.i] = picks[i] === q.a));
+  return `<code>${escapeHtml(f.name)}(${f.args.map((a, i) => `<span class="${marks[i] === false ? "edu-wrong" : "edu-right"}">${escapeHtml(a.rep ? "…" : a.label)}</span>`).join(", ")})</code>`;
+}
+// Opens (or picks up) the quiz for the match `m`, then runs onDone.
+function openEduQuiz(m, onDone) {
+  let cur = state.edu.current;
+  if (!cur || cur.key !== m.key) {
+    const f = eduPickFunction(eduPool(m));
+    cur = state.edu.current = eduBuildQuiz(f, m);
+    saveState();
+  }
+  const f = eduFnByKey(cur.fn);
+  const who = m.info.opponentName || (m.event && nextEventGame() && nextEventGame().rival.name) || "";
+  const head = `<div class="edu-head"><span>📘 Before the match${who ? ` vs ${escapeHtml(who)}` : ""}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
+  if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
+  const q = cur.qs[cur.i];
+  openModal(`
+    <div class="edu-quiz">
+      ${head}
+      <div class="edu-bar"><div style="width:${(100 * cur.i) / cur.qs.length}%"></div></div>
+      <div class="edu-prompt">${eduPrompt(f, q)}</div>
+      <div class="edu-options">${q.o.map((o, i) => `<button class="edu-opt${q.k === "arg" ? " edu-mono" : ""}" data-edu-opt="${i}">${escapeHtml(o)}</button>`).join("")}</div>
+      <div class="edu-feedback" id="eduFeedback"></div>
+      <button class="primary-btn" id="eduNext" hidden>Next ▶</button>
+    </div>`);
+  const buttons = [...document.querySelectorAll("[data-edu-opt]")];
+  buttons.forEach((b) =>
+    b.addEventListener("click", () => {
+      if (cur.picks.length > cur.i) return;
+      const pick = q.o[Number(b.dataset.eduOpt)];
+      cur.picks.push(pick);
+      const ok = pick === q.a;
+      buttons.forEach((x) => {
+        x.disabled = true;
+        if (q.o[Number(x.dataset.eduOpt)] === q.a) x.classList.add("edu-correct");
+      });
+      if (!ok) b.classList.add("edu-incorrect");
+      $("eduFeedback").innerHTML = ok ? "✅ Right!" : `❌ It's <b>${escapeHtml(q.a)}</b>.`;
+      const next = $("eduNext");
+      next.hidden = false;
+      next.textContent = cur.i + 1 >= cur.qs.length ? "See how you did ▶" : "Next ▶";
+      saveState();
+    })
+  );
+  $("eduNext").addEventListener("click", () => {
+    cur.i += 1;
+    openEduQuiz(m, onDone);
+  });
+}
+// Turning it on or off (per game, any time).
+function openEduModeInfo() {
+  const on = eduOn();
+  openModal(`
+    ${stickyHeadHtml("📘 Education mode")}
+    <p class="modal-sub">Before every match you're asked about one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does. Your score is <b>15% of match performance</b> (10% from Skill, 5% from Health) — guessing scores what those would have, so knowing them is an edge. The functions follow the week's focus skills and get harder as you climb.</p>
+    <p class="modal-sub">It's <b>${on ? "on" : "off"}</b> for this game. What you've mastered is kept if you turn it off and on again.</p>
+    <button class="primary-btn" id="eduSwitch">${on ? "Turn it off" : "Turn it on"}</button>`, { ownClose: true });
+  $("eduSwitch").addEventListener("click", () => {
+    state.edu.on = !on;
+    saveState();
+    closeModal();
+    renderAll();
+    openGames();
+  });
+}
+// Career: how you're doing, while it's on.
+function eduCareerHtml() {
+  if (!eduOn()) return "";
+  const avail = eduAvailable();
+  const e = state.edu;
+  const py = pyUnlocked() && state.python && state.python.revealed;
+  return `<div class="modal-section">
+      <h3>📘 Education mode</h3>
+      <div class="kv-row"><span>🏅 Formulas mastered</span><span>${eduMasteredCount(avail)} of ${avail.length}</span></div>
+      ${py ? `<div class="kv-row"><span>🐍 Python functions mastered</span><span>${eduMasteredCount(EDU_PY)} of ${EDU_PY.length}</span></div>` : ""}
+      <div class="kv-row"><span>✅ Answers right</span><span>${e.asked ? `${Math.round((100 * e.correct) / e.asked)}% of ${e.asked}` : "none yet"}</span></div>
+      <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
+    </div>`;
+}
+function eduReview(m, cur, f, onDone) {
+  const qs = cur.qs, picks = cur.picks;
+  const res = eduFinishQuiz(cur);
+  saveState();
+  const b = performanceBreakdown();
+  const neutral = eduNeutral(b.raw.skillComponent, b.raw.phys);
+  const value = eduValue(res.acc, neutral);
+  const edge = (value - neutral) * EDU.weight;
+  const line = (q, i) => {
+    const ok = picks[i] === q.a;
+    const label = q.k === "cat" ? "Category" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
+    return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}</span></div>`;
+  };
+  openModal(`
+    <div class="edu-quiz">
+      <div class="edu-head"><span>📘 ${escapeHtml(f.name)}</span><span>${res.right} / ${res.total}</span></div>
+      <div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
+      <p class="edu-desc">${escapeHtml(f.desc)}</p>
+      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${escapeHtml(f.name)} won't come up again until you've mastered the rest.</div>` : ""}
+      <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
+      <div class="kv-row"><span>📘 Quiz for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>
+      <button class="primary-btn" id="eduPlay">${m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
+    </div>`);
+  $("eduPlay").addEventListener("click", () => {
+    closeModal();
+    renderAll();
+    if (onDone) onDone();
+  });
 }
 
 /* ---------------------------------------------------------------------- */

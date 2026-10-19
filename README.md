@@ -9,6 +9,19 @@ also on GitHub Pages at [shilk3.github.io/cellog](https://shilk3.github.io/cello
 (the repository was renamed from `excel-run-sim`; the old Pages address no
 longer works). The cellog.website domain has been retired.
 
+**📘 Education mode** (optional, per game — a tick box when you name a new
+player, or ☰ → 🎮 Games): before every match you answer questions about one
+real Excel function — how many mandatory and optional arguments it has, each
+argument in order, then what it does (four choices each). The share right is
+15% of match performance, taken 10% from Skill and 5% from Health; guessing
+(1 in 4) scores exactly what those would have. Functions follow the week's
+focus skills and your league (SUM and TODAY in League 5, rarer ones higher
+up), with wrong answers that get closer to the right one as you climb. Every
+question right in one go masters a function: it isn't asked again until the
+rest are, and Career and Completion count them. The 471 functions (all of
+Excel's bar compatibility and add-in ones) are in `edu-functions.js`, built
+from Microsoft's function reference by the scripts in `tools/edu/`.
+
 **🐞 Report a bug or suggestion** (☰ menu): no account needed. Each report
 becomes an issue in the private `shilk3/cellog-feedback` repo, filed by
 `api/feedback.js` (a Vercel function using the `FEEDBACK_GITHUB_TOKEN`

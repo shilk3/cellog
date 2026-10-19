@@ -34,7 +34,7 @@ a{color:var(--skill);}
 <style>.ig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.ig-wrap{min-width:1180px}.cellog-back button{font:600 13px inherit;color:#e7edf7;background:#131c2e;border:1px solid #263149;border-radius:8px;padding:4px 10px}</style>
 </head>
 <body>
-<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Mechanics Map</a><button type="button" id="igFit">Fit width</button><span>v5.0.1</span></nav><div class="ig-scroll"><div class="ig-wrap">
+<nav class="cellog-back"><a class="cellog-brand" href="../index.html" title="Back to the game"><small>←</small>CELLOG</a><a href="map.html">🗺️ Mechanics Map</a><button type="button" id="igFit">Fit width</button><span>v5.1.0</span></nav><div class="ig-scroll"><div class="ig-wrap">
 
 <div style="width:100%;max-width:1320px;margin:0 auto;padding:56px 32px 140px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box;">
 
@@ -42,7 +42,7 @@ a{color:var(--skill);}
 <div style="display:flex;flex-direction:column;gap:14px;">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <div style="font-size:42px;font-weight:800;letter-spacing:0.3px;">CELLOG Mechanics Infographic</div>
-    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v5.0.1</div>
+    <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--text-dim);font-family:ui-monospace,monospace;">v5.1.0</div>
   </div>
   <div style="font-size:18px;color:var(--text-dim);max-width:920px;line-height:1.55;">Every mechanic, threshold and formula behind the Excel esports manager sim — exactly as implemented in <code>game.js</code>, laid out as one connected system.</div>
 </div>
@@ -316,6 +316,7 @@ a{color:var(--skill);}
     </div>
     <code>score = clamp((avgAll7Skills × composureMult)×0.55 + phys×0.25 + composure×0.15 + rest×0.05, 0, 100)</code>
     <div style="font-size:12.5px;color:var(--text-dim);">Pro with unmastered techniques: score ×= <code>(1 − min(1, queueLength × 5%))</code> — the match-day cost of falling behind.</div>
+    <div style="font-size:12.5px;color:var(--text-dim);">📘 <b>Education mode</b> (optional, per game): Skill 45%, Health 20%, Calm 15%, Rest 5%, <b>Quiz 15%</b>. The quiz value is <code>neutral + (100 − neutral) × (right − 25%) ÷ 75%</code> (below 25%: <code>neutral × right ÷ 25%</code>), where <code>neutral = (Skill×0.10 + Health×0.05) ÷ 0.15</code> — so guessing scores exactly what the mode-off weights would. Rivals answer 45% (League 5) to 65% (League 1) right, higher at the top.</div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -438,6 +439,21 @@ a{color:var(--skill);}
     </table>
     <div style="font-size:12.5px;color:var(--text-dim);margin-top:8px;">One percentage of how much of CELLOG you've done, in <b>Career</b> — every goal and how far along it is. Rounded down, so 100% only when every goal is done. Each goal keeps its <b>best</b>: rust or a lost title never takes it back down.</div>
   </div>
+</div>
+
+<!-- ============ EDUCATION MODE ============ -->
+<div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:24px;">
+  <div style="font-size:15px;font-weight:700;margin-bottom:10px;">📘 Education mode — real Excel functions before every match <span style="font-size:12px;font-weight:600;color:var(--text-dim);">(new in v5.1)</span></div>
+  <table>
+    <tr><th>Part</th><th>How it works</th></tr>
+    <tr><td>Turning it on</td><td>Optional, per game: a tick box when you name a new player, or ☰ → 🎮 Games any time</td></tr>
+    <tr><td>Functions</td><td>All of Excel's (471, from Microsoft's reference; compatibility and add-in ones left out), each with its exact argument names</td></tr>
+    <tr><td>Questions</td><td>How many mandatory · how many optional · each argument in order (only the earlier ones shown) · what it does. 4 choices, no timer</td></tr>
+    <tr><td>Which function</td><td>The week's focus skills; your league sets the hardest (SUM, TODAY in League 5 … rarer ones higher up)</td></tr>
+    <tr><td>Wrong answers</td><td>Random in Leagues 5–4, from the same skill in 3–2, the function's own other arguments and look-alikes at the highest levels</td></tr>
+    <tr><td>Score</td><td>15% of match performance (10% from Skill, 5% from Health); guessing = neutral</td></tr>
+    <tr><td>🏅 Mastered</td><td>Every question right in one go — not asked again until the rest are; wrong ones come back sooner. Counts towards Completion (never needed for promotion)</td></tr>
+  </table>
 </div>
 
 <!-- ============ TRAINING CAMP ============ -->

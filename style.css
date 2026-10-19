@@ -968,3 +968,26 @@ details.match-more[open] { padding-bottom: 8px; }
 .feedback-report-n { color: var(--text-dim); flex: none; }
 .feedback-report-status { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
 .feedback-report-note { font-size: 13px; color: var(--text); margin-top: 4px; padding: 6px 8px; background: var(--bg-elev-2); border-radius: 8px; }
+
+/* 📘 Education mode quiz */
+.edu-quiz { display: flex; flex-direction: column; gap: 12px; }
+.edu-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--text-dim); font-weight: 600; padding-right: 36px; }
+.edu-bar { height: 4px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; }
+.edu-bar > div { height: 100%; background: var(--accent); }
+.edu-prompt { font-size: 17px; line-height: 1.4; font-weight: 600; }
+.edu-prompt code, .edu-syntax code, .edu-mono { font-family: ui-monospace, Menlo, monospace; }
+.edu-syntax { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--bg-elev-2); font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+.edu-blank { display: inline-block; min-width: 2.2em; text-align: center; border-bottom: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+.edu-options { display: grid; gap: 8px; }
+.edu-opt { text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.edu-opt:disabled { opacity: 0.6; }
+.edu-opt.edu-correct { opacity: 1; border-color: var(--accent); background: rgba(52, 208, 160, 0.16); }
+.edu-opt.edu-incorrect { opacity: 1; border-color: var(--danger, #f87171); background: rgba(248, 113, 113, 0.14); }
+.edu-feedback { font-size: 15px; min-height: 0; }
+.edu-feedback:empty { display: none; }
+.edu-full { font-size: 14px; }
+.edu-right { color: var(--accent); }
+.edu-wrong { color: var(--danger, #f87171); text-decoration: underline wavy; }
+.edu-desc { margin: 0; color: var(--text); font-size: 14px; }
+.edu-mastered { font-size: 14px; }
+.edu-line span:last-child { text-align: right; overflow-wrap: anywhere; }
