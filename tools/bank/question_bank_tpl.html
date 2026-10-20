@@ -1,0 +1,120 @@
+<title>CELLOG Question Bank</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a worksheet — a sticky formula bar of filters over one long table of functions, a column per question type. */
+:root {
+  --bg: #f3f6f2;
+  --sheet: #ffffff;
+  --grid: #e1e7df;
+  --ink: #17221b;
+  --dim: #5b6a61;
+  --head: #e8eee6;
+  --accent: #1f7a4f;
+  --opt: #8a5a12;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0f1612; --sheet: #151e18; --grid: #26332b; --ink: #e4ece6; --dim: #93a39a; --head: #1b2620; --accent: #4fc28a; --opt: #e0a94a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0f1612; --sheet: #151e18; --grid: #26332b; --ink: #e4ece6; --dim: #93a39a; --head: #1b2620; --accent: #4fc28a; --opt: #e0a94a; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 800 26px/1.15 var(--f-display); margin: 0 0 6px; text-wrap: balance; letter-spacing: 0.2px; }
+.lede { color: var(--dim); max-width: 68ch; margin: 0 0 14px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--grid); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.fx { font: 600 13px var(--f-mono); color: var(--accent); }
+input, select { font: 14px var(--f-body); color: var(--ink); background: var(--sheet); border: 1px solid var(--grid); border-radius: 6px; padding: 7px 9px; }
+input { flex: 1 1 180px; min-width: 0; }
+input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.count { font: 13px var(--f-mono); color: var(--dim); font-variant-numeric: tabular-nums; margin-left: auto; }
+.legend { font-size: 12.5px; color: var(--dim); margin: 10px 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.legend code, td code { font-family: var(--f-mono); }
+.opt { color: var(--opt); }
+.tablebox { overflow-x: auto; background: var(--sheet); border: 1px solid var(--grid); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { background: var(--head); font: 600 11.5px var(--f-body); text-transform: uppercase; letter-spacing: 0.6px; color: var(--dim); position: sticky; top: 0; }
+td.name { font: 600 13px var(--f-mono); white-space: nowrap; }
+td.num { font: 13px var(--f-mono); font-variant-numeric: tabular-nums; text-align: center; color: var(--dim); }
+td.args code { font-size: 12.5px; }
+.chip { display: inline-block; font: 600 11px var(--f-body); padding: 2px 7px; border-radius: 999px; background: var(--head); color: var(--dim); white-space: nowrap; }
+.empty { padding: 24px; color: var(--dim); text-align: center; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.tab { font: 600 13px var(--f-body); color: var(--dim); background: var(--sheet); border: 1px solid var(--grid); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--sheet); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.note { font-size: 13px; color: var(--dim); max-width: 75ch; margin: 6px 0 10px; }
+.chip.hard { background: var(--accent); color: var(--sheet); }
+</style>
+<div class="wrap">
+  <h1>CELLOG Question Bank</h1>
+  <p class="lede">Everything 📘 Knowledge mode could ask about, for review. Tell me any name and what's wrong with it.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <p class="note" id="note"></p>
+  <div class="bar">
+    <span class="fx">fx</span>
+    <input id="q" type="search" placeholder="Search names, arguments or descriptions" aria-label="Search">
+    <select id="filter" aria-label="Filter"></select>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="tablebox"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+</div>
+<script>
+__EXCEL__
+
+__BANK__
+
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const argsHtml = (list) => list && list.length ? "<code>" + list.map((a) => a.startsWith("[") ? `<span class="opt">${esc(a)}</span>` : esc(a === "..." ? "…" : a)).join(", ") + "</code>" : "<span class='opt'>(none)</span>";
+const counts = (list) => { const l = list || []; const mand = l.filter((a) => !a.startsWith("[") && a !== "…" && a !== "...").length; const opt = l.filter((a) => a.startsWith("[")).length; return [mand, l.some((a) => a === "…" || a === "...") ? opt + "+…" : String(opt)]; };
+const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Random" };
+const LEAGUE = { 5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan" };
+const TABS = [
+  { id: "excel", label: "Excel functions", note: "In every Knowledge check. League = the first league it can be asked in.",
+    rows: EDU_FUNCS.map(([n, sk, ti, tier, d, a]) => ({ n, f: LEAGUE[tier], cols: [SKILL[sk]], args: a ? a.split("|") : [], d })),
+    head: ["Function", "League", "Skill", "Mand.", "Opt.", "Arguments", "Description"] },
+  { id: "pq", label: "⚡ Power Query", note: "Microsoft's Power Query M reference, all 653. Levels (my picks): Common = asked from League 4 · Everyday = from League 3 · Rare = from League 2.",
+    rows: BANK.pq.map(([n, lv, cat, a, d]) => ({ n, f: lv, cols: [cat], args: a, d })), head: ["Function", "Level", "Category", "Mand.", "Opt.", "Arguments", "Description"] },
+  { id: "vba", label: "💾 VBA", note: "Microsoft's VBA function reference (139, incl. the type-conversion functions). Common = asked first.",
+    rows: BANK.vba.map(([n, lv, cat, a, d]) => ({ n, f: lv, cols: [cat], args: a, d })), head: ["Function", "Level", "Category", "Mand.", "Opt.", "Arguments", "Description"] },
+  { id: "cmds", label: "🤖 OA Robot commands", note: "From CompBot, Array Robot, Formula Robot and MEWC Robot (people's names removed, duplicates merged). Robot-only = hard to do in standard Excel — asked first. Commands without a description would get the \"which group?\" question only. Lambda Robot's own commands aren't listed in its file — I'd need its command list.",
+    rows: BANK.cmds.map(([n, tag, grp, d, src]) => ({ n, f: tag, cols: [grp], d, src })), head: ["Command", "Tag", "Group", "Description", "From"], noArgs: true },
+  { id: "lams", label: "λ Lambdas", note: "For the Lambda invitational: Excel's own LAMBDA functions plus the robots' LAMBDAs (names removed). [x] = optional.",
+    rows: BANK.lams.map(([n, src, a, d]) => ({ n, f: src.split(" + ")[0], cols: [], args: a, d })), head: ["LAMBDA", "From", "Mand.", "Opt.", "Arguments", "Description"] },
+  { id: "py", label: "🐍 Python", note: "Python in Excel (PY, xl) and common pandas commands, main arguments.",
+    rows: EDU_PANDAS.map(([n, d, a]) => ({ n, f: n.startsWith("pd.") ? "pandas" : n.startsWith("df.") ? "DataFrame" : n.startsWith("np.") ? "numpy" : "Python in Excel", cols: [], args: a.split("|"), d })), head: ["Name", "Kind", "Mand.", "Opt.", "Arguments", "Description"] },
+];
+const $ = (id) => document.getElementById(id);
+let cur = TABS[0];
+function setTab(t) {
+  cur = t;
+  $("tabs").querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", b.dataset.id === t.id));
+  $("note").textContent = t.note;
+  const opts = [...new Set(t.rows.map((r) => r.f))];
+  $("filter").innerHTML = `<option value="">All</option>` + opts.map((o) => `<option>${esc(o)}</option>`).join("");
+  $("thead").innerHTML = "<tr>" + t.head.map((h) => `<th>${h}</th>`).join("") + "</tr>";
+  $("q").value = "";
+  render();
+}
+function render() {
+  const q = $("q").value.trim().toLowerCase(), f = $("filter").value;
+  const shown = cur.rows.filter((r) => (!f || r.f === f) && (!q || (r.n + " " + (r.args || []).join(" ") + " " + r.d + " " + r.cols.join(" ")).toLowerCase().includes(q)));
+  $("count").textContent = `${shown.length} of ${cur.rows.length}`;
+  $("rows").innerHTML = shown.length ? shown.map((r) => {
+    const [m, o] = counts(r.args);
+    const tag = `<span class="chip${r.f === "Robot-only" ? " hard" : ""}">${esc(r.f)}</span>`;
+    if (cur.noArgs) return `<tr><td class="name">${esc(r.n)}</td><td>${tag}</td><td>${esc(r.cols[0])}</td><td>${esc(r.d) || "<span class='opt'>(no description)</span>"}</td><td>${esc(r.src)}</td></tr>`;
+    return `<tr><td class="name">${esc(r.n)}</td><td>${tag}</td>${r.cols.map((c) => `<td>${esc(c)}</td>`).join("")}<td class="num">${m}</td><td class="num">${o}</td><td class="args">${argsHtml(r.args)}</td><td>${esc(r.d)}</td></tr>`;
+  }).join("") : `<tr><td colspan="${cur.head.length}" class="empty">Nothing matches. Clear the search or pick "All".</td></tr>`;
+}
+$("tabs").innerHTML = TABS.map((t) => `<button class="tab" role="tab" data-id="${t.id}">${t.label} <span class="opt">${t.rows.length}</span></button>`).join("");
+$("tabs").querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => setTab(TABS.find((t) => t.id === b.dataset.id))));
+["q", "filter"].forEach((id) => $(id).addEventListener("input", render));
+setTab(TABS[0]);
+</script>

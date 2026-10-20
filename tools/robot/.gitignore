@@ -1,0 +1,4 @@
+robot_raw.json
+*.xlsm
+*.xlam
+__pycache__

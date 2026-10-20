@@ -1,0 +1,3281 @@
+{
+ "lams": [
+  {
+   "name": "Addresses",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns the A1 address of every cell in a range",
+   "src": "CompBot"
+  },
+  {
+   "name": "Alphabet",
+   "params": [],
+   "desc": "Returns A to Z as a 26-row array",
+   "src": "CompBot"
+  },
+  {
+   "name": "ArrayShift",
+   "params": [
+    "Array",
+    "[RowShift]",
+    "[ColumnShift]",
+    "[Fill]",
+    "[WrapAround]"
+   ],
+   "desc": "Shifts an array by rows and columns, either filling the gap or wrapping it round",
+   "src": "CompBot"
+  },
+  {
+   "name": "ArrowsLookup",
+   "params": [
+    "Direction"
+   ],
+   "desc": "Normalises an arrow glyph or compass abbreviation into one consistent form",
+   "src": "CompBot"
+  },
+  {
+   "name": "BiCol",
+   "params": [
+    "array",
+    "function"
+   ],
+   "desc": "Applies a function to each column, allowing it to return an array (BYCOL that tolerates arrays)",
+   "src": "CompBot"
+  },
+  {
+   "name": "Biggest",
+   "params": [
+    "Range",
+    "Return",
+    "Smallest",
+    "[N]",
+    "[TieKey]",
+    "[TieOrder]"
+   ],
+   "desc": "Returns the LABEL belonging to the nth largest or smallest number, with an optional tie-break key",
+   "src": "CompBot"
+  },
+  {
+   "name": "BiRow",
+   "params": [
+    "array",
+    "function"
+   ],
+   "desc": "Applies a function to each row, allowing it to return an array (BYROW that tolerates arrays)",
+   "src": "CompBot"
+  },
+  {
+   "name": "BoardGameMove",
+   "params": [
+    "MoveValue",
+    "EndSpace"
+   ],
+   "desc": "Laps a counter round a board numbered 1 to N: past the last space it carries on from 1",
+   "src": "CompBot"
+  },
+  {
+   "name": "Bounce",
+   "params": [
+    "n",
+    "max",
+    "[min]",
+    "[start]",
+    "[step]",
+    "[leave0Clip1Bounce2]"
+   ],
+   "desc": "Returns a run of positions that reflect off a lower and upper wall",
+   "src": "CompBot"
+  },
+  {
+   "name": "ByColA",
+   "params": [
+    "array",
+    "function",
+    "[fill]"
+   ],
+   "desc": "",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "ByRectangle",
+   "params": [
+    "Range",
+    "Function",
+    "Rows",
+    "[Columns]",
+    "[No_Overlap]"
+   ],
+   "desc": "Applies a function to every rectangular window of a range",
+   "src": "CompBot"
+  },
+  {
+   "name": "ByRowA",
+   "params": [
+    "array",
+    "function",
+    "[fill]"
+   ],
+   "desc": "",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "CardSets",
+   "params": [
+    "Cards",
+    "CardsInRun",
+    "[Ace_High]",
+    "[Ace_Low]",
+    "[Sets]",
+    "[CustomCardList]",
+    "[WrapAroundRuns]"
+   ],
+   "desc": "Finds sets or runs in a hand, with ace-high, ace-low, wrap-around and custom rank orders",
+   "src": "CompBot"
+  },
+  {
+   "name": "Clamp",
+   "params": [
+    "n",
+    "[lower]",
+    "[upper]"
+   ],
+   "desc": "Keeps a number, or every number in an array, between an optional lower and upper bound",
+   "src": "CompBot"
+  },
+  {
+   "name": "ClosestOnMap",
+   "params": [
+    "mp",
+    "start",
+    "steps",
+    "[Items]",
+    "[DistFunc]",
+    "[ShowBlanks]",
+    "[RCaa_CRaa_RCad_CRad_RCda_CRda_RCdd_CRdd]"
+   ],
+   "desc": "Returns the nearest matching item on a grid with its value, address and distance",
+   "src": "CompBot"
+  },
+  {
+   "name": "Coins",
+   "params": [
+    "Target",
+    "Coins"
+   ],
+   "desc": "Returns how many of each denomination greedily makes up a target, largest first",
+   "src": "CompBot"
+  },
+  {
+   "name": "ColNum",
+   "params": [
+    "address"
+   ],
+   "desc": "Converts an A1 address, or a packed row/column number, to its column number",
+   "src": "CompBot"
+  },
+  {
+   "name": "Combinations",
+   "params": [
+    "Array",
+    "c",
+    "[RemoveOrder]",
+    "[AllowRepeatItems]",
+    "[Cumulative]"
+   ],
+   "desc": "Lists the ways of choosing c items from a set, ordered or unordered, with or without repeats",
+   "src": "CompBot"
+  },
+  {
+   "name": "Consecutives",
+   "params": [
+    "array",
+    "[groups]"
+   ],
+   "desc": "Returns how long the current run of identical values is, at every position",
+   "src": "CompBot"
+  },
+  {
+   "name": "CountEachUniqueValue",
+   "params": [
+    "array",
+    "[exclude]"
+   ],
+   "desc": "Returns unique values in array except any exclude values and count of how many of each, sorted by highest count.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "CountOcc",
+   "params": [
+    "OccOf",
+    "Text",
+    "[Case]"
+   ],
+   "desc": "Counts occurrences of a character or substring within text, optionally case-sensitive",
+   "src": "CompBot"
+  },
+  {
+   "name": "CROSSJOIN",
+   "params": [
+    "table1",
+    "table2",
+    "[has_headers]"
+   ],
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "Dice",
+   "params": [
+    "Dice",
+    "[add]",
+    "[join]"
+   ],
+   "desc": "Decodes dice glyphs into their pip values, listed or totalled",
+   "src": "CompBot"
+  },
+  {
+   "name": "Distance",
+   "params": [
+    "start",
+    "end",
+    "[h]",
+    "[v]",
+    "[d]",
+    "[pythag]",
+    "[knight]"
+   ],
+   "desc": "Returns the distance between two cells with independent horizontal, vertical and diagonal step costs, or as straight-line or knight moves; it ignores the map",
+   "src": "CompBot"
+  },
+  {
+   "name": "DistFrom",
+   "params": [
+    "mp",
+    "trg",
+    "func"
+   ],
+   "desc": "Returns how far every cell is from the nearest cell holding a given VALUE, under any metric you supply",
+   "src": "CompBot"
+  },
+  {
+   "name": "Duplicates",
+   "params": [
+    "Array"
+   ],
+   "desc": "Returns the values that appear more than once, or the repeated letters of a single piece of text",
+   "src": "CompBot"
+  },
+  {
+   "name": "ExactUnique",
+   "params": [
+    "Array",
+    "[by_col]",
+    "[exactly_once]"
+   ],
+   "desc": "Returns the distinct values, or only those appearing exactly once",
+   "src": "CompBot"
+  },
+  {
+   "name": "ExcludeCols",
+   "params": [
+    "Array",
+    "ColumnsToRemove"
+   ],
+   "desc": "Returns an array with the named columns removed (CHOOSECOLS by exclusion)",
+   "src": "CompBot"
+  },
+  {
+   "name": "Exists",
+   "params": [
+    "Item",
+    "List",
+    "[SearchMode]"
+   ],
+   "desc": "Returns TRUE where an item is found in a list, with an optional substring mode",
+   "src": "CompBot"
+  },
+  {
+   "name": "ExtractLetters",
+   "params": [
+    "text",
+    "[AsRuns]"
+   ],
+   "desc": "Splits out the letters in mixed text, joined up or as separate runs",
+   "src": "CompBot"
+  },
+  {
+   "name": "ExtractLowerLetters",
+   "params": [
+    "text",
+    "[AsRuns]"
+   ],
+   "desc": "Splits out only the lower-case letters in mixed text, joined up or as separate runs",
+   "src": "CompBot"
+  },
+  {
+   "name": "ExtractNumbers",
+   "params": [
+    "text",
+    "[With_Decimals]"
+   ],
+   "desc": "Splits out the numbers in mixed text, optionally keeping decimals whole",
+   "src": "CompBot"
+  },
+  {
+   "name": "ExtractUpperLetters",
+   "params": [
+    "text",
+    "[AsRuns]"
+   ],
+   "desc": "Splits out only the capital letters in mixed text, joined up or as separate runs",
+   "src": "CompBot"
+  },
+  {
+   "name": "Fetch",
+   "params": [
+    "ref",
+    "source",
+    "[oob]"
+   ],
+   "desc": "Returns the value at an address or packed row/column number, read from a named range or block",
+   "src": "CompBot"
+  },
+  {
+   "name": "FillFromAbove",
+   "params": [
+    "array",
+    "[criteria]"
+   ],
+   "desc": "Replaces values in cells that meet criterion function with value of cell from above. If no criterion, uses blank cells.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "FillFromBelow",
+   "params": [
+    "array",
+    "[criteria]"
+   ],
+   "desc": "Replaces values in cells that meet criterion function with value of cell from below. If no criterion, uses blank cells.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "FillFromLeft",
+   "params": [
+    "array",
+    "[criteria]"
+   ],
+   "desc": "Replaces values in cells that meet criterion function with value of cell from left. If no criterion, uses blank cells.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "FillFromRight",
+   "params": [
+    "array",
+    "[criteria]"
+   ],
+   "desc": "Replaces values in cells that meet criterion function with value of cell from right. If no criterion, uses blank cells.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "FilterArray",
+   "params": [
+    "data",
+    "column_indexes",
+    "filter_values"
+   ],
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "FindInMap",
+   "params": [
+    "items",
+    "mp"
+   ],
+   "desc": "Returns the A1 address of every cell in a grid holding a given value",
+   "src": "CompBot"
+  },
+  {
+   "name": "Flip",
+   "params": [
+    "Array",
+    "[Horizontal]",
+    "[Vertical]",
+    "[DiagonalTopLeft]",
+    "[DiagonalTopRight]",
+    "[AddressMoves]"
+   ],
+   "desc": "Mirrors an array left-to-right, top-to-bottom or in either diagonal, optionally carrying addresses through the same flip",
+   "src": "CompBot"
+  },
+  {
+   "name": "Fold",
+   "params": [
+    "Array",
+    "Arrow",
+    "[PassthroughChars]",
+    "[LinesToFold]",
+    "[AddressMoves]"
+   ],
+   "desc": "Folds an array along an arrow, with characters that pass through instead of colliding",
+   "src": "CompBot"
+  },
+  {
+   "name": "GetBlock",
+   "params": [
+    "Arr",
+    "AnchorCell",
+    "RowSize",
+    "[ColSize]",
+    "[Pos]",
+    "[Fill]",
+    "[WrapAround]"
+   ],
+   "desc": "Gets a block of cells in a range or array based on an address and block size",
+   "src": "CompBot"
+  },
+  {
+   "name": "GridToCol",
+   "params": [
+    "arr",
+    "[Address]",
+    "[RowCol]",
+    "[RCRef]",
+    "[ByColumn]",
+    "[HideZeros]",
+    "[ShowBlanks]"
+   ],
+   "desc": "Converts a grid to a single column with the row number, column number, address and packed coordinate of each cell, or just the columns asked for, reading along the rows or down the columns",
+   "src": "CompBot"
+  },
+  {
+   "name": "GroupByFirstNColumns",
+   "params": [
+    "array",
+    "[n]",
+    "[include_grand_total]",
+    "[aggregate_function]"
+   ],
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "HugWall",
+   "params": [
+    "mp",
+    "st",
+    "first_direction",
+    "[AntiClockwise]",
+    "[AllowMp]",
+    "[Steps]",
+    "[ReferenceMap]",
+    "[Show_on_map]"
+   ],
+   "desc": "Follows a wall around a grid by the left-hand or right-hand rule",
+   "src": "CompBot"
+  },
+  {
+   "name": "IfBlank",
+   "params": [
+    "array",
+    "value_if_blank"
+   ],
+   "desc": "Replaces each blank cell with the values specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "InsertCols",
+   "params": [
+    "array",
+    "columns_to_insert",
+    "[column_index]",
+    "[pad_with]"
+   ],
+   "desc": "Given an array, inserts a second array at a specified column index.",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "IsAll",
+   "params": [
+    "array",
+    "[criterion]"
+   ],
+   "desc": "Returns TRUE if all elements of array are TRUE or meet criterion if specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "IsAllButOne",
+   "params": [
+    "array",
+    "[criterion]"
+   ],
+   "desc": "Returns TRUE if all but one elements of array are TRUE or meet criterion if specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "IsAny",
+   "params": [
+    "array",
+    "[criterion]"
+   ],
+   "desc": "Returns TRUE if any elements of array are TRUE or meet criterion if specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "IsExactlyOne",
+   "params": [
+    "array",
+    "[criterion]"
+   ],
+   "desc": "Returns TRUE if exactly one element of array are TRUE or meet criterion if specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "IsExactlyTwo",
+   "params": [
+    "array",
+    "[criterion]"
+   ],
+   "desc": "Returns TRUE if exactly two elements of array are TRUE or meet criterion if specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "IsInList",
+   "params": [
+    "array",
+    "list"
+   ],
+   "desc": "Returns a boolean for matches in an array to a list",
+   "src": "CompBot + MEWC Robot"
+  },
+  {
+   "name": "IsNone",
+   "params": [
+    "array",
+    "[criterion]"
+   ],
+   "desc": "Returns TRUE if none of the elements of array are TRUE or meet criterion if specified.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "KnapSackInteger",
+   "params": [
+    "Capacity",
+    "Weights",
+    "Values",
+    "[items]"
+   ],
+   "desc": "Returns the best total value that fits a weight capacity, or which items to take",
+   "src": "CompBot"
+  },
+  {
+   "name": "Lag",
+   "params": [
+    "array",
+    "[lag_by]",
+    "[pad_with]",
+    "[scan_by_column]"
+   ],
+   "desc": "Return the array shifted back by the specified number of positions.",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "LeastFrequentValue",
+   "params": [
+    "array",
+    "[exclude]"
+   ],
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "LETStack",
+   "params": [
+    "let_variable",
+    "let_value",
+    "[max_rows]",
+    "[max_columns]",
+    "[spaced]",
+    "[list_across]"
+   ],
+   "desc": "",
+   "src": "Lambda Robot"
+  },
+  {
+   "name": "LetterType",
+   "params": [
+    "text",
+    "[Vowels]",
+    "[Digits]"
+   ],
+   "desc": "Returns a code for each character: U upper case, L lower case, S anything else; or V vowel / C consonant; or L letter / D digit",
+   "src": "CompBot"
+  },
+  {
+   "name": "LineOfSight",
+   "params": [
+    "mp",
+    "Projections",
+    "blockers",
+    "[No_Diag]",
+    "[Distance]",
+    "[Custom_RC_Directions]",
+    "[Fill]"
+   ],
+   "desc": "Returns what a cell can see across a grid, with blockers stopping the view",
+   "src": "CompBot"
+  },
+  {
+   "name": "LineOfSightCount",
+   "params": [
+    "st",
+    "mp",
+    "ItemsToCount",
+    "[Blockers]",
+    "[No_Diag]",
+    "[Distance]",
+    "[Custom_Directions]",
+    "[ReferenceMap]"
+   ],
+   "desc": "Counts how many of a given item are visible from a cell",
+   "src": "CompBot"
+  },
+  {
+   "name": "MapOffsets",
+   "params": [
+    "array",
+    "offsets",
+    "function"
+   ],
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "MassSubstitute",
+   "params": [
+    "Text",
+    "OldText",
+    "[NewText]",
+    "[CaseSensitive]",
+    "[InstanceNumber]",
+    "[Regexmode]"
+   ],
+   "desc": "Applies a whole list of substitutions to text in one pass, with regex and case-sensitive modes",
+   "src": "CompBot"
+  },
+  {
+   "name": "MAXLOOKUP",
+   "params": [
+    "lookup_array",
+    "return_array"
+   ],
+   "desc": "Returns the item lined up with the MAX of a range",
+   "src": "CompBot"
+  },
+  {
+   "name": "Maze",
+   "params": [
+    "mp",
+    "st",
+    "[targets]",
+    "[No_Diag]",
+    "[AllowMp]",
+    "[Custom_Directions]",
+    "[ReferenceMap]"
+   ],
+   "desc": "Returns which cells can be reached from a starting cell, obeying walls",
+   "src": "CompBot"
+  },
+  {
+   "name": "MazeDistance",
+   "params": [
+    "mp",
+    "st",
+    "[Targets]",
+    "[No_Diag]",
+    "[Allowmp]",
+    "[Show_Steps]",
+    "[Cus_Dir]",
+    "[Mazelam]",
+    "[ReferenceMap]"
+   ],
+   "desc": "Returns the shortest distance across a grid, obeying walls. Weighted, so it takes the cheapest route rather than the fewest steps",
+   "src": "CompBot"
+  },
+  {
+   "name": "MINLOOKUP",
+   "params": [
+    "lookup_array",
+    "return_array"
+   ],
+   "desc": "Returns the item lined up with the MIN of a range",
+   "src": "CompBot"
+  },
+  {
+   "name": "MissingLetters",
+   "params": [
+    "list",
+    "[pool]"
+   ],
+   "desc": "Returns the letters of the alphabet, or of any other complete set, that do not appear in a list",
+   "src": "CompBot"
+  },
+  {
+   "name": "ModeSuper",
+   "params": [
+    "rng"
+   ],
+   "desc": "Returns the most frequent value AND how many times it appears",
+   "src": "CompBot"
+  },
+  {
+   "name": "MostFrequentValue",
+   "params": [
+    "array",
+    "[exclude]"
+   ],
+   "desc": "Returns the most frequent value in an array.",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "MoveOnMap",
+   "params": [
+    "St",
+    "Dir",
+    "[Steps]",
+    "[mp]",
+    "[Path]",
+    "[Stop]",
+    "[Glide]",
+    "[Bounce]",
+    "[Wrap]",
+    "[RefMap]",
+    "[mpA]",
+    "[ShowDir]"
+   ],
+   "desc": "Walks a direction across a grid, stopping, gliding, bouncing or wrapping at obstacles, and optionally returning the whole path",
+   "src": "CompBot"
+  },
+  {
+   "name": "NetworkGraph",
+   "params": [
+    "Starts",
+    "OriginDestinationTable",
+    "[Weights]",
+    "[Function]",
+    "[Targets]",
+    "[BiDirectional]",
+    "[StartWeights]",
+    "[MaximiseW]",
+    "[StepLimit]",
+    "[ShowRoute]"
+   ],
+   "desc": "Returns the cheapest (or dearest) route over an origin/destination edge table, with its cost or its route",
+   "src": "CompBot"
+  },
+  {
+   "name": "NotInList",
+   "params": [
+    "array",
+    "list"
+   ],
+   "desc": "Returns the items of a list that do not appear in another list",
+   "src": "CompBot"
+  },
+  {
+   "name": "nSet",
+   "params": [
+    "array1",
+    "array2",
+    "[skip_blanks_zeros]"
+   ],
+   "desc": "Returns the values found in both arrays (their intersection), each once",
+   "src": "CompBot"
+  },
+  {
+   "name": "OffsetA",
+   "params": [
+    "arr",
+    "rows",
+    "[cols]",
+    "[h]",
+    "[w]",
+    "[pad_with]"
+   ],
+   "desc": "Returns a block offset within an array, padding rather than stepping outside it (a non-volatile OFFSET)",
+   "src": "CompBot"
+  },
+  {
+   "name": "OptimiseTSP",
+   "params": [
+    "GreedyResult",
+    "DistanceMatrix"
+   ],
+   "desc": "Improves a greedy tour and returns its cost and route",
+   "src": "CompBot"
+  },
+  {
+   "name": "PerCom",
+   "params": [
+    "n",
+    "c",
+    "[P0C1]",
+    "[rep]",
+    "[cum]"
+   ],
+   "desc": "Lists the permutations or combinations of c items chosen from n",
+   "src": "CompBot"
+  },
+  {
+   "name": "Prev",
+   "params": [
+    "arr",
+    "n",
+    "[fill]"
+   ],
+   "desc": "Shifts a list by n places so each row can see an earlier one, filling the gap it opens",
+   "src": "CompBot"
+  },
+  {
+   "name": "RCRefConvert",
+   "params": [
+    "St"
+   ],
+   "desc": "Converts between an A1 address and a packed row/column number, and decodes an arrow glyph into the packed step it means",
+   "src": "CompBot"
+  },
+  {
+   "name": "Regions",
+   "params": [
+    "mp",
+    "[No_Diag]",
+    "[Allowmp]",
+    "[Cus_Dir]",
+    "[Mazelam]"
+   ],
+   "desc": "Labels each connected region of a grid, so separate areas can be counted or told apart",
+   "src": "CompBot"
+  },
+  {
+   "name": "RegPattern",
+   "params": [
+    "WordArray",
+    "[words_within_words]"
+   ],
+   "desc": "Builds a regular expression that matches any word in a list, longest first",
+   "src": "CompBot"
+  },
+  {
+   "name": "RemoveBlanks",
+   "params": [
+    "array",
+    "[remove_rows]",
+    "[remove_columns]"
+   ],
+   "desc": "Removes blank rows and columns from array as specified by remove_rows and remove_columns. Default: TRUE, TRUE.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "RemoveCols",
+   "params": [
+    "array",
+    "column_indexes"
+   ],
+   "desc": "Removes specified columns of array using RemoveCols lambda.",
+   "src": "MEWC Robot + Array Robot"
+  },
+  {
+   "name": "RemoveRows",
+   "params": [
+    "array",
+    "row_indexes"
+   ],
+   "desc": "Returns all rows of array except the ones specified in row_indexes.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "ReverseColumns",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns array with columns in reverse order.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "ReverseRows",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns array with rows in reverse order.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "RGBtoColorName",
+   "params": [
+    "r",
+    "g",
+    "b"
+   ],
+   "desc": "Converts RGB integers to nearest color name in a table of 139 colors.",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "Rotate",
+   "params": [
+    "Array",
+    "[Rotation]",
+    "[InputAddresses]"
+   ],
+   "desc": "Turns an array through quarter turns, optionally carrying addresses through the same rotation",
+   "src": "CompBot"
+  },
+  {
+   "name": "RowNum",
+   "params": [
+    "addresses"
+   ],
+   "desc": "Converts an A1 address, or a packed row/column number, to its row number",
+   "src": "CompBot"
+  },
+  {
+   "name": "RunningCount",
+   "params": [
+    "Array"
+   ],
+   "desc": "Returns which occurrence of its own value each item is",
+   "src": "CompBot"
+  },
+  {
+   "name": "RunningProduct",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns a running product of an array of values in same dimensions.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "RunningTotal",
+   "params": [
+    "values",
+    "[ResetFlags]",
+    "[ResetTo]",
+    "[StopAt]",
+    "[Cap]",
+    "[IncFlaggedVal]"
+   ],
+   "desc": "Running total that can restart at chosen rows, and cap or stop at a limit",
+   "src": "CompBot + Array Robot"
+  },
+  {
+   "name": "RunningTotalsByColumn",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns a running sum of each column of an array of values.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "RunningTotalsByRow",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns a running sum of each row of an array of values.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "ScanA",
+   "params": [
+    "initial_value",
+    "array",
+    "function"
+   ],
+   "desc": "",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "ShiftText",
+   "params": [
+    "Text",
+    "Shift",
+    "[AlongShift]",
+    "[AlongLettersOnly]",
+    "[NoWrapAround]"
+   ],
+   "desc": "Shifts each letter along the alphabet, optionally by an amount that grows with its position",
+   "src": "CompBot"
+  },
+  {
+   "name": "ShowHighlights",
+   "params": null,
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "Snake",
+   "params": [
+    "Array",
+    "[ByCol]",
+    "[StartRorC]",
+    "[SwapEvery]",
+    "[AddressMoves]"
+   ],
+   "desc": "Reads a grid in serpentine order, reversing direction on alternate lines",
+   "src": "CompBot + MEWC Robot"
+  },
+  {
+   "name": "SplitByCharacter",
+   "params": [
+    "text_vector"
+   ],
+   "desc": "Separates each text value in text_vector in separate cells by character.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "SplitNumbersFromText",
+   "params": [
+    "text_vector",
+    "[ignore_commas]"
+   ],
+   "desc": "Separates each text value in text_vector into separate cells by text versus numeric values.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "SplitText",
+   "params": [
+    "Text",
+    "[Groups]",
+    "[Overlap]"
+   ],
+   "desc": "Splits text into characters, or into fixed or overlapping groups of characters",
+   "src": "CompBot"
+  },
+  {
+   "name": "StackSheets",
+   "params": [
+    "blocks",
+    "names",
+    "[TopLeft]",
+    "[HideBlanks]"
+   ],
+   "desc": "Turns many same-shaped sheets into one table, one row per cell, carrying the sheet name and the cell's address, row, column and packed coordinate",
+   "src": "CompBot"
+  },
+  {
+   "name": "SumByColumn",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns sum of each column of an array of values.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "SumByRow",
+   "params": [
+    "array"
+   ],
+   "desc": "Returns sum of each row of an array of values.",
+   "src": "Array Robot"
+  },
+  {
+   "name": "TILE",
+   "params": [
+    "params",
+    "function"
+   ],
+   "desc": "",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "Timer",
+   "params": null,
+   "desc": "",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "TSPFull",
+   "params": [
+    "DistanceMatrix",
+    "[StartNodeNumber]",
+    "[ReturnToStart]",
+    "[StepLimit]"
+   ],
+   "desc": "Returns the cost of the exact shortest tour over a distance matrix",
+   "src": "CompBot"
+  },
+  {
+   "name": "TSPGreedy",
+   "params": [
+    "DistanceMatrix",
+    "[StartNodeNumber]",
+    "[ReturnToStart]"
+   ],
+   "desc": "Returns the cost of a nearest-neighbour tour over a distance matrix",
+   "src": "CompBot"
+  },
+  {
+   "name": "UngroupColumn",
+   "params": [
+    "data",
+    "[column_index]",
+    "[delimiter]"
+   ],
+   "desc": "",
+   "src": "MEWC Robot"
+  },
+  {
+   "name": "UnPivot",
+   "params": [
+    "KeepColumns",
+    "UnpivotColumns",
+    "[HasHeaders]",
+    "[RemoveBlanks]"
+   ],
+   "desc": "Converts a wide block into a long one, repeating the key columns once per value",
+   "src": "CompBot + Array Robot"
+  },
+  {
+   "name": "UnSplivot",
+   "params": [
+    "table",
+    "delim"
+   ],
+   "desc": "Splits a delimited column and unpivots it in one step, repeating the other columns for each token",
+   "src": "CompBot"
+  },
+  {
+   "name": "UnTile",
+   "params": [
+    "array",
+    "tile_height",
+    "tile_width",
+    "function"
+   ],
+   "desc": "",
+   "src": "Formula Robot"
+  },
+  {
+   "name": "uSet",
+   "params": [
+    "array1",
+    "array2",
+    "[skip_blanks_zeros]"
+   ],
+   "desc": "Returns every value found in either array (their union), each once",
+   "src": "CompBot"
+  },
+  {
+   "name": "VStacks",
+   "params": [
+    "Array",
+    "NoTimes",
+    "[Hstk]"
+   ],
+   "desc": "Repeats a block n times, stacked or side by side",
+   "src": "CompBot"
+  },
+  {
+   "name": "WhileIterations",
+   "params": [
+    "initialValue",
+    "iterativeStep",
+    "stopCondition",
+    "[currentIterationCount]"
+   ],
+   "desc": "Repeats a step until a condition holds and returns how many steps it took",
+   "src": "CompBot"
+  },
+  {
+   "name": "WhileLoop",
+   "params": [
+    "initialValue",
+    "iterativeStep",
+    "stopCondition"
+   ],
+   "desc": "Repeats a step until a condition holds and returns the final state",
+   "src": "CompBot"
+  },
+  {
+   "name": "XLOOKUP2D",
+   "params": [
+    "DataSource",
+    "RLU",
+    "CLU",
+    "[RowArray]",
+    "[ColumnArray]",
+    "[MatchMode]",
+    "[SearchMode]",
+    "[IfNotFound]"
+   ],
+   "desc": "Looks up a value by row key and column key together",
+   "src": "CompBot"
+  },
+  {
+   "name": "YouAreHere",
+   "params": [
+    "cell",
+    "[sheetname]"
+   ],
+   "desc": "Converts a cell to its A1 address as text, optionally sheet-qualified",
+   "src": "CompBot"
+  }
+ ],
+ "cmds": [
+  {
+   "name": "Align Array to Right",
+   "group": "",
+   "desc": "Aligns array to the right with blanks to left",
+   "code": "ar",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Apply ARROWSHIFT Lambda",
+   "group": "",
+   "desc": "Apply ARROWSHIFT lambda function to active cell, using direction in clipboard.",
+   "code": "ARR",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Apply Filter To Array",
+   "group": "Formula",
+   "desc": "Create Filter formula based on top row spill range formula.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": false
+  },
+  {
+   "name": "Are All True By Column?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Are All True By Row?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Are All True?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Are Some/Any True By Column?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Are Some/Any True By Row?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Are Some/Any True?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Auto Fill Down",
+   "group": "Fill",
+   "desc": "Fill down formula or value (dyanmic array formula or normal formula or native fill down).",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": false
+  },
+  {
+   "name": "Auto Fill To Right",
+   "group": "Fill",
+   "desc": "Fill to right by using either Array formula behavior or vba smart fill down or native excel fill down.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Auto-Fit Formula Bar",
+   "group": "Formula",
+   "desc": "Autofit formula bar height based on formula length so that whole formula is visible.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Average Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Average Of Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Average Of Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Backup Active Sheet",
+   "group": "Game Prep",
+   "desc": "Make a copy of the active sheet with \" (Backup)\" added to the sheet name.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Backup All Sheets",
+   "group": "Game Prep",
+   "desc": "Make copies of all sheets with \" (Backup)\" added to each sheet name.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Backup Sheets in Workbook",
+   "group": "",
+   "desc": "Copy all sheets in workbook for backup",
+   "code": "BU",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Clear Bonus From Dock",
+   "group": "",
+   "desc": "Hides one bonus from the dock by hand (type 2, B4, B or Bonus 2)",
+   "code": "BQX",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Clear Lambda Library",
+   "group": "",
+   "desc": "Forgets your saved lambda library, so ILL and Full Setup Case stop loading it",
+   "code": "CLL",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Clear Solve Folder",
+   "group": "",
+   "desc": "Forgets your Solve folder, so Full Setup Case saves the _Solve copy next to the case again",
+   "code": "CSF",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Clear Status Bar",
+   "group": "",
+   "desc": "Clears the status bar",
+   "code": "CSB",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Clear Unused Lambdas",
+   "group": "",
+   "desc": "Deletes lambdas from the active workbook that nothing refers to, so the case file you submit does not carry every lambda you own",
+   "code": "",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Clear Unused Lambdas with Report",
+   "group": "",
+   "desc": "As Clear Unused Lambdas, but writes out what it removed and what it kept; use this one when you want to check before trusting it",
+   "code": "",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Compact Formula Format",
+   "group": "Formula",
+   "desc": "Compact formula format of selected cells containing formulas.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Concatenate Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Concatenate Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Concatenate Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Copy Formula To English",
+   "group": "Translation",
+   "desc": "Translate ActiveCell formula to en-us locale and copy to clipboard.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Copy Map And Fill From Legend",
+   "group": "",
+   "desc": "Copy a color-coded map sheet: stand on a colored legend cell; copies the sheet and fills every map cell on the copy with its color's legend value (white is never a key); each named range on the sheet gets a clr_ twin on the copy",
+   "code": "CFL",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Count Cells With Numbers",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Count Columns Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Count Non-Empty Cells",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Count Rows Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Count Unique Values In Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Count Unique Values In Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Count Unique Values In Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Create Blank Sheet",
+   "group": "",
+   "desc": "Creates a blank sheet named based on cell value (Sht otherwise)",
+   "code": "BS, CBS, S",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Create Bonus Sheet",
+   "group": "",
+   "desc": "Creates bonus sheet \"B\" with bonus questions",
+   "code": "BQC, CB",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Create Case Inputs Sheet",
+   "group": "",
+   "desc": "Creates a case inputs sheet: one row per game with its Game and Level, then every input; names each level L01_Inputs, L02_Inputs, ...",
+   "code": "CIS, IS",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Create Data Table",
+   "group": "",
+   "desc": "Builds (or finds) the data table block for the level you are in, beside its inputs, and lands on the last input; fill it with Run Data Table (RDT)",
+   "code": "CDT, DT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Create Data Table Here",
+   "group": "",
+   "desc": "Builds the level's data table block at the selected cell, else beside the inputs",
+   "code": "CDTH, DT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Create Level Sheets",
+   "group": "",
+   "desc": "Creates a sheet for each level in the Case sheet",
+   "code": "CL, CLS",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Create Table With Headers",
+   "group": "Game Prep",
+   "desc": "Create table from current region with headers.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Difference of Array Columns by Row",
+   "group": "",
+   "desc": "Returns first column minus last column in array",
+   "code": "diff, dbr",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Duplicate Array To Below",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Duplicate Array To Right",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Eggy",
+   "group": "",
+   "desc": "Easter Egg Fun",
+   "code": "",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Enable Interative Calculation",
+   "group": "Game Prep",
+   "desc": "Enables iterative calculation with 500 max interations.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Exclude Blanks",
+   "group": "",
+   "desc": "Filters blank cells out of the active array, leaving only cells that hold something",
+   "code": "EB",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Exclude Examples",
+   "group": "",
+   "desc": "Trims the worked-example rows off the top of the selection, leaving just the real questions",
+   "code": "XE",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Extract Characters",
+   "group": "",
+   "desc": "Split the active cell's text into its individual characters, one per row. Keeps line breaks, accented letters and emoji intact.",
+   "code": "",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Extract Columns Of Array To Below",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Extract Columns Of Array To Right",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Extract Numbers From Text To Columns",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Extract Rows Of Array To Below",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Extract Rows Of Array To Right",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Fill Blanks From Above",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Fill Blanks From Below",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Fill Blanks From Left",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Fill Blanks From Right",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Fill Similar Background Color",
+   "group": "",
+   "desc": "Copies the selected cells' values over every cell sharing their fill color; turns a color-coded map into data in one run",
+   "code": "FBC",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Filter By Copied Value",
+   "group": "Filtering",
+   "desc": "Filter active column by values in clipboard.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Find Above In Left",
+   "group": "",
+   "desc": "Select the empty grid between two lists: marks 1 where the item ABOVE each column is found in the item LEFT of each row",
+   "code": "fal",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Find Address Of Value On Map",
+   "group": "",
+   "desc": "Returns the cell ADDRESS of each value you are looking for on a map, the start point the distance commands need",
+   "code": "FAM",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Find Nearest On Map",
+   "group": "",
+   "desc": "Stand on the start (e.g. the S) in a map spill, with the target cell COPIED: lists the nearest targets with their addresses and distances, to the right of the sheet's contents",
+   "code": "FNM",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "First Match By Row",
+   "group": "",
+   "desc": "For each row, the position of the first cell equal to the COPIED cell's value, or a fallback (blank = never) where the row never matches",
+   "code": "FMR",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Flip Array",
+   "group": "",
+   "desc": "Reverses the active cell's text (stressed becomes desserts). For a block use FLR (left to right) or FTB (top to bottom)",
+   "code": "FLP",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Flip Array Left to Right",
+   "group": "",
+   "desc": "Mirrors the active array left to right: the last column comes first",
+   "code": "FLR",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Flip Array Top to Bottom",
+   "group": "",
+   "desc": "Mirrors the active array top to bottom: the last row comes first",
+   "code": "FTB",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Format Formulas",
+   "group": "Formula",
+   "desc": "Format formulas from selected cells. It will only change cell formula which has a formula.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Full Setup Case",
+   "group": "",
+   "desc": "Sets up the case: saves a _Solve copy, backs up the sheets, creates the level, bonus and Case inputs sheets, then imports lambdas. Choose the steps with SCS",
+   "code": "SC, Ctrl+Shift+G",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Generate Table Lookup Lambdas",
+   "group": "Table Lookup",
+   "desc": "Generate lambdas for each column of an Excel Table.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Get Current Settings",
+   "group": "",
+   "desc": "Get current settings for this computer.",
+   "code": "GS",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Go To Example",
+   "group": "",
+   "desc": "Goes to the level's example row, two cells right of its last input, ready to solve",
+   "code": "GE",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Goto Similar Background Color",
+   "group": "",
+   "desc": "Selects every cell in the selection that shares the active cell's fill color, so a color group can be seen or counted at once",
+   "code": "SBC",
+   "src": "CompBot + MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Goto Similar Constant Values",
+   "group": "Goto Special",
+   "desc": "Select constant cells in selection with similar value as active cell.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Goto Similar Formulas",
+   "group": "Goto Special",
+   "desc": "Select formula cells in selection with similar formula as active cell.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Group By Average",
+   "group": "Grouping",
+   "desc": "Group by first N columns and average remaining column.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Group By Concat With Delimiter",
+   "group": "Grouping",
+   "desc": "Group by first N columns and concat remaining columns with specified delimiter.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Group By Function/Lambda",
+   "group": "Grouping",
+   "desc": "Group by first N columns and aggregates remaining columns with specified function name or lambda.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Group By Sum",
+   "group": "Grouping",
+   "desc": "Group by first N columns and sum remaining columns.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "If Blank Then Blank",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Blank Then NA",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Blank Then One (1)",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Blank Then Zero (0)",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Error Then Blank",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Error Then NA",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Error Then Zero (0)",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If NA Then \"NA\"",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If NA Then Blank",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If NA Then Zero (0)",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "If Zero (0) Then Blank",
+   "group": "Replacing Values",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Import Case Lambdas",
+   "group": "",
+   "desc": "Your library (if set) and CompBot's lambdas, the winner first, into the active workbook. Chained after Full Setup Case",
+   "code": "",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Import Lambda Library",
+   "group": "",
+   "desc": "Loads YOUR own lambda library (set once with SLL) into the active workbook: its lambdas and its stored values (named constants)",
+   "code": "ILL",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Import Lambdas From CompBot",
+   "group": "",
+   "desc": "Loads CompBot's own lambdas into the active workbook, replacing older copies unless SCS says your library wins",
+   "code": "ILC",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Is Error?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is Even?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is False?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is NA?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is Not True?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is Odd?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is One (1)?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Is Zero (0)?",
+   "group": "Boolean Operations",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep Cell of Array",
+   "group": "",
+   "desc": "Reduces a spilled array to just the one cell you selected, so a single value can be inspected or reused",
+   "code": "KTC",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Keep Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep First Column Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep First N Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep First N Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep First Row Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep Last Column Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep Last N Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep Last N Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep Last Row Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Keep Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Label Connected Regions (4 ways)",
+   "group": "",
+   "desc": "Numbers each connected blob on a map, cells joining only up, down, left and right",
+   "code": "LCR4",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Label Connected Regions (8 ways)",
+   "group": "",
+   "desc": "Numbers each connected blob on a map, a diagonal (corner) touch joining cells too",
+   "code": "LCR8",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Least Frequent Value In Array",
+   "group": "Data Analysis",
+   "desc": "Wrap with LeastFrequentValue Lambda function.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Level Inputs",
+   "group": "",
+   "desc": "Type a level, or levels like 4-5 or 3,5-6: their inputs land as an array to work on, with headers and game/level beside them (blank = this sheet's level)",
+   "code": "LI, LLI",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Link Answer Cell",
+   "group": "",
+   "desc": "Points the level's data table ANSWER cell at the active cell (your calculation's output); then run RDT",
+   "code": "ANS, DT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Link Side Cell",
+   "group": "",
+   "desc": "Data table: adds a bonus SIDE column pointed at the active cell; RDT fills it",
+   "code": "LSC, BDT, DT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "List Combinations Of Array",
+   "group": "",
+   "desc": "Every ordering of all the items in the active array, each used once (10 20 30, 10 30 20, 20 10 30 ...)",
+   "code": "LCA",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "List Lambdas Used",
+   "group": "",
+   "desc": "Lists every lambda the active workbook's formulas actually call; worth running before clearing anything",
+   "code": "",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "List Pairings Of Two Lists",
+   "group": "",
+   "desc": "Every pairing of the COPIED list with the active spill (each item of one with each item of the other), written to the right of the sheet's contents",
+   "code": "LP",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Load Game Into Calculation",
+   "group": "",
+   "desc": "Loads the selected data table game into the example calculation, or restores the example",
+   "code": "LDT, LG, DT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Lookup Array from Column N",
+   "group": "",
+   "desc": "Looks every value of the active array up in a named range or table and returns the column you choose",
+   "code": "LKN",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Lookup Value by Row",
+   "group": "",
+   "desc": "Returns RC location of a list of values in a range",
+   "code": "lkp",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Map Distance From Cell (4 ways)",
+   "group": "",
+   "desc": "How far every cell on a map is from the COPIED start cell(s), moving only up, down, left and right, routing AROUND obstacles",
+   "code": "MDC4",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Map Distance From Cell (8 ways)",
+   "group": "",
+   "desc": "How far every cell on a map is from the COPIED start cell(s), diagonal moves allowed, routing AROUND obstacles",
+   "code": "MDC8",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Map Offsets By Pattern",
+   "group": "Map",
+   "desc": "Applies a function to each cell of array based on a selection pattern relative to active cell.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Map To Array",
+   "group": "Formula",
+   "desc": "Convert Spill parent cell formula to use Map for all the cell of the spill range.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Max Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Max Of Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Max Of Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Median Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Merged To Centre Across Selection",
+   "group": "",
+   "desc": "Merged Cells changed to Centre Across Selection",
+   "code": "Unmerge, M2C",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Min Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Min Of Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Min Of Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "MM",
+   "group": "",
+   "desc": "Applies -- to an array, turning TRUE/FALSE into 1/0 so it can be summed or multiplied",
+   "code": "MM",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Modulo Array",
+   "group": "",
+   "desc": "Wraps the active array with MOD; turns cumulative movement into a position on a looping board",
+   "code": "MODA",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Modulo Array 1-Based",
+   "group": "",
+   "desc": "Wraps the active array in BoardGameMove: a board numbered 1 to N, so an exact lap lands on N rather than 0",
+   "code": "MOD1",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Most Frequent Value In Array",
+   "group": "Data Analysis",
+   "desc": "Wrap with MostFrequentValue Lambda function.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Name All Used Ranges",
+   "group": "",
+   "desc": "Renames used range in all sheets",
+   "code": "NA, NAUR",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Name Used Ranges",
+   "group": "",
+   "desc": "Names used range in all sheets starting with the prefix as provided in the active cell",
+   "code": "NURS",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Name Used Ranges On All Sheets",
+   "group": "Game Prep",
+   "desc": "Names the used range on each sheet in the workbook using a sanitized version of the sheet name.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Negative Values",
+   "group": "",
+   "desc": "Negative values. with errors as blank",
+   "code": "neg",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Next Bonus In Status Bar",
+   "group": "",
+   "desc": "Shows the next open bonus question on the status bar (no-dock fallback)",
+   "code": "BQN",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Paste As References",
+   "group": "Formula",
+   "desc": "Paste clipboard range address to ActiveCell.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Characters",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Count By Background Color",
+   "group": "Paste Special",
+   "desc": "Pastes the number of cells in copied range by background color.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Count Unique Values",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Distinct/Unique Row Values",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Exact Formula",
+   "group": "Paste",
+   "desc": "Paste formula exactly as copied and number formats.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Fill Down",
+   "group": "Fill",
+   "desc": "Fill down formula or value from clipboard range(dyanmic array formula or normal formula or native fill down).",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Fill To Right",
+   "group": "Fill",
+   "desc": "Fill to right from clipboard range by using either Array formula behavior or vba smart fill down or native excel fill down.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Filter Array By Copied Cell",
+   "group": "Filtering",
+   "desc": "Wraps array formula with function returning active array filtered by copied cell in a column of active array.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Flattened List With Formatting",
+   "group": "",
+   "desc": "Turns a copied range into a list, one row per cell, carrying fill color, font color and border flags",
+   "code": "PFF",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Paste Formulas Over Similar Background Colors",
+   "group": "Paste Special",
+   "desc": "Paste the formulas in the copied cells over all similar background colors on the sheet as the selected cells.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Lookup",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Sequence Across/Right",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Sequence Down",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Sum By Background Color",
+   "group": "Paste Special",
+   "desc": "Pastes the sum of cells in copied range by background color.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Translate Formula",
+   "group": "Paste",
+   "desc": "Given text in clipboard containing an Excel formula in en-us format, translates it to local languange, and puts it in active cell.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Paste Unpivot Array",
+   "group": "Paste Features",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Paste Values Over Similar Background Colors",
+   "group": "Paste Special",
+   "desc": "Paste the values in the copied cells over all similar background colors on the sheet as the selected cells.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Previous Bonus In Status Bar",
+   "group": "",
+   "desc": "Shows the previous open bonus question on the status bar",
+   "code": "BQP",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Product Of Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Product Of Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Record Walk Route",
+   "group": "",
+   "desc": "Start recording a route: every orthogonal move adds the cells you pass over. Diagonal click finishes",
+   "code": "RWR",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Record Walk Route Here",
+   "group": "",
+   "desc": "As Record Walk Route, but the route table goes on this sheet, level with where the walk started and to its right, in the first space clear enough to hold it",
+   "code": "RWH",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Remove Blank Rows And Columns",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "Removes specified columns of array using RemoveCols lambda.",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove First Column Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove First N Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove First N Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove First Row Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Last Column of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Last N Columns of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Last N Rows of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Last Row of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Other Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Other Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Remove Outer Function",
+   "group": "Formula",
+   "desc": "Remove the outer function from ActiveCell formula e.g. ActiveCell formula =DROP(SEQUENCE(10,2),2,1) and after running the command it will be =SEQUENCE(10,2)",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Remove Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "Removes specified rows of array using RemoveRows lambda.",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Rename Sheets",
+   "group": "",
+   "desc": "Shortens multi-word sheet names to their initials, keeping numbers (Level 1 Data becomes L1D); backups keep their names",
+   "code": "rs",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Reshape To One (1) Column",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Reshape To One (1) Row",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Restore Cleared Bonuses",
+   "group": "",
+   "desc": "Brings every hand-cleared bonus back into the dock",
+   "code": "BQR",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Reverse Columns (Flip Array Horizontally)",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Reverse Rows (Flip Array Vertically)",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Revert Settings",
+   "group": "",
+   "desc": "Reverts settings to those loaded into the Loaded column.",
+   "code": "RVS",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Rotate Array",
+   "group": "",
+   "desc": "Turns the active array a quarter turn clockwise; run it again for another quarter turn",
+   "code": "ROT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Round to 0",
+   "group": "",
+   "desc": "Wraps the active formula in ROUND(...,0) for a whole number. Round once at the END of a chain; rounding each step compounds the error",
+   "code": "r0",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Run Data Table",
+   "group": "",
+   "desc": "Fills a Create Data Table block with static results game by game, recalculating only when run",
+   "code": "RDT, DT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Running Product Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Running Total",
+   "group": "",
+   "desc": "Wraps the active array in a running total (RunningTotal with nothing else set)",
+   "code": "RT",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Running Total Of Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Running Total with Cap",
+   "group": "",
+   "desc": "Running total that stops at the COPIED limit and holds there (Cap = 1). Change the final 1 to 0 to keep the crossing row's full value instead",
+   "code": "RTC",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Running Total with Reset",
+   "group": "",
+   "desc": "Running total that restarts wherever the COPIED flag range holds 1; asks what it restarts at (blank = 0). The flagged row's own value is included",
+   "code": "RTR",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Running Totals By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Running Totals By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Save Answer To Bonus 1",
+   "group": "",
+   "desc": "Links the active cell (any sheet) into the Bonus 1 answer cell, goes there and copies it for the submission site.",
+   "code": "B1",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Save Answer To Bonus 2",
+   "group": "",
+   "desc": "Links the active cell (any sheet) into the Bonus 2 answer cell, goes there and copies it for the submission site.",
+   "code": "B2",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Save Answer To Bonus 3",
+   "group": "",
+   "desc": "Links the active cell (any sheet) into the Bonus 3 answer cell, goes there and copies it for the submission site.",
+   "code": "B3",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Save Answer To Bonus 4",
+   "group": "",
+   "desc": "Links the active cell (any sheet) into the Bonus 4 answer cell, goes there and copies it for the submission site.",
+   "code": "B4",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Save Answer To Bonus 5",
+   "group": "",
+   "desc": "Links the active cell (any sheet) into the Bonus 5 answer cell, goes there and copies it for the submission site.",
+   "code": "B5",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Save Answers To Left",
+   "group": "",
+   "desc": "Saves references to the selected cells in the green answer cells to the left on the same row.",
+   "code": "SAL",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Save Copy of File",
+   "group": "",
+   "desc": "Enable editing and save copy of file with suffix based on active cell (otherwise Working)",
+   "code": "SA",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Save From Example",
+   "group": "",
+   "desc": "Select your answer formula on the example row; the working right of the inputs is copied to every question and the answers linked",
+   "code": "SFE",
+   "src": "CompBot + MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Save Game Answers To Left",
+   "group": "Game Prep",
+   "desc": "Saves references to the selected cells in the green answer cells to the left on the same row.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": true
+  },
+  {
+   "name": "Search Workbook For Specified Functions",
+   "group": "Search",
+   "desc": "Searches cells, names, and conditional formatting for use of user specified functions and reports findings.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Search Workbook For Volatile Functions",
+   "group": "Search",
+   "desc": "Searches cells, names, and conditional formatting for use of volatile functions and reports findings.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Select Spill Parent",
+   "group": "Formula",
+   "desc": "Select dynamic array formula cell. If no spill in ActiveCell then do nothing.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Sequence of Row Count",
+   "group": "",
+   "desc": "Sequence of row count of array variable",
+   "code": "src",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Set Lambda Library",
+   "group": "",
+   "desc": "Points CompBot at YOUR lambda library workbook, once; ILL and Full Setup Case then load it",
+   "code": "SLL",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Set Solve Folder",
+   "group": "",
+   "desc": "Choose the folder Full Setup Case saves your _Solve copy into, once (e.g. OneDrive)",
+   "code": "SSF",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Setup Case Settings",
+   "group": "",
+   "desc": "Opens CompBot's Setup Settings sheet: choose which steps Full Setup Case runs, and whose lambdas win a name clash",
+   "code": "SCS",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Show Bonus Dock",
+   "group": "",
+   "desc": "Shows the open bonus questions in a dock on the right; answered ones drop off",
+   "code": "BQ",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Show Formula Text",
+   "group": "Formula",
+   "desc": "Show formula text of active cell in a specified adjacent cell.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": false
+  },
+  {
+   "name": "Snake Array",
+   "group": "Map",
+   "desc": "Uses selection within array to determine starting cell and direction.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Sort Array Asc",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Sort Array Desc",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Split By Character",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Split By Digits",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Split Numbers From Text To Columns",
+   "group": "Extracting From Array",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Split Text by Delimiter Above",
+   "group": "",
+   "desc": "Splits the active cell's text DOWN into rows on the delimiter in the cell above (linked, so changing that cell re-splits), and trims each piece",
+   "code": "ST",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Split Text by Semicolon",
+   "group": "",
+   "desc": "Splits the active cell's text on semicolons into an array, trimming each piece",
+   "code": "S;",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Stack Sheets From Clipboard",
+   "group": "",
+   "desc": "Stacks the same block from many sheets into one table, driven by a sheet-name list in the clipboard",
+   "code": "STK",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Stack Sheets From Clipboard, Hide Blanks",
+   "group": "",
+   "desc": "As Stack Sheets From Clipboard, but drops empty cells. WARNING: it drops zeros too",
+   "code": "STKH",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Stop Walk Route",
+   "group": "",
+   "desc": "Ends a walk route by hand and writes it out, for when a diagonal click is awkward to reach",
+   "code": "SWR",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Sum Array",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Sum Array By Column",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Sum Array By Row",
+   "group": "Aggregation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Sum False",
+   "group": "",
+   "desc": "Counts the FALSE (0) values in an array: how many rows fail the test. Anything non-zero, such as 2 from an OR built with +, counts as TRUE",
+   "code": "SF",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Sum True",
+   "group": "",
+   "desc": "Counts the TRUE values in an array (applies -- and sums it): the usual way to answer 'how many rows pass this test'",
+   "code": "ST  \u00b7  MMS",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Time Formula",
+   "group": "Formula",
+   "desc": "Wraps formula in active cell with Timer lambda to evaluate calculation performance.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Toggle Calculation Mode",
+   "group": "",
+   "desc": "Toggles calculation mode and places current mode notice in StatusBar",
+   "code": "TC",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Toggle Expand Formula Bar",
+   "group": "Formula",
+   "desc": "If formula bar height is 1 then autofit it otherwise make it 1.",
+   "code": "",
+   "src": "Formula Robot",
+   "hard": true
+  },
+  {
+   "name": "Toggle Iterative Calculation",
+   "group": "",
+   "desc": "Toggles iterative calculation and sets status in status bar",
+   "code": "IC",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Transpose Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Ungroup Column By Delimiter",
+   "group": "Grouping",
+   "desc": "Splits the values in the selected column and expands the other columns.",
+   "code": "",
+   "src": "MEWC Robot",
+   "hard": false
+  },
+  {
+   "name": "Unique Columns Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Unique Rows Of Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Unmerge Multi-Row Merges",
+   "group": "",
+   "desc": "Unmerges every merged area spanning more than one row (the selection, or the whole sheet), leaving the value in the top-left cell",
+   "code": "",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Unpivot Array",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Unpivot Array (By Selected Columns)",
+   "group": "Array Manipulation",
+   "desc": "",
+   "code": "",
+   "src": "Array Robot",
+   "hard": false
+  },
+  {
+   "name": "Update Settings",
+   "group": "",
+   "desc": "Updates default settings to those in Regional Settings sheet",
+   "code": "US",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Wrap Flat List Into Grid",
+   "group": "",
+   "desc": "Folds a single row or column back into a grid of a chosen width, the missing half of Reshape To One Row/Column",
+   "code": "WFG",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Wrap in ABS",
+   "group": "",
+   "desc": "Wraps the active formula in ABS() to make the result positive: distances, differences, gaps, reflections",
+   "code": "ABS",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Wrap in Concat",
+   "group": "",
+   "desc": "Wraps the active formula in CONCAT() to join an array into one string with no separator, rebuilding a word from its letters",
+   "code": "con",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Wrap in Drop First Row",
+   "group": "",
+   "desc": "Wraps the active formula in DROP(...,1) to remove a header row from a spilled array",
+   "code": "DF",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Wrap in Take by Copied Cell Columns",
+   "group": "",
+   "desc": "Wrap in take by copied cell columns.",
+   "code": "TCC",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Wrap in UNICHAR",
+   "group": "",
+   "desc": "Wraps the active formula in UNICHAR() to turn code numbers back into characters: decoding glyphs, emoji or dice faces",
+   "code": "char",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Wrap in UNICODE",
+   "group": "",
+   "desc": "Wraps the active formula in UNICODE() to turn characters into their code numbers, the first step in most cipher and glyph puzzles",
+   "code": "code",
+   "src": "CompBot",
+   "hard": false
+  },
+  {
+   "name": "Wrap in UNIQUE",
+   "group": "",
+   "desc": "Wraps the active formula in UNIQUE() to strip duplicates: distinct values, distinct colors, distinct answers",
+   "code": "U",
+   "src": "CompBot",
+   "hard": true
+  },
+  {
+   "name": "Wrap with IFERROR TEXTBEFORE space",
+   "group": "",
+   "desc": "Wraps current formula with TEXTBEFORE space with IFERROR in case space doesn't exist",
+   "code": "tbse",
+   "src": "CompBot",
+   "hard": false
+  }
+ ]
+}

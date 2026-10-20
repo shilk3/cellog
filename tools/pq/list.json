@@ -1,0 +1,3938 @@
+[
+ {
+  "name": "AccessControlEntry.ConditionToIdentities",
+  "cat": "accessing-data",
+  "desc": "Returns a list of identities that the condition will accept.",
+  "href": "accesscontrolentry-conditiontoidentities"
+ },
+ {
+  "name": "Access.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a structural representation of a Microsoft Access database.",
+  "href": "access-database"
+ },
+ {
+  "name": "ActiveDirectory.Domains",
+  "cat": "accessing-data",
+  "desc": "Returns a list of Active Directory domains in the same forest as the specified domain or of the current machine's domain if none is specified.",
+  "href": "activedirectory-domains"
+ },
+ {
+  "name": "AdobeAnalytics.Cubes",
+  "cat": "accessing-data",
+  "desc": "Returns the report suites in Adobe Analytics.",
+  "href": "adobeanalytics-cubes"
+ },
+ {
+  "name": "AdoDotNet.DataSource",
+  "cat": "accessing-data",
+  "desc": "Returns the schema collection for an ADO.NET data source.",
+  "href": "adodotnet-datasource"
+ },
+ {
+  "name": "AdoDotNet.Query",
+  "cat": "accessing-data",
+  "desc": "Returns the result of running a native query on an ADO.NET data source.",
+  "href": "adodotnet-query"
+ },
+ {
+  "name": "AnalysisServices.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of multidimensional cubes or tabular models from the Analysis Services database.",
+  "href": "analysisservices-database"
+ },
+ {
+  "name": "AnalysisServices.Databases",
+  "cat": "accessing-data",
+  "desc": "Returns the Analysis Services databases on a particular host.",
+  "href": "analysisservices-databases"
+ },
+ {
+  "name": "AzureStorage.BlobContents",
+  "cat": "accessing-data",
+  "desc": "Returns the content of the specified blob from an Azure storage vault.",
+  "href": "azurestorage-blobcontents"
+ },
+ {
+  "name": "AzureStorage.Blobs",
+  "cat": "accessing-data",
+  "desc": "Returns a navigational table containing the containers found in the specified account from an Azure storage vault. Each row has the container name and a link to the container blobs.",
+  "href": "azurestorage-blobs"
+ },
+ {
+  "name": "AzureStorage.DataLake",
+  "cat": "accessing-data",
+  "desc": "Returns a navigational table containing the documents found in the specified container and its subfolders from Azure Data Lake Storage.",
+  "href": "azurestorage-datalake"
+ },
+ {
+  "name": "AzureStorage.DataLakeContents",
+  "cat": "accessing-data",
+  "desc": "Returns the content of the specified file from an Azure Data Lake Storage filesystem.",
+  "href": "azurestorage-datalakecontents"
+ },
+ {
+  "name": "AzureStorage.Tables",
+  "cat": "accessing-data",
+  "desc": "Returns a navigational table containing the tables found in the specified account from an Azure storage vault. Each row contains a link to the azure table.",
+  "href": "azurestorage-tables"
+ },
+ {
+  "name": "Cdm.Contents",
+  "cat": "accessing-data",
+  "desc": "This function is unavailable because it requires .NET 4.5.",
+  "href": "cdm-contents"
+ },
+ {
+  "name": "Csv.Document",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the CSV document as a table using the specified encoding.",
+  "href": "csv-document"
+ },
+ {
+  "name": "Cube.AddAndExpandDimensionColumn",
+  "cat": "accessing-data",
+  "desc": "Merges the specified dimension table into the cube's filter context and changes the dimensional granularity of the filter context by expanding the specified set of dimension attributes.",
+  "href": "cube-addandexpanddimensioncolumn"
+ },
+ {
+  "name": "Cube.AddMeasureColumn",
+  "cat": "accessing-data",
+  "desc": "AAdds a column to the cube that contains the results of the measure applied in the row context of each row.",
+  "href": "cube-addmeasurecolumn"
+ },
+ {
+  "name": "Cube.ApplyParameter",
+  "cat": "accessing-data",
+  "desc": "Returns a cube after applying a parameter to it.",
+  "href": "cube-applyparameter"
+ },
+ {
+  "name": "Cube.AttributeMemberId",
+  "cat": "accessing-data",
+  "desc": "Returns the unique member identifier from members property value.",
+  "href": "cube-attributememberid"
+ },
+ {
+  "name": "Cube.AttributeMemberProperty",
+  "cat": "accessing-data",
+  "desc": "Returns a property of a dimension attribute.",
+  "href": "cube-attributememberproperty"
+ },
+ {
+  "name": "Cube.CollapseAndRemoveColumns",
+  "cat": "accessing-data",
+  "desc": "Changes the dimensional granularity of the filter context for the cube by collapsing the attributes mapped to the specified columns.",
+  "href": "cube-collapseandremovecolumns"
+ },
+ {
+  "name": "Cube.Dimensions",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the set of available dimensions.",
+  "href": "cube-dimensions"
+ },
+ {
+  "name": "Cube.DisplayFolders",
+  "cat": "accessing-data",
+  "desc": "Returns a nested tree of tables representing the display folder hierarchy of the objects (for example, dimensions and measures).",
+  "href": "cube-displayfolders"
+ },
+ {
+  "name": "Cube.MeasureProperties",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the set of available measure properties that are expanded in the cube.",
+  "href": "cube-measureproperties"
+ },
+ {
+  "name": "Cube.MeasureProperty",
+  "cat": "accessing-data",
+  "desc": "Returns a property of a measure (cell property).",
+  "href": "cube-measureproperty"
+ },
+ {
+  "name": "Cube.Measures",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the set of available measures.",
+  "href": "cube-measures"
+ },
+ {
+  "name": "Cube.Parameters",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the set of parameters that can be applied to the cube.",
+  "href": "cube-parameters"
+ },
+ {
+  "name": "Cube.Properties",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the set of available properties for dimensions that are expanded in the cube.",
+  "href": "cube-properties"
+ },
+ {
+  "name": "Cube.PropertyKey",
+  "cat": "accessing-data",
+  "desc": "Returns the key of a property.",
+  "href": "cube-propertykey"
+ },
+ {
+  "name": "Cube.ReplaceDimensions",
+  "cat": "accessing-data",
+  "desc": "Replaces the set of dimensions returned by Cube.Dimensions .",
+  "href": "cube-replacedimensions"
+ },
+ {
+  "name": "Cube.Transform",
+  "cat": "accessing-data",
+  "desc": "Applies a list of cube functions.",
+  "href": "cube-transform"
+ },
+ {
+  "name": "DB2.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views available in a Db2 database.",
+  "href": "db2-database"
+ },
+ {
+  "name": "DeltaLake.Metadata",
+  "cat": "accessing-data",
+  "desc": "Given a Delta Lake table, returns the log entries for that table.",
+  "href": "deltalake-metadata"
+ },
+ {
+  "name": "DeltaLake.Table",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the Delta Lake table.",
+  "href": "deltalake-table"
+ },
+ {
+  "name": "Essbase.Cubes",
+  "cat": "accessing-data",
+  "desc": "Returns the cubes in an Essbase instance grouped by Essbase server.",
+  "href": "essbase-cubes"
+ },
+ {
+  "name": "Excel.CurrentWorkbook",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the current Excel workbook.",
+  "href": "excel-currentworkbook"
+ },
+ {
+  "name": "Excel.Workbook",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the Excel workbook.",
+  "href": "excel-workbook"
+ },
+ {
+  "name": "Exchange.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns a table of contents from a Microsoft Exchange account.",
+  "href": "exchange-contents"
+ },
+ {
+  "name": "FabricAI.Prompt",
+  "cat": "accessing-data",
+  "desc": "Returns the result of passing the specified input to an AI model.",
+  "href": "fabricai-prompt"
+ },
+ {
+  "name": "File.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the specified file as binary.",
+  "href": "file-contents"
+ },
+ {
+  "name": "Folder.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the properties and contents of the files and folders found in the specified folder.",
+  "href": "folder-contents"
+ },
+ {
+  "name": "Folder.Files",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the properties and contents of the files found in the specified folder and subfolders. Each row contains properties of the folder or file and a link to its content.",
+  "href": "folder-files"
+ },
+ {
+  "name": "GoogleAnalytics.Accounts",
+  "cat": "accessing-data",
+  "desc": "Returns the Google Analytics accounts for the current credential.",
+  "href": "googleanalytics-accounts"
+ },
+ {
+  "name": "Hdfs.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the properties and contents of the files and folders found in the specified folder from a Hadoop file system. Each row contains properties of the folder or file and a link to its content.",
+  "href": "hdfs-contents"
+ },
+ {
+  "name": "Hdfs.Files",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the properties and contents of the files found in the specified folder and subfolders from a Hadoop file system. Each row contains properties of the file and a link to its content.",
+  "href": "hdfs-files"
+ },
+ {
+  "name": "HdInsight.Containers",
+  "cat": "accessing-data",
+  "desc": "Returns a navigational table containing the containers found in the specified account from an Azure storage vault. Each row has the container name and table containing its files.",
+  "href": "hdinsight-containers"
+ },
+ {
+  "name": "HdInsight.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns a navigational table containing the containers found in the specified account from an Azure storage vault. Each row has the container name and table containing its files.",
+  "href": "hdinsight-contents"
+ },
+ {
+  "name": "HdInsight.Files",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the properties and contents of the blobs found in the specified container from an Azure storage vault. Each row contains properties of the file/folder and a link to its content.",
+  "href": "hdinsight-files"
+ },
+ {
+  "name": "Html.Table",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing the results of running the specified CSS selectors against the provided HTML.",
+  "href": "html-table"
+ },
+ {
+  "name": "Identity.From",
+  "cat": "accessing-data",
+  "desc": "Creates an identity.",
+  "href": "identity-from"
+ },
+ {
+  "name": "Identity.IsMemberOf",
+  "cat": "accessing-data",
+  "desc": "Determines whether an identity is a member of an identity collection.",
+  "href": "identity-ismemberof"
+ },
+ {
+  "name": "IdentityProvider.Default",
+  "cat": "accessing-data",
+  "desc": "The default identity provider for the current host.",
+  "href": "identityprovider-default"
+ },
+ {
+  "name": "Informix.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views available in an Informix database.",
+  "href": "informix-database"
+ },
+ {
+  "name": "Json.Document",
+  "cat": "accessing-data",
+  "desc": "Returns the content of the JSON document. The contents can be directly passed to the function as text, or it can be the binary value returned by a function like File.Contents .",
+  "href": "json-document"
+ },
+ {
+  "name": "Json.FromValue",
+  "cat": "accessing-data",
+  "desc": "Produces a JSON representation of a given value value with a text encoding specified by encoding.",
+  "href": "json-fromvalue"
+ },
+ {
+  "name": "MySQL.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables, views, and stored scalar functions available in a MySQL database.",
+  "href": "mysql-database"
+ },
+ {
+  "name": "OData.Feed",
+  "cat": "accessing-data",
+  "desc": "Returns a table of OData feeds offered by an OData service.",
+  "href": "odata-feed"
+ },
+ {
+  "name": "Odbc.DataSource",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views from the ODBC data source.",
+  "href": "odbc-datasource"
+ },
+ {
+  "name": "Odbc.InferOptions",
+  "cat": "accessing-data",
+  "desc": "Returns the result of trying to infer SQL capabilities for an ODBC driver.",
+  "href": "odbc-inferoptions"
+ },
+ {
+  "name": "Odbc.Query",
+  "cat": "accessing-data",
+  "desc": "Returns the result of running a native query on an ODBC data source.",
+  "href": "odbc-query"
+ },
+ {
+  "name": "OleDb.DataSource",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views from the OLE DB data source.",
+  "href": "oledb-datasource"
+ },
+ {
+  "name": "OleDb.Query",
+  "cat": "accessing-data",
+  "desc": "Returns the result of running a native query on an OLE DB data source.",
+  "href": "oledb-query"
+ },
+ {
+  "name": "Oracle.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views from the Oracle database.",
+  "href": "oracle-database"
+ },
+ {
+  "name": "Pdf.Tables",
+  "cat": "accessing-data",
+  "desc": "Returns any tables found in a PDF file.",
+  "href": "pdf-tables"
+ },
+ {
+  "name": "PostgreSQL.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views available in a PostgreSQL database.",
+  "href": "postgresql-database"
+ },
+ {
+  "name": "RData.FromBinary",
+  "cat": "accessing-data",
+  "desc": "Returns a record of data frames from the RData file.",
+  "href": "rdata-frombinary"
+ },
+ {
+  "name": "Salesforce.Data",
+  "cat": "accessing-data",
+  "desc": "Returns the objects from the Salesforce account.",
+  "href": "salesforce-data"
+ },
+ {
+  "name": "Salesforce.Reports",
+  "cat": "accessing-data",
+  "desc": "Returns the reports from the Salesforce account.",
+  "href": "salesforce-reports"
+ },
+ {
+  "name": "SapBusinessWarehouse.Cubes",
+  "cat": "accessing-data",
+  "desc": "Returns the InfoCubes and queries in an SAP Business Warehouse system grouped by InfoArea.",
+  "href": "sapbusinesswarehouse-cubes"
+ },
+ {
+  "name": "SapHana.Database",
+  "cat": "accessing-data",
+  "desc": "Returns the packages in an SAP HANA database.",
+  "href": "saphana-database"
+ },
+ {
+  "name": "SharePoint.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing content from a SharePoint site. Each row contains properties of the folder or file and a link to its content.",
+  "href": "sharepoint-contents"
+ },
+ {
+  "name": "SharePoint.Files",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing documents from a SharePoint site. Each row contains properties of the folder or file and a link to its content.",
+  "href": "sharepoint-files"
+ },
+ {
+  "name": "SharePoint.Tables",
+  "cat": "accessing-data",
+  "desc": "Returns a table containing content from a SharePoint List.",
+  "href": "sharepoint-tables"
+ },
+ {
+  "name": "Soda.Feed",
+  "cat": "accessing-data",
+  "desc": "Returns a table from the contents at the specified URL formatted according to the SODA 2.0 API. The URL must point to a valid SODA-compliant source that ends in a .csv extension.",
+  "href": "soda-feed"
+ },
+ {
+  "name": "Sql.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables, views, and stored functions from the SQL Server database.",
+  "href": "sql-database"
+ },
+ {
+  "name": "Sql.Databases",
+  "cat": "accessing-data",
+  "desc": "Returns a table of databases on a SQL Server.",
+  "href": "sql-databases"
+ },
+ {
+  "name": "Sybase.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views available in a Sybase database.",
+  "href": "sybase-database"
+ },
+ {
+  "name": "Teradata.Database",
+  "cat": "accessing-data",
+  "desc": "Returns a table of SQL tables and views from the Teradata database.",
+  "href": "teradata-database"
+ },
+ {
+  "name": "WebAction.Request",
+  "cat": "accessing-data",
+  "desc": "Creates an action that, when executed, will return the results of performing a method request against url using HTTP as a binary value.",
+  "href": "webaction-request"
+ },
+ {
+  "name": "Web.BrowserContents",
+  "cat": "accessing-data",
+  "desc": "Returns the HTML for the specified URL, as viewed by a web browser.",
+  "href": "web-browsercontents"
+ },
+ {
+  "name": "Web.Contents",
+  "cat": "accessing-data",
+  "desc": "Returns the contents downloaded from the URL as binary.",
+  "href": "web-contents"
+ },
+ {
+  "name": "Web.Headers",
+  "cat": "accessing-data",
+  "desc": "Returns the HTTP headers downloaded from the URL as a record value.",
+  "href": "web-headers"
+ },
+ {
+  "name": "Web.Page",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the HTML document broken into its constituent structures, as well as a representation of the full document and its text after removing tags.",
+  "href": "web-page"
+ },
+ {
+  "name": "Xml.Document",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of the XML document as a hierarchical table (list of records).",
+  "href": "xml-document"
+ },
+ {
+  "name": "Xml.Tables",
+  "cat": "accessing-data",
+  "desc": "Returns the contents of an XML document as a nested collection of flattened tables.",
+  "href": "xml-tables"
+ },
+ {
+  "name": "BinaryFormat.7BitEncodedSignedInteger",
+  "cat": "binary",
+  "desc": "A binary format that reads a 64-bit signed integer that was encoded using a 7-bit variable-length encoding.",
+  "href": "binaryformat-7bitencodedsignedinteger"
+ },
+ {
+  "name": "BinaryFormat.7BitEncodedUnsignedInteger",
+  "cat": "binary",
+  "desc": "A binary format that reads a 64-bit unsigned integer that was encoded using a 7-bit variable-length encoding.",
+  "href": "binaryformat-7bitencodedunsignedinteger"
+ },
+ {
+  "name": "BinaryFormat.Binary",
+  "cat": "binary",
+  "desc": "Returns a binary format that reads a binary value.",
+  "href": "binaryformat-binary"
+ },
+ {
+  "name": "BinaryFormat.Byte",
+  "cat": "binary",
+  "desc": "A binary format that reads an 8-bit unsigned integer.",
+  "href": "binaryformat-byte"
+ },
+ {
+  "name": "BinaryFormat.Choice",
+  "cat": "binary",
+  "desc": "Returns a binary format that chooses the next binary format based on a value that has already been read.",
+  "href": "binaryformat-choice"
+ },
+ {
+  "name": "BinaryFormat.Decimal",
+  "cat": "binary",
+  "desc": "A binary format that reads a .NET 16-byte decimal value.",
+  "href": "binaryformat-decimal"
+ },
+ {
+  "name": "BinaryFormat.Double",
+  "cat": "binary",
+  "desc": "A binary format that reads an 8-byte IEEE double-precision floating point value.",
+  "href": "binaryformat-double"
+ },
+ {
+  "name": "BinaryFormat.Group",
+  "cat": "binary",
+  "desc": "Returns a binary format that reads a group of items. Each item value is preceded by a unique key value. The result is a list of item values.",
+  "href": "binaryformat-group"
+ },
+ {
+  "name": "BinaryFormat.Length",
+  "cat": "binary",
+  "desc": "Returns a binary format that limits the amount of data that can be read. Both BinaryFormat.List and BinaryFormat.Binary can be used to read until end of the data. BinaryFormat.Length can be used to limit the number of bytes that are read.",
+  "href": "binaryformat-length"
+ },
+ {
+  "name": "BinaryFormat.List",
+  "cat": "binary",
+  "desc": "Returns a binary format that reads a sequence of items and returns a list.",
+  "href": "binaryformat-list"
+ },
+ {
+  "name": "BinaryFormat.Null",
+  "cat": "binary",
+  "desc": "A binary format that reads zero bytes and returns null.",
+  "href": "binaryformat-null"
+ },
+ {
+  "name": "BinaryFormat.Record",
+  "cat": "binary",
+  "desc": "Returns a binary format that reads a record. Each field in the record can have a different binary format.",
+  "href": "binaryformat-record"
+ },
+ {
+  "name": "BinaryFormat.SignedInteger16",
+  "cat": "binary",
+  "desc": "A binary format that reads a 16-bit signed integer.",
+  "href": "binaryformat-signedinteger16"
+ },
+ {
+  "name": "BinaryFormat.SignedInteger32",
+  "cat": "binary",
+  "desc": "A binary format that reads a 32-bit signed integer.",
+  "href": "binaryformat-signedinteger32"
+ },
+ {
+  "name": "BinaryFormat.SignedInteger64",
+  "cat": "binary",
+  "desc": "A binary format that reads a 64-bit signed integer.",
+  "href": "binaryformat-signedinteger64"
+ },
+ {
+  "name": "BinaryFormat.Single",
+  "cat": "binary",
+  "desc": "A binary format that reads a 4-byte IEEE single-precision floating point value.",
+  "href": "binaryformat-single"
+ },
+ {
+  "name": "BinaryFormat.Text",
+  "cat": "binary",
+  "desc": "Returns a binary format that reads a text value. The optional encoding value specifies the encoding of the text.",
+  "href": "binaryformat-text"
+ },
+ {
+  "name": "BinaryFormat.Transform",
+  "cat": "binary",
+  "desc": "Returns a binary format that will transform the values read by another binary format.",
+  "href": "binaryformat-transform"
+ },
+ {
+  "name": "BinaryFormat.UnsignedInteger16",
+  "cat": "binary",
+  "desc": "A binary format that reads a 16-bit unsigned integer.",
+  "href": "binaryformat-unsignedinteger16"
+ },
+ {
+  "name": "BinaryFormat.UnsignedInteger32",
+  "cat": "binary",
+  "desc": "A binary format that reads a 32-bit unsigned integer.",
+  "href": "binaryformat-unsignedinteger32"
+ },
+ {
+  "name": "BinaryFormat.UnsignedInteger64",
+  "cat": "binary",
+  "desc": "A binary format that reads a 64-bit unsigned integer.",
+  "href": "binaryformat-unsignedinteger64"
+ },
+ {
+  "name": "BinaryFormat.ByteOrder",
+  "cat": "binary",
+  "desc": "Returns a binary format with the byte order specified by a function.",
+  "href": "binaryformat-byteorder"
+ },
+ {
+  "name": "Table.PartitionValues",
+  "cat": "binary",
+  "desc": "Returns information about how a table is partitioned.",
+  "href": "table-partitionvalues"
+ },
+ {
+  "name": "Binary.ApproximateLength",
+  "cat": "binary",
+  "desc": "Returns the approximate length of the binary.",
+  "href": "binary-approximatelength"
+ },
+ {
+  "name": "Binary.Buffer",
+  "cat": "binary",
+  "desc": "Buffers the binary value in memory. The result of this call is a stable binary value, which means it will have a deterministic length and order of bytes.",
+  "href": "binary-buffer"
+ },
+ {
+  "name": "Binary.Combine",
+  "cat": "binary",
+  "desc": "Combines a list of binaries into a single binary.",
+  "href": "binary-combine"
+ },
+ {
+  "name": "Binary.Compress",
+  "cat": "binary",
+  "desc": "Compresses a binary value using the given compression type.",
+  "href": "binary-compress"
+ },
+ {
+  "name": "Binary.Decompress",
+  "cat": "binary",
+  "desc": "Decompresses a binary value using the given compression type.",
+  "href": "binary-decompress"
+ },
+ {
+  "name": "Binary.From",
+  "cat": "binary",
+  "desc": "Returns a binary value from the given value.",
+  "href": "binary-from"
+ },
+ {
+  "name": "Binary.FromList",
+  "cat": "binary",
+  "desc": "Converts a list of numbers into a binary value",
+  "href": "binary-fromlist"
+ },
+ {
+  "name": "Binary.FromText",
+  "cat": "binary",
+  "desc": "Decodes data from a text form into binary.",
+  "href": "binary-fromtext"
+ },
+ {
+  "name": "Binary.InferContentType",
+  "cat": "binary",
+  "desc": "Returns a record with field Content.Type that contains the inferred MIME-type.",
+  "href": "binary-infercontenttype"
+ },
+ {
+  "name": "Binary.Length",
+  "cat": "binary",
+  "desc": "Returns the length of binary values.",
+  "href": "binary-length"
+ },
+ {
+  "name": "Binary.Range",
+  "cat": "binary",
+  "desc": "Returns a subset of the binary value beginning at an offset.",
+  "href": "binary-range"
+ },
+ {
+  "name": "Binary.Split",
+  "cat": "binary",
+  "desc": "Splits the specified binary into a list of binaries using the specified page size.",
+  "href": "binary-split"
+ },
+ {
+  "name": "Binary.ToList",
+  "cat": "binary",
+  "desc": "Converts a binary value into a list of numbers",
+  "href": "binary-tolist"
+ },
+ {
+  "name": "Binary.ToText",
+  "cat": "binary",
+  "desc": "Encodes binary data into a text form.",
+  "href": "binary-totext"
+ },
+ {
+  "name": "Binary.View",
+  "cat": "binary",
+  "desc": "Creates or extends a binary with user-defined handlers for query and action operations.",
+  "href": "binary-view"
+ },
+ {
+  "name": "Binary.ViewError",
+  "cat": "binary",
+  "desc": "Creates a modified error record which won't trigger a fallback when raised by a handler defined on a view (via Binary.View ).",
+  "href": "binary-viewerror"
+ },
+ {
+  "name": "Binary.ViewFunction",
+  "cat": "binary",
+  "desc": "Creates a function that can be intercepted by a handler defined on a view (via Binary.View ).",
+  "href": "binary-viewfunction"
+ },
+ {
+  "name": "#binary",
+  "cat": "binary",
+  "desc": "Creates a binary value from numbers or text.",
+  "href": "sharpbinary"
+ },
+ {
+  "name": "Combiner.CombineTextByDelimiter",
+  "cat": "combiner",
+  "desc": "Returns a function that combines a list of text using the specified delimiter.",
+  "href": "combiner-combinetextbydelimiter"
+ },
+ {
+  "name": "Combiner.CombineTextByEachDelimiter",
+  "cat": "combiner",
+  "desc": "Returns a function that combines a list of text using a sequence of delimiters.",
+  "href": "combiner-combinetextbyeachdelimiter"
+ },
+ {
+  "name": "Combiner.CombineTextByLengths",
+  "cat": "combiner",
+  "desc": "Returns a function that combines a list of text using the specified lengths.",
+  "href": "combiner-combinetextbylengths"
+ },
+ {
+  "name": "Combiner.CombineTextByPositions",
+  "cat": "combiner",
+  "desc": "Returns a function that combines a list of text using the specified output positions.",
+  "href": "combiner-combinetextbypositions"
+ },
+ {
+  "name": "Combiner.CombineTextByRanges",
+  "cat": "combiner",
+  "desc": "Returns a function that combines a list of text using the specified positions and lengths.",
+  "href": "combiner-combinetextbyranges"
+ },
+ {
+  "name": "Comparer.Equals",
+  "cat": "comparer",
+  "desc": "Returns a logical value based on the equality check over the two given values.",
+  "href": "comparer-equals"
+ },
+ {
+  "name": "Comparer.FromCulture",
+  "cat": "comparer",
+  "desc": "Returns a comparer function based on the specified culture and case-sensitivity.",
+  "href": "comparer-fromculture"
+ },
+ {
+  "name": "Comparer.Ordinal",
+  "cat": "comparer",
+  "desc": "Returns a comparer function which uses Ordinal rules to compare values.",
+  "href": "comparer-ordinal"
+ },
+ {
+  "name": "Comparer.OrdinalIgnoreCase",
+  "cat": "comparer",
+  "desc": "Returns a case-insensitive comparer function which uses Ordinal rules to compare the provided values.",
+  "href": "comparer-ordinalignorecase"
+ },
+ {
+  "name": "Date.AddDays",
+  "cat": "date",
+  "desc": "Returns a Date/DateTime/DateTimeZone value with the day portion incremented by the number of days provided. It also handles incrementing the month and year portions of the value as appropriate.",
+  "href": "date-adddays"
+ },
+ {
+  "name": "Date.AddMonths",
+  "cat": "date",
+  "desc": "Returns a DateTime value with the month portion incremented by n months.",
+  "href": "date-addmonths"
+ },
+ {
+  "name": "Date.AddQuarters",
+  "cat": "date",
+  "desc": "Returns a Date/DateTime/DateTimeZone value incremented by the number of quarters provided. Each quarter is defined as a duration of three months. It also handles incrementing the year portion of the value as appropriate.",
+  "href": "date-addquarters"
+ },
+ {
+  "name": "Date.AddWeeks",
+  "cat": "date",
+  "desc": "Returns a Date/DateTime/DateTimeZone value incremented by the number of weeks provided. Each week is defined as a duration of seven days. It also handles incrementing the month and year portions of the value as appropriate.",
+  "href": "date-addweeks"
+ },
+ {
+  "name": "Date.AddYears",
+  "cat": "date",
+  "desc": "Returns a DateTime value with the year portion incremented by n years.",
+  "href": "date-addyears"
+ },
+ {
+  "name": "Date.Day",
+  "cat": "date",
+  "desc": "Returns the day for a DateTime value.",
+  "href": "date-day"
+ },
+ {
+  "name": "Date.DayOfWeek",
+  "cat": "date",
+  "desc": "Returns a number (from 0 to 6) indicating the day of the week of the provided value.",
+  "href": "date-dayofweek"
+ },
+ {
+  "name": "Date.DayOfWeekName",
+  "cat": "date",
+  "desc": "Returns the day of the week name.",
+  "href": "date-dayofweekname"
+ },
+ {
+  "name": "Date.DayOfYear",
+  "cat": "date",
+  "desc": "Returns a number that represents the day of the year from a DateTime value.",
+  "href": "date-dayofyear"
+ },
+ {
+  "name": "Date.DaysInMonth",
+  "cat": "date",
+  "desc": "Returns the number of days in the month from a DateTime value.",
+  "href": "date-daysinmonth"
+ },
+ {
+  "name": "Date.EndOfDay",
+  "cat": "date",
+  "desc": "Returns the end of the day.",
+  "href": "date-endofday"
+ },
+ {
+  "name": "Date.EndOfMonth",
+  "cat": "date",
+  "desc": "Returns the end of the month.",
+  "href": "date-endofmonth"
+ },
+ {
+  "name": "Date.EndOfQuarter",
+  "cat": "date",
+  "desc": "Returns the end of the quarter.",
+  "href": "date-endofquarter"
+ },
+ {
+  "name": "Date.EndOfWeek",
+  "cat": "date",
+  "desc": "Returns the end of the week.",
+  "href": "date-endofweek"
+ },
+ {
+  "name": "Date.EndOfYear",
+  "cat": "date",
+  "desc": "Returns the end of the year.",
+  "href": "date-endofyear"
+ },
+ {
+  "name": "Date.From",
+  "cat": "date",
+  "desc": "Returns a date value from a value.",
+  "href": "date-from"
+ },
+ {
+  "name": "Date.FromText",
+  "cat": "date",
+  "desc": "Creates a Date from local, universal, and custom Date formats.",
+  "href": "date-fromtext"
+ },
+ {
+  "name": "Date.IsInCurrentDay",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the current day, as determined by the current date and time on the system.",
+  "href": "date-isincurrentday"
+ },
+ {
+  "name": "Date.IsInCurrentMonth",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the current month, as determined by the current date and time on the system.",
+  "href": "date-isincurrentmonth"
+ },
+ {
+  "name": "Date.IsInCurrentQuarter",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the current quarter, as determined by the current date and time on the system.",
+  "href": "date-isincurrentquarter"
+ },
+ {
+  "name": "Date.IsInCurrentWeek",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the current week, as determined by the current date and time on the system.",
+  "href": "date-isincurrentweek"
+ },
+ {
+  "name": "Date.IsInCurrentYear",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the current year, as determined by the current date and time on the system.",
+  "href": "date-isincurrentyear"
+ },
+ {
+  "name": "Date.IsInNextDay",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the next day, as determined by the current date and time on the system.",
+  "href": "date-isinnextday"
+ },
+ {
+  "name": "Date.IsInNextMonth",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the next month, as determined by the current date and time on the system.",
+  "href": "date-isinnextmonth"
+ },
+ {
+  "name": "Date.IsInNextNDays",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the next number of days, as determined by the current date and time on the system.",
+  "href": "date-isinnextndays"
+ },
+ {
+  "name": "Date.IsInNextNMonths",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the next number of months, as determined by the current date and time on the system.",
+  "href": "date-isinnextnmonths"
+ },
+ {
+  "name": "Date.IsInNextNQuarters",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the next number of quarters, as determined by the current date and time on the system.",
+  "href": "date-isinnextnquarters"
+ },
+ {
+  "name": "Date.IsInNextNWeeks",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the next number of weeks, as determined by the current date and time on the system.",
+  "href": "date-isinnextnweeks"
+ },
+ {
+  "name": "Date.IsInNextNYears",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the next number of years, as determined by the current date and time on the system.",
+  "href": "date-isinnextnyears"
+ },
+ {
+  "name": "Date.IsInNextQuarter",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the next quarter, as determined by the current date and time on the system.",
+  "href": "date-isinnextquarter"
+ },
+ {
+  "name": "Date.IsInNextWeek",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the next week, as determined by the current date and time on the system.",
+  "href": "date-isinnextweek"
+ },
+ {
+  "name": "Date.IsInNextYear",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the next year, as determined by the current date and time on the system.",
+  "href": "date-isinnextyear"
+ },
+ {
+  "name": "Date.IsInPreviousDay",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the previous day, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousday"
+ },
+ {
+  "name": "Date.IsInPreviousMonth",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the previous month, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousmonth"
+ },
+ {
+  "name": "Date.IsInPreviousNDays",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the previous number of days, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousndays"
+ },
+ {
+  "name": "Date.IsInPreviousNMonths",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the previous number of months, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousnmonths"
+ },
+ {
+  "name": "Date.IsInPreviousNQuarters",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the previous number of quarters, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousnquarters"
+ },
+ {
+  "name": "Date.IsInPreviousNWeeks",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the previous number of weeks, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousnweeks"
+ },
+ {
+  "name": "Date.IsInPreviousNYears",
+  "cat": "date",
+  "desc": "Indicates whether the given datetime value dateTime occurs during the previous number of years, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousnyears"
+ },
+ {
+  "name": "Date.IsInPreviousQuarter",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the previous quarter, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousquarter"
+ },
+ {
+  "name": "Date.IsInPreviousWeek",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the previous week, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousweek"
+ },
+ {
+  "name": "Date.IsInPreviousYear",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred during the previous year, as determined by the current date and time on the system.",
+  "href": "date-isinpreviousyear"
+ },
+ {
+  "name": "Date.IsInYearToDate",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the given Date/DateTime/DateTimeZone occurred in the period starting January 1st of the current year and ending on the current day, as determined by the current date and time on the system.",
+  "href": "date-isinyeartodate"
+ },
+ {
+  "name": "Date.IsLeapYear",
+  "cat": "date",
+  "desc": "Returns a logical value indicating whether the year portion of a DateTime value is a leap year.",
+  "href": "date-isleapyear"
+ },
+ {
+  "name": "Date.Month",
+  "cat": "date",
+  "desc": "Returns the month from a DateTime value.",
+  "href": "date-month"
+ },
+ {
+  "name": "Date.MonthName",
+  "cat": "date",
+  "desc": "Returns the name of the month component.",
+  "href": "date-monthname"
+ },
+ {
+  "name": "Date.QuarterOfYear",
+  "cat": "date",
+  "desc": "Returns a number between 1 and 4 for the quarter of the year from a DateTime value.",
+  "href": "date-quarterofyear"
+ },
+ {
+  "name": "Date.StartOfDay",
+  "cat": "date",
+  "desc": "Returns the start of the day.",
+  "href": "date-startofday"
+ },
+ {
+  "name": "Date.StartOfMonth",
+  "cat": "date",
+  "desc": "Returns the start of the month.",
+  "href": "date-startofmonth"
+ },
+ {
+  "name": "Date.StartOfQuarter",
+  "cat": "date",
+  "desc": "Returns the start of the quarter.",
+  "href": "date-startofquarter"
+ },
+ {
+  "name": "Date.StartOfWeek",
+  "cat": "date",
+  "desc": "Returns the start of the week.",
+  "href": "date-startofweek"
+ },
+ {
+  "name": "Date.StartOfYear",
+  "cat": "date",
+  "desc": "Returns the start of the year.",
+  "href": "date-startofyear"
+ },
+ {
+  "name": "Date.ToRecord",
+  "cat": "date",
+  "desc": "Returns a record containing parts of a Date value.",
+  "href": "date-torecord"
+ },
+ {
+  "name": "Date.ToText",
+  "cat": "date",
+  "desc": "Returns a text value from a Date value.",
+  "href": "date-totext"
+ },
+ {
+  "name": "Date.WeekOfMonth",
+  "cat": "date",
+  "desc": "Returns a number for the count of week in the current month.",
+  "href": "date-weekofmonth"
+ },
+ {
+  "name": "Date.WeekOfYear",
+  "cat": "date",
+  "desc": "Returns a number for the count of week in the current year.",
+  "href": "date-weekofyear"
+ },
+ {
+  "name": "Date.Year",
+  "cat": "date",
+  "desc": "Returns the year from a DateTime value.",
+  "href": "date-year"
+ },
+ {
+  "name": "#date",
+  "cat": "date",
+  "desc": "Creates a date value from year, month, and day.",
+  "href": "sharpdate"
+ },
+ {
+  "name": "DateTime.AddZone",
+  "cat": "datetime",
+  "desc": "Adds timezone information to the datetime value.",
+  "href": "datetime-addzone"
+ },
+ {
+  "name": "DateTime.Date",
+  "cat": "datetime",
+  "desc": "Returns the date component of the given date, datetime, or datetimezone value.",
+  "href": "datetime-date"
+ },
+ {
+  "name": "DateTime.FixedLocalNow",
+  "cat": "datetime",
+  "desc": "Returns the current date and time in the local timezone. This value is fixed and doesn't change with successive calls.",
+  "href": "datetime-fixedlocalnow"
+ },
+ {
+  "name": "DateTime.From",
+  "cat": "datetime",
+  "desc": "Creates a datetime from the given value.",
+  "href": "datetime-from"
+ },
+ {
+  "name": "DateTime.FromFileTime",
+  "cat": "datetime",
+  "desc": "Creates a datetime from a 64-bit long number.",
+  "href": "datetime-fromfiletime"
+ },
+ {
+  "name": "DateTime.FromText",
+  "cat": "datetime",
+  "desc": "Creates a datetime from local and universal datetime formats.",
+  "href": "datetime-fromtext"
+ },
+ {
+  "name": "DateTime.IsInCurrentHour",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the current hour, as determined by the current date and time on the system.",
+  "href": "datetime-isincurrenthour"
+ },
+ {
+  "name": "DateTime.IsInCurrentMinute",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the current minute, as determined by the current date and time on the system.",
+  "href": "datetime-isincurrentminute"
+ },
+ {
+  "name": "DateTime.IsInCurrentSecond",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the current second, as determined by the current date and time on the system.",
+  "href": "datetime-isincurrentsecond"
+ },
+ {
+  "name": "DateTime.IsInNextHour",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the next hour, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current hour.",
+  "href": "datetime-isinnexthour"
+ },
+ {
+  "name": "DateTime.IsInNextMinute",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the next minute, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current minute.",
+  "href": "datetime-isinnextminute"
+ },
+ {
+  "name": "DateTime.IsInNextNHours",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the next number of hours, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current hour.",
+  "href": "datetime-isinnextnhours"
+ },
+ {
+  "name": "DateTime.IsInNextNMinutes",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the next number of minutes, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current minute.",
+  "href": "datetime-isinnextnminutes"
+ },
+ {
+  "name": "DateTime.IsInNextNSeconds",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the next number of seconds, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current second.",
+  "href": "datetime-isinnextnseconds"
+ },
+ {
+  "name": "DateTime.IsInNextSecond",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the next second, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current second.",
+  "href": "datetime-isinnextsecond"
+ },
+ {
+  "name": "DateTime.IsInPreviousHour",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the previous hour, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current hour.",
+  "href": "datetime-isinprevioushour"
+ },
+ {
+  "name": "DateTime.IsInPreviousMinute",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the previous minute, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current minute.",
+  "href": "datetime-isinpreviousminute"
+ },
+ {
+  "name": "DateTime.IsInPreviousNHours",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the previous number of hours, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current hour.",
+  "href": "datetime-isinpreviousnhours"
+ },
+ {
+  "name": "DateTime.IsInPreviousNMinutes",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the previous number of minutes, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current minute.",
+  "href": "datetime-isinpreviousnminutes"
+ },
+ {
+  "name": "DateTime.IsInPreviousNSeconds",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the previous number of seconds, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current second.",
+  "href": "datetime-isinpreviousnseconds"
+ },
+ {
+  "name": "DateTime.IsInPreviousSecond",
+  "cat": "datetime",
+  "desc": "Indicates whether this datetime occurs during the previous second, as determined by the current date and time on the system. This function returns false when passed a value that occurs within the current second.",
+  "href": "datetime-isinprevioussecond"
+ },
+ {
+  "name": "DateTime.LocalNow",
+  "cat": "datetime",
+  "desc": "Returns the current date and time in the local timezone.",
+  "href": "datetime-localnow"
+ },
+ {
+  "name": "DateTime.Time",
+  "cat": "datetime",
+  "desc": "Returns the time part of the given datetime value.",
+  "href": "datetime-time"
+ },
+ {
+  "name": "DateTime.ToRecord",
+  "cat": "datetime",
+  "desc": "Returns a record containing the datetime value's parts.",
+  "href": "datetime-torecord"
+ },
+ {
+  "name": "DateTime.ToText",
+  "cat": "datetime",
+  "desc": "Returns a textual representation of the datetime value.",
+  "href": "datetime-totext"
+ },
+ {
+  "name": "#datetime",
+  "cat": "datetime",
+  "desc": "Creates a datetime value from year, month, day, hour, minute, and second.",
+  "href": "sharpdatetime"
+ },
+ {
+  "name": "DateTimeZone.FixedLocalNow",
+  "cat": "datetimezone",
+  "desc": "Returns a DateTimeZone value set to the current date, time, and timezone offset on the system.",
+  "href": "datetimezone-fixedlocalnow"
+ },
+ {
+  "name": "DateTimeZone.FixedUtcNow",
+  "cat": "datetimezone",
+  "desc": "Returns the current date and time in UTC (the GMT timezone).",
+  "href": "datetimezone-fixedutcnow"
+ },
+ {
+  "name": "DateTimeZone.From",
+  "cat": "datetimezone",
+  "desc": "Returns a datetimezone value from a value.",
+  "href": "datetimezone-from"
+ },
+ {
+  "name": "DateTimeZone.FromFileTime",
+  "cat": "datetimezone",
+  "desc": "Returns a DateTimeZone from a number value.",
+  "href": "datetimezone-fromfiletime"
+ },
+ {
+  "name": "DateTimeZone.FromText",
+  "cat": "datetimezone",
+  "desc": "Creates a datetimezone from local, universal, and custom datetimezone formats.",
+  "href": "datetimezone-fromtext"
+ },
+ {
+  "name": "DateTimeZone.LocalNow",
+  "cat": "datetimezone",
+  "desc": "Returns a DateTime value set to the current system date and time.",
+  "href": "datetimezone-localnow"
+ },
+ {
+  "name": "DateTimeZone.RemoveZone",
+  "cat": "datetimezone",
+  "desc": "Returns a datetime value with the zone information removed from the input datetimezone value.",
+  "href": "datetimezone-removezone"
+ },
+ {
+  "name": "DateTimeZone.SwitchZone",
+  "cat": "datetimezone",
+  "desc": "Changes the timezone information for the input DateTimeZone.",
+  "href": "datetimezone-switchzone"
+ },
+ {
+  "name": "DateTimeZone.ToLocal",
+  "cat": "datetimezone",
+  "desc": "Returns a DateTime value from the local time zone.",
+  "href": "datetimezone-tolocal"
+ },
+ {
+  "name": "DateTimeZone.ToRecord",
+  "cat": "datetimezone",
+  "desc": "Returns a record containing parts of a DateTime value.",
+  "href": "datetimezone-torecord"
+ },
+ {
+  "name": "DateTimeZone.ToText",
+  "cat": "datetimezone",
+  "desc": "Returns a text value from a DateTime value.",
+  "href": "datetimezone-totext"
+ },
+ {
+  "name": "DateTimeZone.ToUtc",
+  "cat": "datetimezone",
+  "desc": "Returns a DateTime value to the Utc time zone.",
+  "href": "datetimezone-toutc"
+ },
+ {
+  "name": "DateTimeZone.UtcNow",
+  "cat": "datetimezone",
+  "desc": "Returns a DateTime value set to the current system date and time in the Utc timezone.",
+  "href": "datetimezone-utcnow"
+ },
+ {
+  "name": "DateTimeZone.ZoneHours",
+  "cat": "datetimezone",
+  "desc": "Gets the timezone hour of the value.",
+  "href": "datetimezone-zonehours"
+ },
+ {
+  "name": "DateTimeZone.ZoneMinutes",
+  "cat": "datetimezone",
+  "desc": "Gets the timezone minute of the value.",
+  "href": "datetimezone-zoneminutes"
+ },
+ {
+  "name": "#datetimezone",
+  "cat": "datetimezone",
+  "desc": "Creates a datetimezone value from year, month, day, hour, minute, second, offset-hours, and offset-minutes.",
+  "href": "sharpdatetimezone"
+ },
+ {
+  "name": "Duration.Days",
+  "cat": "duration",
+  "desc": "Returns the days portion of a duration.",
+  "href": "duration-days"
+ },
+ {
+  "name": "Duration.From",
+  "cat": "duration",
+  "desc": "Creates a duration from the given value.",
+  "href": "duration-from"
+ },
+ {
+  "name": "Duration.FromText",
+  "cat": "duration",
+  "desc": "Returns a duration value from a text value.",
+  "href": "duration-fromtext"
+ },
+ {
+  "name": "Duration.Hours",
+  "cat": "duration",
+  "desc": "Returns the hours portion of a duration.",
+  "href": "duration-hours"
+ },
+ {
+  "name": "Duration.Minutes",
+  "cat": "duration",
+  "desc": "Returns the minutes portion of a duration.",
+  "href": "duration-minutes"
+ },
+ {
+  "name": "Duration.Seconds",
+  "cat": "duration",
+  "desc": "Returns the seconds portion of a duration.",
+  "href": "duration-seconds"
+ },
+ {
+  "name": "Duration.ToRecord",
+  "cat": "duration",
+  "desc": "Returns a record containing the parts of the duration.",
+  "href": "duration-torecord"
+ },
+ {
+  "name": "Duration.TotalDays",
+  "cat": "duration",
+  "desc": "Returns the total days this duration spans.",
+  "href": "duration-totaldays"
+ },
+ {
+  "name": "Duration.TotalHours",
+  "cat": "duration",
+  "desc": "Returns the total hours this duration spans.",
+  "href": "duration-totalhours"
+ },
+ {
+  "name": "Duration.TotalMinutes",
+  "cat": "duration",
+  "desc": "Returns the total minutes this duration spans.",
+  "href": "duration-totalminutes"
+ },
+ {
+  "name": "Duration.TotalSeconds",
+  "cat": "duration",
+  "desc": "Returns the total seconds this duration spans.",
+  "href": "duration-totalseconds"
+ },
+ {
+  "name": "Duration.ToText",
+  "cat": "duration",
+  "desc": "Returns the text of the form \"d.h:m:s\".",
+  "href": "duration-totext"
+ },
+ {
+  "name": "#duration",
+  "cat": "duration",
+  "desc": "Creates a duration value from days, hours, minutes, and seconds.",
+  "href": "sharpduration"
+ },
+ {
+  "name": "Expression.Constant",
+  "cat": "expression",
+  "desc": "Returns the M source code representation of a constant value.",
+  "href": "expression-constant"
+ },
+ {
+  "name": "Expression.Evaluate",
+  "cat": "expression",
+  "desc": "Returns the result of evaluating an M expression.",
+  "href": "expression-evaluate"
+ },
+ {
+  "name": "Expression.Identifier",
+  "cat": "expression",
+  "desc": "Returns the M source code representation of an identifier.",
+  "href": "expression-identifier"
+ },
+ {
+  "name": "Lines.FromBinary",
+  "cat": "lines",
+  "desc": "Converts a binary value to a list of text values split at lines breaks.",
+  "href": "lines-frombinary"
+ },
+ {
+  "name": "Lines.FromText",
+  "cat": "lines",
+  "desc": "Converts a text value to a list of text values split at lines breaks.",
+  "href": "lines-fromtext"
+ },
+ {
+  "name": "Lines.ToBinary",
+  "cat": "lines",
+  "desc": "Converts a list of text into a binary value using the specified encoding and lineSeparator.The specified lineSeparator is appended to each line. If not specified then the carriage return and line feed characters are used.",
+  "href": "lines-tobinary"
+ },
+ {
+  "name": "Lines.ToText",
+  "cat": "lines",
+  "desc": "Converts a list of text into a single text. The specified lineSeparator is appended to each line. If not specified then the carriage return and line feed characters are used.",
+  "href": "lines-totext"
+ },
+ {
+  "name": "List.Count",
+  "cat": "list",
+  "desc": "Returns the number of items in a list.",
+  "href": "list-count"
+ },
+ {
+  "name": "List.IsEmpty",
+  "cat": "list",
+  "desc": "Returns true if the list is empty.",
+  "href": "list-isempty"
+ },
+ {
+  "name": "List.NonNullCount",
+  "cat": "list",
+  "desc": "Returns the number of non-null items in the list.",
+  "href": "list-nonnullcount"
+ },
+ {
+  "name": "List.Alternate",
+  "cat": "list",
+  "desc": "Returns a list comprised of all the odd numbered offset elements in a list.",
+  "href": "list-alternate"
+ },
+ {
+  "name": "List.Buffer",
+  "cat": "list",
+  "desc": "Buffers a list.",
+  "href": "list-buffer"
+ },
+ {
+  "name": "List.Distinct",
+  "cat": "list",
+  "desc": "Returns a list of values with duplicates removed.",
+  "href": "list-distinct"
+ },
+ {
+  "name": "List.FindText",
+  "cat": "list",
+  "desc": "Returns a list of values (including record fields) that contain the specified text.",
+  "href": "list-findtext"
+ },
+ {
+  "name": "List.First",
+  "cat": "list",
+  "desc": "Returns the first value of the list or the specified default if empty.",
+  "href": "list-first"
+ },
+ {
+  "name": "List.FirstN",
+  "cat": "list",
+  "desc": "Returns the first set of items in the list by specifying how many items to return or a qualifying condition.",
+  "href": "list-firstn"
+ },
+ {
+  "name": "List.InsertRange",
+  "cat": "list",
+  "desc": "Inserts values into a list at the given index.",
+  "href": "list-insertrange"
+ },
+ {
+  "name": "List.IsDistinct",
+  "cat": "list",
+  "desc": "Indicates whether there are duplicates in the list.",
+  "href": "list-isdistinct"
+ },
+ {
+  "name": "List.Last",
+  "cat": "list",
+  "desc": "Returns the last value of the list or the specified default if empty.",
+  "href": "list-last"
+ },
+ {
+  "name": "List.LastN",
+  "cat": "list",
+  "desc": "Returns a list of the last item or items in the specified list. Can optionally specify how many values to return or a qualifying condition.",
+  "href": "list-lastn"
+ },
+ {
+  "name": "List.MatchesAll",
+  "cat": "list",
+  "desc": "Returns true if the condition function is satisfied by all values in the list.",
+  "href": "list-matchesall"
+ },
+ {
+  "name": "List.MatchesAny",
+  "cat": "list",
+  "desc": "Returns true if the condition function is satisfied by any value.",
+  "href": "list-matchesany"
+ },
+ {
+  "name": "List.Positions",
+  "cat": "list",
+  "desc": "Returns a list of offsets for the input.",
+  "href": "list-positions"
+ },
+ {
+  "name": "List.Range",
+  "cat": "list",
+  "desc": "Returns a subset of the list beginning at an offset.",
+  "href": "list-range"
+ },
+ {
+  "name": "List.Select",
+  "cat": "list",
+  "desc": "Returns a list of values that match the condition.",
+  "href": "list-select"
+ },
+ {
+  "name": "List.Single",
+  "cat": "list",
+  "desc": "Returns the one list item for a list of length one, otherwise raises an error.",
+  "href": "list-single"
+ },
+ {
+  "name": "List.SingleOrDefault",
+  "cat": "list",
+  "desc": "Returns the one list item for a list of length one and the default value for an empty list.",
+  "href": "list-singleordefault"
+ },
+ {
+  "name": "List.Skip",
+  "cat": "list",
+  "desc": "Returns a list that skips the specified number of elements at the beginning of the list.",
+  "href": "list-skip"
+ },
+ {
+  "name": "List.Accumulate",
+  "cat": "list",
+  "desc": "AAccumulates a summary value from the items in the list.",
+  "href": "list-accumulate"
+ },
+ {
+  "name": "List.Combine",
+  "cat": "list",
+  "desc": "Returns a single list by combining multiple lists.",
+  "href": "list-combine"
+ },
+ {
+  "name": "List.ConformToPageReader",
+  "cat": "list",
+  "desc": "This function is intended for internal use only.",
+  "href": "list-conformtopagereader"
+ },
+ {
+  "name": "List.RemoveFirstN",
+  "cat": "list",
+  "desc": "Returns a list that skips the specified number of elements at the beginning of the list.",
+  "href": "list-removefirstn"
+ },
+ {
+  "name": "List.RemoveItems",
+  "cat": "list",
+  "desc": "Removes items from the first list that are present in the second list.",
+  "href": "list-removeitems"
+ },
+ {
+  "name": "List.RemoveLastN",
+  "cat": "list",
+  "desc": "Returns a list that removes the specified number of elements from the end of the list.",
+  "href": "list-removelastn"
+ },
+ {
+  "name": "List.RemoveMatchingItems",
+  "cat": "list",
+  "desc": "Removes all occurrences of the input values.",
+  "href": "list-removematchingitems"
+ },
+ {
+  "name": "List.RemoveNulls",
+  "cat": "list",
+  "desc": "Removes all null values from the specified list.",
+  "href": "list-removenulls"
+ },
+ {
+  "name": "List.RemoveRange",
+  "cat": "list",
+  "desc": "Removes count number of values starting at the specified position.",
+  "href": "list-removerange"
+ },
+ {
+  "name": "List.Repeat",
+  "cat": "list",
+  "desc": "Returns a list that is count repetitions of the original list.",
+  "href": "list-repeat"
+ },
+ {
+  "name": "List.ReplaceMatchingItems",
+  "cat": "list",
+  "desc": "Replaces occurrences of existing values in the list with new values that match the condition.",
+  "href": "list-replacematchingitems"
+ },
+ {
+  "name": "List.ReplaceRange",
+  "cat": "list",
+  "desc": "Replaces count number of values starting at position with the replacement values.",
+  "href": "list-replacerange"
+ },
+ {
+  "name": "List.ReplaceValue",
+  "cat": "list",
+  "desc": "Searches a list for the specified value and replaces it.",
+  "href": "list-replacevalue"
+ },
+ {
+  "name": "List.Reverse",
+  "cat": "list",
+  "desc": "Reverses the order of values in the list.",
+  "href": "list-reverse"
+ },
+ {
+  "name": "List.Split",
+  "cat": "list",
+  "desc": "Splits the specified list into a list of lists using the specified page size.",
+  "href": "list-split"
+ },
+ {
+  "name": "List.Transform",
+  "cat": "list",
+  "desc": "Returns a new list of values computed from this list.",
+  "href": "list-transform"
+ },
+ {
+  "name": "List.TransformMany",
+  "cat": "list",
+  "desc": "Returns a list whose elements are transformed from the input list using specified functions.",
+  "href": "list-transformmany"
+ },
+ {
+  "name": "List.Zip",
+  "cat": "list",
+  "desc": "Returns a list of lists by combining items at the same position in multiple lists.",
+  "href": "list-zip"
+ },
+ {
+  "name": "List.AllTrue",
+  "cat": "list",
+  "desc": "Returns true if all expressions are true.",
+  "href": "list-alltrue"
+ },
+ {
+  "name": "List.AnyTrue",
+  "cat": "list",
+  "desc": "Returns true if any expression is true.",
+  "href": "list-anytrue"
+ },
+ {
+  "name": "List.Contains",
+  "cat": "list",
+  "desc": "Indicates whether the list contains the value.",
+  "href": "list-contains"
+ },
+ {
+  "name": "List.ContainsAll",
+  "cat": "list",
+  "desc": "Indicates where a list includes all the values in another list.",
+  "href": "list-containsall"
+ },
+ {
+  "name": "List.ContainsAny",
+  "cat": "list",
+  "desc": "Indicates where a list includes any of the values in another list.",
+  "href": "list-containsany"
+ },
+ {
+  "name": "List.PositionOf",
+  "cat": "list",
+  "desc": "Returns the offset(s) of a value in a list.",
+  "href": "list-positionof"
+ },
+ {
+  "name": "List.PositionOfAny",
+  "cat": "list",
+  "desc": "Returns the first offset of a value in a list.",
+  "href": "list-positionofany"
+ },
+ {
+  "name": "List.Difference",
+  "cat": "list",
+  "desc": "Returns the difference of the two given lists.",
+  "href": "list-difference"
+ },
+ {
+  "name": "List.Intersect",
+  "cat": "list",
+  "desc": "Returns the intersection of the list values found in the input.",
+  "href": "list-intersect"
+ },
+ {
+  "name": "List.Union",
+  "cat": "list",
+  "desc": "Returns the union of the list values found in the input.",
+  "href": "list-union"
+ },
+ {
+  "name": "List.Max",
+  "cat": "list",
+  "desc": "Returns the maximum value or the default value for an empty list.",
+  "href": "list-max"
+ },
+ {
+  "name": "List.MaxN",
+  "cat": "list",
+  "desc": "Returns the maximum value(s) in the list. The number of values to return or a filter condition must be specified.",
+  "href": "list-maxn"
+ },
+ {
+  "name": "List.Median",
+  "cat": "list",
+  "desc": "Returns the median value in the list.",
+  "href": "list-median"
+ },
+ {
+  "name": "List.Min",
+  "cat": "list",
+  "desc": "Returns the minimum value or the default value for an empty list.",
+  "href": "list-min"
+ },
+ {
+  "name": "List.MinN",
+  "cat": "list",
+  "desc": "Returns the minimum value(s) in the list. The number of values to return or a filter condition may be specified.",
+  "href": "list-minn"
+ },
+ {
+  "name": "List.Sort",
+  "cat": "list",
+  "desc": "Sorts a list of data according to the criteria specified.",
+  "href": "list-sort"
+ },
+ {
+  "name": "List.Percentile",
+  "cat": "list",
+  "desc": "Returns one or more sample percentiles corresponding to the given probabilities.",
+  "href": "list-percentile"
+ },
+ {
+  "name": "List.Average",
+  "cat": "list",
+  "desc": "Returns the average of the values. Works with number, date, datetime, datetimezone and duration values.",
+  "href": "list-average"
+ },
+ {
+  "name": "List.Mode",
+  "cat": "list",
+  "desc": "Returns the most frequent value in the list.",
+  "href": "list-mode"
+ },
+ {
+  "name": "List.Modes",
+  "cat": "list",
+  "desc": "Returns a list of the most frequent values in the list.",
+  "href": "list-modes"
+ },
+ {
+  "name": "List.StandardDeviation",
+  "cat": "list",
+  "desc": "Returns a sample based estimate of the standard deviation. This function performs a sample based estimate. The result is a number for numbers, and a duration for DateTimes and Durations.",
+  "href": "list-standarddeviation"
+ },
+ {
+  "name": "List.Sum",
+  "cat": "list",
+  "desc": "Returns the sum of the items in the list.",
+  "href": "list-sum"
+ },
+ {
+  "name": "List.Covariance",
+  "cat": "list",
+  "desc": "Returns the covariance between the two lists of numbers.",
+  "href": "list-covariance"
+ },
+ {
+  "name": "List.Product",
+  "cat": "list",
+  "desc": "Returns the product of the numbers in the list.",
+  "href": "list-product"
+ },
+ {
+  "name": "List.Dates",
+  "cat": "list",
+  "desc": "Generates a list of date values given an initial value, count, and incremental duration value.",
+  "href": "list-dates"
+ },
+ {
+  "name": "List.DateTimes",
+  "cat": "list",
+  "desc": "Generates a list of datetime values given an initial value, count, and incremental duration value.",
+  "href": "list-datetimes"
+ },
+ {
+  "name": "List.DateTimeZones",
+  "cat": "list",
+  "desc": "Generates a list of datetimezone values given an initial value, count, and incremental duration value.",
+  "href": "list-datetimezones"
+ },
+ {
+  "name": "List.Durations",
+  "cat": "list",
+  "desc": "Generates a list of duration values given an initial value, count, and incremental duration value.",
+  "href": "list-durations"
+ },
+ {
+  "name": "List.Generate",
+  "cat": "list",
+  "desc": "Generates a list of values.",
+  "href": "list-generate"
+ },
+ {
+  "name": "List.Numbers",
+  "cat": "list",
+  "desc": "Returns a list of numbers given an initial value, count, and optional increment value.",
+  "href": "list-numbers"
+ },
+ {
+  "name": "List.Random",
+  "cat": "list",
+  "desc": "Returns a list of random numbers.",
+  "href": "list-random"
+ },
+ {
+  "name": "List.Times",
+  "cat": "list",
+  "desc": "Generates a list of time values given an initial value, count, and incremental duration value.",
+  "href": "list-times"
+ },
+ {
+  "name": "Logical.From",
+  "cat": "logical",
+  "desc": "Creates a logical from the given value.",
+  "href": "logical-from"
+ },
+ {
+  "name": "Logical.FromText",
+  "cat": "logical",
+  "desc": "Creates a logical value from the text values \"true\" and \"false\".",
+  "href": "logical-fromtext"
+ },
+ {
+  "name": "Logical.ToText",
+  "cat": "logical",
+  "desc": "Returns the text \"true\" or \"false\" given a logical value.",
+  "href": "logical-totext"
+ },
+ {
+  "name": "Number.IsEven",
+  "cat": "number",
+  "desc": "Returns true if a value is an even number.",
+  "href": "number-iseven"
+ },
+ {
+  "name": "Number.IsNaN",
+  "cat": "number",
+  "desc": "Returns true if a value is Number.NaN .",
+  "href": "number-isnan"
+ },
+ {
+  "name": "Number.IsOdd",
+  "cat": "number",
+  "desc": "Returns true if a value is an odd number.",
+  "href": "number-isodd"
+ },
+ {
+  "name": "Byte.From",
+  "cat": "number",
+  "desc": "Returns an 8-bit integer number value from the given value.",
+  "href": "byte-from"
+ },
+ {
+  "name": "Currency.From",
+  "cat": "number",
+  "desc": "Returns a currency value from the given value.",
+  "href": "currency-from"
+ },
+ {
+  "name": "Decimal.From",
+  "cat": "number",
+  "desc": "Returns a decimal number value from the given value.",
+  "href": "decimal-from"
+ },
+ {
+  "name": "Double.From",
+  "cat": "number",
+  "desc": "Returns a Double number value from the given value.",
+  "href": "double-from"
+ },
+ {
+  "name": "Int8.From",
+  "cat": "number",
+  "desc": "Returns a signed 8-bit integer number value from the given value.",
+  "href": "int8-from"
+ },
+ {
+  "name": "Int16.From",
+  "cat": "number",
+  "desc": "Returns a 16-bit integer number value from the given value.",
+  "href": "int16-from"
+ },
+ {
+  "name": "Int32.From",
+  "cat": "number",
+  "desc": "Returns a 32-bit integer number value from the given value.",
+  "href": "int32-from"
+ },
+ {
+  "name": "Int64.From",
+  "cat": "number",
+  "desc": "Returns a 64-bit integer number value from the given value.",
+  "href": "int64-from"
+ },
+ {
+  "name": "Number.From",
+  "cat": "number",
+  "desc": "Returns a number value from a value.",
+  "href": "number-from"
+ },
+ {
+  "name": "Number.FromText",
+  "cat": "number",
+  "desc": "Returns a number value from a text value.",
+  "href": "number-fromtext"
+ },
+ {
+  "name": "Number.ToText",
+  "cat": "number",
+  "desc": "Converts the given number to text.",
+  "href": "number-totext"
+ },
+ {
+  "name": "Percentage.From",
+  "cat": "number",
+  "desc": "Returns a percentage value from the given value.",
+  "href": "percentage-from"
+ },
+ {
+  "name": "Single.From",
+  "cat": "number",
+  "desc": "Returns a Single number value from the given value.",
+  "href": "single-from"
+ },
+ {
+  "name": "Number.Round",
+  "cat": "number",
+  "desc": "Returns a nullable number (n) if value is an integer.",
+  "href": "number-round"
+ },
+ {
+  "name": "Number.RoundAwayFromZero",
+  "cat": "number",
+  "desc": "Returns Number.RoundUp(value) when value >= 0 and Number.RoundDown(value) when value < 0.",
+  "href": "number-roundawayfromzero"
+ },
+ {
+  "name": "Number.RoundDown",
+  "cat": "number",
+  "desc": "Returns the largest integer less than or equal to a number value.",
+  "href": "number-rounddown"
+ },
+ {
+  "name": "Number.RoundTowardZero",
+  "cat": "number",
+  "desc": "Returns Number.RoundDown(x) when x >= 0 and Number.RoundUp(x) when x < 0.",
+  "href": "number-roundtowardzero"
+ },
+ {
+  "name": "Number.RoundUp",
+  "cat": "number",
+  "desc": "Returns the larger integer greater than or equal to a number value.",
+  "href": "number-roundup"
+ },
+ {
+  "name": "Number.Abs",
+  "cat": "number",
+  "desc": "Returns the absolute value of a number.",
+  "href": "number-abs"
+ },
+ {
+  "name": "Number.Combinations",
+  "cat": "number",
+  "desc": "Returns the number of combinations of a given number of items for the optional combination size.",
+  "href": "number-combinations"
+ },
+ {
+  "name": "Number.Exp",
+  "cat": "number",
+  "desc": "Returns a number representing e raised to a power.",
+  "href": "number-exp"
+ },
+ {
+  "name": "Number.Factorial",
+  "cat": "number",
+  "desc": "Returns the factorial of a number.",
+  "href": "number-factorial"
+ },
+ {
+  "name": "Number.IntegerDivide",
+  "cat": "number",
+  "desc": "Divides two numbers and returns the whole part of the resulting number.",
+  "href": "number-integerdivide"
+ },
+ {
+  "name": "Number.Ln",
+  "cat": "number",
+  "desc": "Returns the natural logarithm of a number.",
+  "href": "number-ln"
+ },
+ {
+  "name": "Number.Log",
+  "cat": "number",
+  "desc": "Returns the logarithm of a number to the base.",
+  "href": "number-log"
+ },
+ {
+  "name": "Number.Log10",
+  "cat": "number",
+  "desc": "Returns the base-10 logarithm of a number.",
+  "href": "number-log10"
+ },
+ {
+  "name": "Number.Mod",
+  "cat": "number",
+  "desc": "Divides two numbers and returns the remainder of the resulting number.",
+  "href": "number-mod"
+ },
+ {
+  "name": "Number.Permutations",
+  "cat": "number",
+  "desc": "Returns the number of total permutations of a given number of items for the optional permutation size.",
+  "href": "number-permutations"
+ },
+ {
+  "name": "Number.Power",
+  "cat": "number",
+  "desc": "Returns a number raised by a power.",
+  "href": "number-power"
+ },
+ {
+  "name": "Number.Sign",
+  "cat": "number",
+  "desc": "Returns 1 for positive numbers, -1 for negative numbers, or 0 for zero.",
+  "href": "number-sign"
+ },
+ {
+  "name": "Number.Sqrt",
+  "cat": "number",
+  "desc": "Returns the square root of a number.",
+  "href": "number-sqrt"
+ },
+ {
+  "name": "Number.Random",
+  "cat": "number",
+  "desc": "Returns a random fractional number between 0 and 1.",
+  "href": "number-random"
+ },
+ {
+  "name": "Number.RandomBetween",
+  "cat": "number",
+  "desc": "Returns a random number between the two given number values.",
+  "href": "number-randombetween"
+ },
+ {
+  "name": "Number.Acos",
+  "cat": "number",
+  "desc": "Returns the arccosine of a number.",
+  "href": "number-acos"
+ },
+ {
+  "name": "Number.Asin",
+  "cat": "number",
+  "desc": "Returns the arcsine of a number.",
+  "href": "number-asin"
+ },
+ {
+  "name": "Number.Atan",
+  "cat": "number",
+  "desc": "Returns the arctangent of a number.",
+  "href": "number-atan"
+ },
+ {
+  "name": "Number.Atan2",
+  "cat": "number",
+  "desc": "Returns the arctangent of the division of two numbers.",
+  "href": "number-atan2"
+ },
+ {
+  "name": "Number.Cos",
+  "cat": "number",
+  "desc": "Returns the cosine of a number.",
+  "href": "number-cos"
+ },
+ {
+  "name": "Number.Cosh",
+  "cat": "number",
+  "desc": "Returns the hyperbolic cosine of a number.",
+  "href": "number-cosh"
+ },
+ {
+  "name": "Number.Sin",
+  "cat": "number",
+  "desc": "Returns the sine of a number.",
+  "href": "number-sin"
+ },
+ {
+  "name": "Number.Sinh",
+  "cat": "number",
+  "desc": "Returns the hyperbolic sine of a number.",
+  "href": "number-sinh"
+ },
+ {
+  "name": "Number.Tan",
+  "cat": "number",
+  "desc": "Returns the tangent of a number.",
+  "href": "number-tan"
+ },
+ {
+  "name": "Number.Tanh",
+  "cat": "number",
+  "desc": "Returns the hyperbolic tangent of a number.",
+  "href": "number-tanh"
+ },
+ {
+  "name": "Number.BitwiseAnd",
+  "cat": "number",
+  "desc": "Returns the result of a bitwise AND operation on the provided operands.",
+  "href": "number-bitwiseand"
+ },
+ {
+  "name": "Number.BitwiseNot",
+  "cat": "number",
+  "desc": "Returns the result of a bitwise NOT operation on the provided operands.",
+  "href": "number-bitwisenot"
+ },
+ {
+  "name": "Number.BitwiseOr",
+  "cat": "number",
+  "desc": "Returns the result of a bitwise OR operation on the provided operands.",
+  "href": "number-bitwiseor"
+ },
+ {
+  "name": "Number.BitwiseShiftLeft",
+  "cat": "number",
+  "desc": "Returns the result of a bitwise shift left operation on the operands.",
+  "href": "number-bitwiseshiftleft"
+ },
+ {
+  "name": "Number.BitwiseShiftRight",
+  "cat": "number",
+  "desc": "Returns the result of a bitwise shift right operation on the operands.",
+  "href": "number-bitwiseshiftright"
+ },
+ {
+  "name": "Number.BitwiseXor",
+  "cat": "number",
+  "desc": "Returns the result of a bitwise XOR operation on the provided operands.",
+  "href": "number-bitwisexor"
+ },
+ {
+  "name": "Record.FieldCount",
+  "cat": "record",
+  "desc": "Returns the number of fields in a record.",
+  "href": "record-fieldcount"
+ },
+ {
+  "name": "Record.HasFields",
+  "cat": "record",
+  "desc": "Returns true if the field name or field names are present in a record.",
+  "href": "record-hasfields"
+ },
+ {
+  "name": "Geography.FromWellKnownText",
+  "cat": "record",
+  "desc": "Translates text representing a geographic value in Well-Known Text (WKT) format into a structured record.",
+  "href": "geography-fromwellknowntext"
+ },
+ {
+  "name": "Geography.ToWellKnownText",
+  "cat": "record",
+  "desc": "Translates a structured geographic point value into its Well-Known Text (WKT) representation.",
+  "href": "geography-towellknowntext"
+ },
+ {
+  "name": "GeographyPoint.From",
+  "cat": "record",
+  "desc": "Creates a record representing a geographic point from parts.",
+  "href": "geographypoint-from"
+ },
+ {
+  "name": "Geometry.FromWellKnownText",
+  "cat": "record",
+  "desc": "Translates text representing a geometric value in Well-Known Text (WKT) format into a structured record.",
+  "href": "geometry-fromwellknowntext"
+ },
+ {
+  "name": "Geometry.ToWellKnownText",
+  "cat": "record",
+  "desc": "Translates a structured geometric point value into its Well-Known Text (WKT) representation.",
+  "href": "geometry-towellknowntext"
+ },
+ {
+  "name": "GeometryPoint.From",
+  "cat": "record",
+  "desc": "Creates a record representing a geometric point from parts.",
+  "href": "geometrypoint-from"
+ },
+ {
+  "name": "Record.AddField",
+  "cat": "record",
+  "desc": "Adds a field from a field name and value.",
+  "href": "record-addfield"
+ },
+ {
+  "name": "Record.Combine",
+  "cat": "record",
+  "desc": "Combines the records in a list.",
+  "href": "record-combine"
+ },
+ {
+  "name": "Record.RemoveFields",
+  "cat": "record",
+  "desc": "Removes the specified field(s) from the input record.",
+  "href": "record-removefields"
+ },
+ {
+  "name": "Record.RenameFields",
+  "cat": "record",
+  "desc": "Returns a new record that renames the fields specified. The resultant fields will retain their original order. This function supports swapping and chaining field names. However, all target names plus remaining field names must constitute a unique set or an error will occur.",
+  "href": "record-renamefields"
+ },
+ {
+  "name": "Record.ReorderFields",
+  "cat": "record",
+  "desc": "Reorders record fields to match the order of a list of field names.",
+  "href": "record-reorderfields"
+ },
+ {
+  "name": "Record.TransformFields",
+  "cat": "record",
+  "desc": "Transforms fields by applying transformOperations. For more more information about values supported by transformOperations, go to Parameter Values .",
+  "href": "record-transformfields"
+ },
+ {
+  "name": "Record.Field",
+  "cat": "record",
+  "desc": "Returns the value of the given field. This function can be used to dynamically create field lookup syntax for a given record. In that way it is a dynamic version of the record[field] syntax.",
+  "href": "record-field"
+ },
+ {
+  "name": "Record.FieldNames",
+  "cat": "record",
+  "desc": "Returns a list of field names in order of the record's fields.",
+  "href": "record-fieldnames"
+ },
+ {
+  "name": "Record.FieldOrDefault",
+  "cat": "record",
+  "desc": "Returns the value of a field from a record, or the default value if the field does not exist.",
+  "href": "record-fieldordefault"
+ },
+ {
+  "name": "Record.FieldValues",
+  "cat": "record",
+  "desc": "Returns a list of field values in order of the record's fields.",
+  "href": "record-fieldvalues"
+ },
+ {
+  "name": "Record.SelectFields",
+  "cat": "record",
+  "desc": "Returns a new record that contains the fields selected from the input record. The original order of the fields is maintained.",
+  "href": "record-selectfields"
+ },
+ {
+  "name": "Record.FromList",
+  "cat": "record",
+  "desc": "Returns a record given a list of field values and a set of fields.",
+  "href": "record-fromlist"
+ },
+ {
+  "name": "Record.FromTable",
+  "cat": "record",
+  "desc": "Returns a record from a table of records containing field names and values.",
+  "href": "record-fromtable"
+ },
+ {
+  "name": "Record.ToList",
+  "cat": "record",
+  "desc": "Returns a list of values containing the field values of the input record.",
+  "href": "record-tolist"
+ },
+ {
+  "name": "Record.ToTable",
+  "cat": "record",
+  "desc": "Returns a table of records containing field names and values from an input record.",
+  "href": "record-totable"
+ },
+ {
+  "name": "MissingField option",
+  "cat": "record",
+  "desc": "More information: MissingField.Type",
+  "href": null
+ },
+ {
+  "name": "Transform operations",
+  "cat": "record",
+  "desc": "Transform operations can be specified by either of the following values: \u2022 A list value of two items, first item being the field name and the second item being the transformation function applied to that field to produce a new value. \u2022 A list of transformations can be provided by providing a list value, and each item being the list value of 2 items as described above. For examples, go to the description of Record.TransformFields",
+  "href": null
+ },
+ {
+  "name": "Rename operations",
+  "cat": "record",
+  "desc": "Rename operations for a record can be specified as either of: A single rename operation, which is represented by a list of two field names, old and new. For examples, go to the description of Record.RenameFields .",
+  "href": null
+ },
+ {
+  "name": "Replacer.ReplaceText",
+  "cat": "replacer",
+  "desc": "This function be provided to List.ReplaceValue or Table.ReplaceValue to do replace of text values in list and table values respectively.",
+  "href": "replacer-replacetext"
+ },
+ {
+  "name": "Replacer.ReplaceValue",
+  "cat": "replacer",
+  "desc": "This function be provided to List.ReplaceValue or Table.ReplaceValue to do replace values in list and table values respectively.",
+  "href": "replacer-replacevalue"
+ },
+ {
+  "name": "Splitter.SplitByNothing",
+  "cat": "splitter",
+  "desc": "Returns a function that does no splitting, returning its argument as a single element list.",
+  "href": "splitter-splitbynothing"
+ },
+ {
+  "name": "Splitter.SplitTextByCharacterTransition",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text into a list of text according to a transition from one kind of character to another.",
+  "href": "splitter-splittextbycharactertransition"
+ },
+ {
+  "name": "Splitter.SplitTextByAnyDelimiter",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text by any supported delimiter.",
+  "href": "splitter-splittextbyanydelimiter"
+ },
+ {
+  "name": "Splitter.SplitTextByDelimiter",
+  "cat": "splitter",
+  "desc": "Returns a function that will split text according to a delimiter.",
+  "href": "splitter-splittextbydelimiter"
+ },
+ {
+  "name": "Splitter.SplitTextByEachDelimiter",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text by each delimiter in turn.",
+  "href": "splitter-splittextbyeachdelimiter"
+ },
+ {
+  "name": "Splitter.SplitTextByLengths",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text according to the specified lengths.",
+  "href": "splitter-splittextbylengths"
+ },
+ {
+  "name": "Splitter.SplitTextByPositions",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text according to the specified positions.",
+  "href": "splitter-splittextbypositions"
+ },
+ {
+  "name": "Splitter.SplitTextByRanges",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text according to the specified ranges.",
+  "href": "splitter-splittextbyranges"
+ },
+ {
+  "name": "Splitter.SplitTextByRepeatedLengths",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text into a list of text after the specified length repeatedly.",
+  "href": "splitter-splittextbyrepeatedlengths"
+ },
+ {
+  "name": "Splitter.SplitTextByWhitespace",
+  "cat": "splitter",
+  "desc": "Returns a function that splits text according to whitespace.",
+  "href": "splitter-splittextbywhitespace"
+ },
+ {
+  "name": "#table",
+  "cat": "table",
+  "desc": "Creates a table value from columns and rows.",
+  "href": "sharptable"
+ },
+ {
+  "name": "ItemExpression.From",
+  "cat": "table",
+  "desc": "Returns the abstract syntax tree (AST) for the body of a function.",
+  "href": "itemexpression-from"
+ },
+ {
+  "name": "RowExpression.Column",
+  "cat": "table",
+  "desc": "Returns an abstract syntax tree (AST) that represents access to a column within a row expression.",
+  "href": "rowexpression-column"
+ },
+ {
+  "name": "RowExpression.From",
+  "cat": "table",
+  "desc": "Returns the abstract syntax tree (AST) for the body of a function.",
+  "href": "rowexpression-from"
+ },
+ {
+  "name": "Table.FromColumns",
+  "cat": "table",
+  "desc": "Creates a table from a list of columns and specified values.",
+  "href": "table-fromcolumns"
+ },
+ {
+  "name": "Table.FromList",
+  "cat": "table",
+  "desc": "Converts a list into a table by applying the specified splitting function to each item in the list.",
+  "href": "table-fromlist"
+ },
+ {
+  "name": "Table.FromRecords",
+  "cat": "table",
+  "desc": "Converts a list of records into a table.",
+  "href": "table-fromrecords"
+ },
+ {
+  "name": "Table.FromRows",
+  "cat": "table",
+  "desc": "Creates a table from a list of row values and optional columns.",
+  "href": "table-fromrows"
+ },
+ {
+  "name": "Table.FromValue",
+  "cat": "table",
+  "desc": "Creates a table with a column from the provided value or values.",
+  "href": "table-fromvalue"
+ },
+ {
+  "name": "Table.WithErrorContext",
+  "cat": "table",
+  "desc": "This function is intended for internal use only.",
+  "href": "table-witherrorcontext"
+ },
+ {
+  "name": "Table.View",
+  "cat": "table",
+  "desc": "Creates or extends a table with user-defined handlers for query and action operations.",
+  "href": "table-view"
+ },
+ {
+  "name": "Table.ViewError",
+  "cat": "table",
+  "desc": "Creates a modified error record that won't trigger a fallback when raised by a handler defined on a view (via Table.View ).",
+  "href": "table-viewerror"
+ },
+ {
+  "name": "Table.ViewFunction",
+  "cat": "table",
+  "desc": "Creates a function that can be intercepted by a handler defined on a view (via Table.View ).",
+  "href": "table-viewfunction"
+ },
+ {
+  "name": "Table.ToColumns",
+  "cat": "table",
+  "desc": "Creates a list of nested lists of column values from a table.",
+  "href": "table-tocolumns"
+ },
+ {
+  "name": "Table.ToList",
+  "cat": "table",
+  "desc": "Converts a table into a list by applying the specified combining function to each row of values in the table.",
+  "href": "table-tolist"
+ },
+ {
+  "name": "Table.ToRecords",
+  "cat": "table",
+  "desc": "Converts a table to a list of records.",
+  "href": "table-torecords"
+ },
+ {
+  "name": "Table.ToRows",
+  "cat": "table",
+  "desc": "Creates a list of nested lists of row values from a table.",
+  "href": "table-torows"
+ },
+ {
+  "name": "Table.ApproximateRowCount",
+  "cat": "table",
+  "desc": "Returns the approximate number of rows in the table.",
+  "href": "table-approximaterowcount"
+ },
+ {
+  "name": "Table.ColumnCount",
+  "cat": "table",
+  "desc": "Returns the number of columns in the table.",
+  "href": "table-columncount"
+ },
+ {
+  "name": "Table.IsEmpty",
+  "cat": "table",
+  "desc": "Indicates whether the table contains any rows.",
+  "href": "table-isempty"
+ },
+ {
+  "name": "Table.PartitionValues",
+  "cat": "table",
+  "desc": "Returns information about how a table is partitioned.",
+  "href": "table-partitionvalues"
+ },
+ {
+  "name": "Table.Profile",
+  "cat": "table",
+  "desc": "Returns a profile of the columns of a table.",
+  "href": "table-profile"
+ },
+ {
+  "name": "Table.RowCount",
+  "cat": "table",
+  "desc": "Returns the number of rows in the table.",
+  "href": "table-rowcount"
+ },
+ {
+  "name": "Table.Schema",
+  "cat": "table",
+  "desc": "Returns a table containing a description of the columns (that is, the schema) of the specified table.",
+  "href": "table-schema"
+ },
+ {
+  "name": "Tables.GetRelationships",
+  "cat": "table",
+  "desc": "Gets the relationships among a set of tables.",
+  "href": "tables-getrelationships"
+ },
+ {
+  "name": "Table.AlternateRows",
+  "cat": "table",
+  "desc": "Keeps the initial offset then alternates taking and skipping the following rows.",
+  "href": "table-alternaterows"
+ },
+ {
+  "name": "Table.Combine",
+  "cat": "table",
+  "desc": "Returns a table that is the result of merging a list of tables.",
+  "href": "table-combine"
+ },
+ {
+  "name": "Table.FindText",
+  "cat": "table",
+  "desc": "Returns all the rows that contain the given text in the table.",
+  "href": "table-findtext"
+ },
+ {
+  "name": "Table.First",
+  "cat": "table",
+  "desc": "Returns the first row or a specified default value.",
+  "href": "table-first"
+ },
+ {
+  "name": "Table.FirstN",
+  "cat": "table",
+  "desc": "Returns the first count rows specified.",
+  "href": "table-firstn"
+ },
+ {
+  "name": "Table.FirstValue",
+  "cat": "table",
+  "desc": "Returns the first column of the first row of the table or a specified default value.",
+  "href": "table-firstvalue"
+ },
+ {
+  "name": "Table.FromPartitions",
+  "cat": "table",
+  "desc": "Returns a table that is the result of combining a set of partitioned tables.",
+  "href": "table-frompartitions"
+ },
+ {
+  "name": "Table.InsertRows",
+  "cat": "table",
+  "desc": "Inserts a list of rows into the table at the specified position.",
+  "href": "table-insertrows"
+ },
+ {
+  "name": "Table.Last",
+  "cat": "table",
+  "desc": "Returns the last row or a specified default value.",
+  "href": "table-last"
+ },
+ {
+  "name": "Table.LastN",
+  "cat": "table",
+  "desc": "Returns the last specified number of rows.",
+  "href": "table-lastn"
+ },
+ {
+  "name": "Table.MatchesAllRows",
+  "cat": "table",
+  "desc": "Indicates whether all the rows in the table meet the given condition.",
+  "href": "table-matchesallrows"
+ },
+ {
+  "name": "Table.MatchesAnyRows",
+  "cat": "table",
+  "desc": "Indicates whether any the rows in the table meet the given condition.",
+  "href": "table-matchesanyrows"
+ },
+ {
+  "name": "Table.Partition",
+  "cat": "table",
+  "desc": "Partitions the table into a list of tables based on the number of groups and column specified.",
+  "href": "table-partition"
+ },
+ {
+  "name": "Table.Range",
+  "cat": "table",
+  "desc": "Returns the rows beginning at the specified offset.",
+  "href": "table-range"
+ },
+ {
+  "name": "Table.RemoveFirstN",
+  "cat": "table",
+  "desc": "Returns a table with the specified number of rows removed from the table starting at the first row.",
+  "href": "table-removefirstn"
+ },
+ {
+  "name": "Table.RemoveLastN",
+  "cat": "table",
+  "desc": "Returns a table with the specified number of rows removed from the table starting at the last row.",
+  "href": "table-removelastn"
+ },
+ {
+  "name": "Table.RemoveRows",
+  "cat": "table",
+  "desc": "Removes the specified number of rows.",
+  "href": "table-removerows"
+ },
+ {
+  "name": "Table.RemoveRowsWithErrors",
+  "cat": "table",
+  "desc": "Returns a table with the rows removed from the input table that contain an error in at least one of the cells. If a columns list is specified, then only the cells in the specified columns are inspected for errors.",
+  "href": "table-removerowswitherrors"
+ },
+ {
+  "name": "Table.Repeat",
+  "cat": "table",
+  "desc": "Repeats the rows of the tables a specified number of times.",
+  "href": "table-repeat"
+ },
+ {
+  "name": "Table.ReplaceRows",
+  "cat": "table",
+  "desc": "Replaces the specified range of rows with the provided row or rows.",
+  "href": "table-replacerows"
+ },
+ {
+  "name": "Table.ReverseRows",
+  "cat": "table",
+  "desc": "Returns a table with the rows in reverse order.",
+  "href": "table-reverserows"
+ },
+ {
+  "name": "Table.SelectRows",
+  "cat": "table",
+  "desc": "Selects the rows that meet the condition function.",
+  "href": "table-selectrows"
+ },
+ {
+  "name": "Table.SelectRowsWithErrors",
+  "cat": "table",
+  "desc": "Returns a table with only those rows of the input table that contain an error in at least one of the cells. If a columns list is specified, then only the cells in the specified columns are inspected for errors.",
+  "href": "table-selectrowswitherrors"
+ },
+ {
+  "name": "Table.SingleRow",
+  "cat": "table",
+  "desc": "Returns a single row in the table.",
+  "href": "table-singlerow"
+ },
+ {
+  "name": "Table.Skip",
+  "cat": "table",
+  "desc": "Returns a table with the first specified number of rows skipped.",
+  "href": "table-skip"
+ },
+ {
+  "name": "Table.SplitAt",
+  "cat": "table",
+  "desc": "Returns a list containing the first count rows specified and the remaining rows.",
+  "href": "table-splitat"
+ },
+ {
+  "name": "Table.Column",
+  "cat": "table",
+  "desc": "Returns a specified column of data from the table as a list.",
+  "href": "table-column"
+ },
+ {
+  "name": "Table.ColumnNames",
+  "cat": "table",
+  "desc": "Returns the column names as a list.",
+  "href": "table-columnnames"
+ },
+ {
+  "name": "Table.ColumnsOfType",
+  "cat": "table",
+  "desc": "Returns a list with the names of the columns that match the specified types.",
+  "href": "table-columnsoftype"
+ },
+ {
+  "name": "Table.DemoteHeaders",
+  "cat": "table",
+  "desc": "Demotes the column headers to the first row of values.",
+  "href": "table-demoteheaders"
+ },
+ {
+  "name": "Table.DuplicateColumn",
+  "cat": "table",
+  "desc": "Duplicates a column with the specified name. Values and type are copied from the source column.",
+  "href": "table-duplicatecolumn"
+ },
+ {
+  "name": "Table.HasColumns",
+  "cat": "table",
+  "desc": "Indicates whether the table contains the specified column or columns.",
+  "href": "table-hascolumns"
+ },
+ {
+  "name": "Table.Pivot",
+  "cat": "table",
+  "desc": "Given a pair of columns representing attribute-value pairs, rotates the data in the attribute column into a column headings.",
+  "href": "table-pivot"
+ },
+ {
+  "name": "Table.PrefixColumns",
+  "cat": "table",
+  "desc": "Returns a table where the columns have all been prefixed with the given text.",
+  "href": "table-prefixcolumns"
+ },
+ {
+  "name": "Table.PromoteHeaders",
+  "cat": "table",
+  "desc": "Promotes the first row of values as the new column headers (that is, as column names).",
+  "href": "table-promoteheaders"
+ },
+ {
+  "name": "Table.RemoveColumns",
+  "cat": "table",
+  "desc": "Removes the specified columns.",
+  "href": "table-removecolumns"
+ },
+ {
+  "name": "Table.ReorderColumns",
+  "cat": "table",
+  "desc": "Returns a table with the columns in the specified order.",
+  "href": "table-reordercolumns"
+ },
+ {
+  "name": "Table.RenameColumns",
+  "cat": "table",
+  "desc": "Returns a table with the columns renamed as specified.",
+  "href": "table-renamecolumns"
+ },
+ {
+  "name": "Table.SelectColumns",
+  "cat": "table",
+  "desc": "Returns a table with only the specified columns.",
+  "href": "table-selectcolumns"
+ },
+ {
+  "name": "Table.TransformColumnNames",
+  "cat": "table",
+  "desc": "Transforms column names by using the given function.",
+  "href": "table-transformcolumnnames"
+ },
+ {
+  "name": "Table.Unpivot",
+  "cat": "table",
+  "desc": "Translates a set of columns in a table into attribute-value pairs.",
+  "href": "table-unpivot"
+ },
+ {
+  "name": "Table.UnpivotOtherColumns",
+  "cat": "table",
+  "desc": "Translates all columns other than a specified set into attribute-value pairs.",
+  "href": "table-unpivotothercolumns"
+ },
+ {
+  "name": "Table.AddColumn",
+  "cat": "table",
+  "desc": "Adds a column with the specified name. The value is computed using the specified selection function with each row taken as an input.",
+  "href": "table-addcolumn"
+ },
+ {
+  "name": "Table.AddFuzzyClusterColumn",
+  "cat": "table",
+  "desc": "Adds a new column with representative values obtained by fuzzy grouping values of the specified column in the table.",
+  "href": "table-addfuzzyclustercolumn"
+ },
+ {
+  "name": "Table.AddIndexColumn",
+  "cat": "table",
+  "desc": "Appends a column with explicit position values.",
+  "href": "table-addindexcolumn"
+ },
+ {
+  "name": "Table.AddJoinColumn",
+  "cat": "table",
+  "desc": "Performs a join between tables on supplied columns and produces the join result in a new column.",
+  "href": "table-addjoincolumn"
+ },
+ {
+  "name": "Table.AddKey",
+  "cat": "table",
+  "desc": "Adds a key to a table.",
+  "href": "table-addkey"
+ },
+ {
+  "name": "Table.AggregateTableColumn",
+  "cat": "table",
+  "desc": "Aggregates a column of tables into multiple columns in the containing table.",
+  "href": "table-aggregatetablecolumn"
+ },
+ {
+  "name": "Table.CombineColumns",
+  "cat": "table",
+  "desc": "Combines the specified columns into a new column using the specified combiner function.",
+  "href": "table-combinecolumns"
+ },
+ {
+  "name": "Table.CombineColumnsToRecord",
+  "cat": "table",
+  "desc": "Combines the specified columns into a new record-valued column where each record has field names and values corresponding to the column names and values of the columns that were combined.",
+  "href": "table-combinecolumnstorecord"
+ },
+ {
+  "name": "Table.ConformToPageReader",
+  "cat": "table",
+  "desc": "This function is intended for internal use only.",
+  "href": "table-conformtopagereader"
+ },
+ {
+  "name": "Table.ExpandListColumn",
+  "cat": "table",
+  "desc": "Given a column of lists in a table, create a copy of a row for each value in its list.",
+  "href": "table-expandlistcolumn"
+ },
+ {
+  "name": "Table.ExpandRecordColumn",
+  "cat": "table",
+  "desc": "Expands a column of records into columns with each of the values.",
+  "href": "table-expandrecordcolumn"
+ },
+ {
+  "name": "Table.ExpandTableColumn",
+  "cat": "table",
+  "desc": "Expands a column of records or a column of tables into multiple columns in the containing table.",
+  "href": "table-expandtablecolumn"
+ },
+ {
+  "name": "Table.FillDown",
+  "cat": "table",
+  "desc": "Propagates the value of a previous cell to the null-valued cells below in the column.",
+  "href": "table-filldown"
+ },
+ {
+  "name": "Table.FillUp",
+  "cat": "table",
+  "desc": "Propagates the value of a cell to the null-valued cells above in the column.",
+  "href": "table-fillup"
+ },
+ {
+  "name": "Table.FilterWithDataTable",
+  "cat": "table",
+  "desc": "This function is intended for internal use only.",
+  "href": "table-filterwithdatatable"
+ },
+ {
+  "name": "Table.FuzzyGroup",
+  "cat": "table",
+  "desc": "Groups rows in the table based on fuzzy matching of keys.",
+  "href": "table-fuzzygroup"
+ },
+ {
+  "name": "Table.FuzzyJoin",
+  "cat": "table",
+  "desc": "Joins the rows from the two tables that fuzzy match based on the given keys.",
+  "href": "table-fuzzyjoin"
+ },
+ {
+  "name": "Table.FuzzyNestedJoin",
+  "cat": "table",
+  "desc": "Performs a fuzzy join between tables on supplied columns and produces the join result in a new column.",
+  "href": "table-fuzzynestedjoin"
+ },
+ {
+  "name": "Table.Group",
+  "cat": "table",
+  "desc": "Groups rows in the table that have the same key.",
+  "href": "table-group"
+ },
+ {
+  "name": "Table.Join",
+  "cat": "table",
+  "desc": "Joins the rows from the two tables that match based on the given keys.",
+  "href": "table-join"
+ },
+ {
+  "name": "Table.Keys",
+  "cat": "table",
+  "desc": "Returns the keys of the specified table.",
+  "href": "table-keys"
+ },
+ {
+  "name": "Table.NestedJoin",
+  "cat": "table",
+  "desc": "Performs a join between tables on supplied columns and produces the join result in a new column.",
+  "href": "table-nestedjoin"
+ },
+ {
+  "name": "Table.PartitionKey",
+  "cat": "table",
+  "desc": "Returns the partition key of the specified table.",
+  "href": "table-partitionkey"
+ },
+ {
+  "name": "Table.ReplaceErrorValues",
+  "cat": "table",
+  "desc": "Replaces the error values in the specified columns with the corresponding specified value.",
+  "href": "table-replaceerrorvalues"
+ },
+ {
+  "name": "Table.ReplaceKeys",
+  "cat": "table",
+  "desc": "Replaces the keys of the specified table.",
+  "href": "table-replacekeys"
+ },
+ {
+  "name": "Table.ReplacePartitionKey",
+  "cat": "table",
+  "desc": "Replaces the partition key of the specified table.",
+  "href": "table-replacepartitionkey"
+ },
+ {
+  "name": "Table.ReplaceRelationshipIdentity",
+  "cat": "table",
+  "desc": "This function is intended for internal use only.",
+  "href": "table-replacerelationshipidentity"
+ },
+ {
+  "name": "Table.ReplaceValue",
+  "cat": "table",
+  "desc": "Replaces one value with another in the specified columns.",
+  "href": "table-replacevalue"
+ },
+ {
+  "name": "Table.Split",
+  "cat": "table",
+  "desc": "Splits the specified table into a list of tables using the specified page size.",
+  "href": "table-split"
+ },
+ {
+  "name": "Table.SplitColumn",
+  "cat": "table",
+  "desc": "Splits the specified column into a set of additional columns using the specified splitter function.",
+  "href": "table-splitcolumn"
+ },
+ {
+  "name": "Table.TransformColumns",
+  "cat": "table",
+  "desc": "Transforms the values of one or more columns.",
+  "href": "table-transformcolumns"
+ },
+ {
+  "name": "Table.TransformColumnTypes",
+  "cat": "table",
+  "desc": "Applies type transformation(s) of the form { column, type } using a specific culture.",
+  "href": "table-transformcolumntypes"
+ },
+ {
+  "name": "Table.TransformRows",
+  "cat": "table",
+  "desc": "Transforms the rows of the table using the specified transform function.",
+  "href": "table-transformrows"
+ },
+ {
+  "name": "Table.Transpose",
+  "cat": "table",
+  "desc": "Makes columns into rows and rows into columns.",
+  "href": "table-transpose"
+ },
+ {
+  "name": "Table.Contains",
+  "cat": "table",
+  "desc": "Indicates whether the specified record appears as a row in the table.",
+  "href": "table-contains"
+ },
+ {
+  "name": "Table.ContainsAll",
+  "cat": "table",
+  "desc": "Indicates whether all of the specified records appear as rows in the table.",
+  "href": "table-containsall"
+ },
+ {
+  "name": "Table.ContainsAny",
+  "cat": "table",
+  "desc": "Indicates whether any of the specified records appear as rows in the table.",
+  "href": "table-containsany"
+ },
+ {
+  "name": "Table.Distinct",
+  "cat": "table",
+  "desc": "Removes duplicate rows from the table.",
+  "href": "table-distinct"
+ },
+ {
+  "name": "Table.IsDistinct",
+  "cat": "table",
+  "desc": "Indicates whether the table contains only distinct rows (no duplicates).",
+  "href": "table-isdistinct"
+ },
+ {
+  "name": "Table.PositionOf",
+  "cat": "table",
+  "desc": "Returns the position or positions of the row within the table.",
+  "href": "table-positionof"
+ },
+ {
+  "name": "Table.PositionOfAny",
+  "cat": "table",
+  "desc": "Returns the position or positions of any of the specified rows within the table.",
+  "href": "table-positionofany"
+ },
+ {
+  "name": "Table.RemoveMatchingRows",
+  "cat": "table",
+  "desc": "Removes all occurrences of the specified rows from the table.",
+  "href": "table-removematchingrows"
+ },
+ {
+  "name": "Table.ReplaceMatchingRows",
+  "cat": "table",
+  "desc": "Replaces all the specified rows with the provided row or rows.",
+  "href": "table-replacematchingrows"
+ },
+ {
+  "name": "Table.AddRankColumn",
+  "cat": "table",
+  "desc": "Appends a column with the ranking of one or more other columns.",
+  "href": "table-addrankcolumn"
+ },
+ {
+  "name": "Table.Max",
+  "cat": "table",
+  "desc": "Returns the largest row or default value using the given criteria.",
+  "href": "table-max"
+ },
+ {
+  "name": "Table.MaxN",
+  "cat": "table",
+  "desc": "Returns the largest row or rows using the given criteria.",
+  "href": "table-maxn"
+ },
+ {
+  "name": "Table.Min",
+  "cat": "table",
+  "desc": "Returns the smallest row or a default value using the given criteria.",
+  "href": "table-min"
+ },
+ {
+  "name": "Table.MinN",
+  "cat": "table",
+  "desc": "Returns the smallest row or rows using the given criteria.",
+  "href": "table-minn"
+ },
+ {
+  "name": "Table.Sort",
+  "cat": "table",
+  "desc": "Sorts the table using one or more column names and comparison criteria.",
+  "href": "table-sort"
+ },
+ {
+  "name": "Table.Buffer",
+  "cat": "table",
+  "desc": "Buffers a table in memory, isolating it from external changes during evaluation.",
+  "href": "table-buffer"
+ },
+ {
+  "name": "Table.StopFolding",
+  "cat": "table",
+  "desc": "Prevents any downstream operations from being run against the original source of the data.",
+  "href": "table-stopfolding"
+ },
+ {
+  "name": "Text.InferNumberType",
+  "cat": "text",
+  "desc": "Infers the granular number type ( Int64.Type , Double.Type , and so on) of a number encoded in text.",
+  "href": "text-infernumbertype"
+ },
+ {
+  "name": "Text.Length",
+  "cat": "text",
+  "desc": "Returns the number of characters in a text value.",
+  "href": "text-length"
+ },
+ {
+  "name": "Character.FromNumber",
+  "cat": "text",
+  "desc": "Converts a number to a text character.",
+  "href": "character-fromnumber"
+ },
+ {
+  "name": "Character.ToNumber",
+  "cat": "text",
+  "desc": "Converts a character to a number value.",
+  "href": "character-tonumber"
+ },
+ {
+  "name": "Guid.From",
+  "cat": "text",
+  "desc": "Returns a GUID value from the given value.",
+  "href": "guid-from"
+ },
+ {
+  "name": "Json.FromValue",
+  "cat": "text",
+  "desc": "Produces a JSON representation of a given value.",
+  "href": "json-fromvalue"
+ },
+ {
+  "name": "Text.From",
+  "cat": "text",
+  "desc": "Creates a text value from the given value.",
+  "href": "text-from"
+ },
+ {
+  "name": "Text.FromBinary",
+  "cat": "text",
+  "desc": "Decodes data from a binary value in to a text value using an encoding.",
+  "href": "text-frombinary"
+ },
+ {
+  "name": "Text.NewGuid",
+  "cat": "text",
+  "desc": "Returns a GUID value as a text value.",
+  "href": "text-newguid"
+ },
+ {
+  "name": "Text.ToBinary",
+  "cat": "text",
+  "desc": "Encodes a text value into binary value using an encoding.",
+  "href": "text-tobinary"
+ },
+ {
+  "name": "Text.ToList",
+  "cat": "text",
+  "desc": "Returns a list of characters from a text value.",
+  "href": "text-tolist"
+ },
+ {
+  "name": "Value.FromText",
+  "cat": "text",
+  "desc": "Creates a strongly-typed value from a textual representation.",
+  "href": "value-fromtext"
+ },
+ {
+  "name": "Text.At",
+  "cat": "text",
+  "desc": "Returns a character starting at a zero-based offset.",
+  "href": "text-at"
+ },
+ {
+  "name": "Text.Middle",
+  "cat": "text",
+  "desc": "Returns the substring up to a specific length.",
+  "href": "text-middle"
+ },
+ {
+  "name": "Text.Range",
+  "cat": "text",
+  "desc": "Returns a number of characters from a text value starting at a zero-based offset and for count number of characters.",
+  "href": "text-range"
+ },
+ {
+  "name": "Text.Start",
+  "cat": "text",
+  "desc": "Returns the count of characters from the start of a text value.",
+  "href": "text-start"
+ },
+ {
+  "name": "Text.End",
+  "cat": "text",
+  "desc": "Returns the number of characters from the end of a text value.",
+  "href": "text-end"
+ },
+ {
+  "name": "Text.Insert",
+  "cat": "text",
+  "desc": "Inserts one text value into another at a given position.",
+  "href": "text-insert"
+ },
+ {
+  "name": "Text.Remove",
+  "cat": "text",
+  "desc": "Removes all occurrences of the given character or list of characters from the input text value.",
+  "href": "text-remove"
+ },
+ {
+  "name": "Text.RemoveRange",
+  "cat": "text",
+  "desc": "Removes count characters at a zero-based offset from a text value.",
+  "href": "text-removerange"
+ },
+ {
+  "name": "Text.Replace",
+  "cat": "text",
+  "desc": "Replaces all occurrences of a substring with a new text value.",
+  "href": "text-replace"
+ },
+ {
+  "name": "Text.ReplaceRange",
+  "cat": "text",
+  "desc": "Replaces length characters in a text value starting at a zero-based offset with the new text value.",
+  "href": "text-replacerange"
+ },
+ {
+  "name": "Text.Select",
+  "cat": "text",
+  "desc": "Selects all occurrences of the given character or list of characters from the input text value.",
+  "href": "text-select"
+ },
+ {
+  "name": "Text.Contains",
+  "cat": "text",
+  "desc": "Returns true if a text value substring was found within a text value string; otherwise, false .",
+  "href": "text-contains"
+ },
+ {
+  "name": "Text.EndsWith",
+  "cat": "text",
+  "desc": "Returns a logical value indicating whether a text value substring was found at the end of a string.",
+  "href": "text-endswith"
+ },
+ {
+  "name": "Text.PositionOf",
+  "cat": "text",
+  "desc": "Returns the first position of the value (-1 if not found).",
+  "href": "text-positionof"
+ },
+ {
+  "name": "Text.PositionOfAny",
+  "cat": "text",
+  "desc": "Returns the first position in the text value of any listed character (-1 if not found).",
+  "href": "text-positionofany"
+ },
+ {
+  "name": "Text.StartsWith",
+  "cat": "text",
+  "desc": "Returns a logical value indicating whether a text value substring was found at the beginning of a string.",
+  "href": "text-startswith"
+ },
+ {
+  "name": "Text.AfterDelimiter",
+  "cat": "text",
+  "desc": "Returns the portion of text after the specified delimiter.",
+  "href": "text-afterdelimiter"
+ },
+ {
+  "name": "Text.BeforeDelimiter",
+  "cat": "text",
+  "desc": "Returns the portion of text before the specified delimiter.",
+  "href": "text-beforedelimiter"
+ },
+ {
+  "name": "Text.BetweenDelimiters",
+  "cat": "text",
+  "desc": "Returns the portion of text between the specified startDelimiter and endDelimiter .",
+  "href": "text-betweendelimiters"
+ },
+ {
+  "name": "Text.Clean",
+  "cat": "text",
+  "desc": "Returns the original text value with non-printable characters removed.",
+  "href": "text-clean"
+ },
+ {
+  "name": "Text.Combine",
+  "cat": "text",
+  "desc": "Returns a text value that is the result of joining all text values with each value separated by a separator.",
+  "href": "text-combine"
+ },
+ {
+  "name": "Text.Lower",
+  "cat": "text",
+  "desc": "Returns the lowercase of a text value.",
+  "href": "text-lower"
+ },
+ {
+  "name": "Text.PadEnd",
+  "cat": "text",
+  "desc": "Returns text of a specified length by padding the end of the given text.",
+  "href": "text-padend"
+ },
+ {
+  "name": "Text.PadStart",
+  "cat": "text",
+  "desc": "Returns text of a specified length by padding the start of the given text.",
+  "href": "text-padstart"
+ },
+ {
+  "name": "Text.Proper",
+  "cat": "text",
+  "desc": "Returns a text value with first letters of all words converted to uppercase.",
+  "href": "text-proper"
+ },
+ {
+  "name": "Text.Repeat",
+  "cat": "text",
+  "desc": "Returns a text value composed of the input text value repeated a number of times.",
+  "href": "text-repeat"
+ },
+ {
+  "name": "Text.Reverse",
+  "cat": "text",
+  "desc": "Reverses the provided text.",
+  "href": "text-reverse"
+ },
+ {
+  "name": "Text.Split",
+  "cat": "text",
+  "desc": "Returns a list containing parts of a text value that are delimited by a separator text value.",
+  "href": "text-split"
+ },
+ {
+  "name": "Text.SplitAny",
+  "cat": "text",
+  "desc": "Returns a list containing parts of a text value that are delimited by any separator text values.",
+  "href": "text-splitany"
+ },
+ {
+  "name": "Text.Trim",
+  "cat": "text",
+  "desc": "Removes all the specified leading and trailing characters.",
+  "href": "text-trim"
+ },
+ {
+  "name": "Text.TrimEnd",
+  "cat": "text",
+  "desc": "Removes all specified trailing characters.",
+  "href": "text-trimend"
+ },
+ {
+  "name": "Text.TrimStart",
+  "cat": "text",
+  "desc": "Removes all specified leading characters.",
+  "href": "text-trimstart"
+ },
+ {
+  "name": "Text.Upper",
+  "cat": "text",
+  "desc": "Returns the uppercase of a text value.",
+  "href": "text-upper"
+ },
+ {
+  "name": "Time.EndOfHour",
+  "cat": "time",
+  "desc": "Returns the end of the hour.",
+  "href": "time-endofhour"
+ },
+ {
+  "name": "Time.From",
+  "cat": "time",
+  "desc": "Returns a time value from a value.",
+  "href": "time-from"
+ },
+ {
+  "name": "Time.FromText",
+  "cat": "time",
+  "desc": "Creates a Time from local, universal, and custom Time formats.",
+  "href": "time-fromtext"
+ },
+ {
+  "name": "Time.Hour",
+  "cat": "time",
+  "desc": "Returns an hour value from a DateTime value.",
+  "href": "time-hour"
+ },
+ {
+  "name": "Time.Minute",
+  "cat": "time",
+  "desc": "Returns a minute value from a DateTime value.",
+  "href": "time-minute"
+ },
+ {
+  "name": "Time.Second",
+  "cat": "time",
+  "desc": "Returns a second value from a DateTime value",
+  "href": "time-second"
+ },
+ {
+  "name": "Time.StartOfHour",
+  "cat": "time",
+  "desc": "Returns the start of the hour.",
+  "href": "time-startofhour"
+ },
+ {
+  "name": "Time.ToRecord",
+  "cat": "time",
+  "desc": "Returns a record containing parts of a Date value.",
+  "href": "time-torecord"
+ },
+ {
+  "name": "Time.ToText",
+  "cat": "time",
+  "desc": "Returns a text value from a Time value.",
+  "href": "time-totext"
+ },
+ {
+  "name": "#time",
+  "cat": "time",
+  "desc": "Creates a time value from hour, minute, and second.",
+  "href": "sharptime"
+ },
+ {
+  "name": "Type.AddTableKey",
+  "cat": "type",
+  "desc": "Add a key to a table type.",
+  "href": "type-addtablekey"
+ },
+ {
+  "name": "Type.ClosedRecord",
+  "cat": "type",
+  "desc": "The given type must be a record type returns a closed version of the given record type (or the same type, if it is already closed)",
+  "href": "type-closedrecord"
+ },
+ {
+  "name": "Type.Facets",
+  "cat": "type",
+  "desc": "Returns the facets of a type.",
+  "href": "type-facets"
+ },
+ {
+  "name": "Type.ForFunction",
+  "cat": "type",
+  "desc": "Returns a type that represents functions with specific parameter and return type constraints.",
+  "href": "type-forfunction"
+ },
+ {
+  "name": "Type.ForRecord",
+  "cat": "type",
+  "desc": "Returns a Record type from a fields record.",
+  "href": "type-forrecord"
+ },
+ {
+  "name": "Type.FunctionParameters",
+  "cat": "type",
+  "desc": "Returns a record with field values set to the name of the parameters of a function type, and their values set to their corresponding types.",
+  "href": "type-functionparameters"
+ },
+ {
+  "name": "Type.FunctionRequiredParameters",
+  "cat": "type",
+  "desc": "Returns a number indicating the minimum number of parameters required to invoke the a type of function.",
+  "href": "type-functionrequiredparameters"
+ },
+ {
+  "name": "Type.FunctionReturn",
+  "cat": "type",
+  "desc": "Returns a type returned by a function type.",
+  "href": "type-functionreturn"
+ },
+ {
+  "name": "Type.Is",
+  "cat": "type",
+  "desc": "Determines if a value of the first type is always compatible with the second type.",
+  "href": "type-is"
+ },
+ {
+  "name": "Type.IsNullable",
+  "cat": "type",
+  "desc": "Returns true if a type is a nullable type; otherwise, false.",
+  "href": "type-isnullable"
+ },
+ {
+  "name": "Type.IsOpenRecord",
+  "cat": "type",
+  "desc": "Returns whether a record type is open.",
+  "href": "type-isopenrecord"
+ },
+ {
+  "name": "Type.ListItem",
+  "cat": "type",
+  "desc": "Returns an item type from a list type.",
+  "href": "type-listitem"
+ },
+ {
+  "name": "Type.NonNullable",
+  "cat": "type",
+  "desc": "Returns the non nullable type from a type.",
+  "href": "type-nonnullable"
+ },
+ {
+  "name": "Type.OpenRecord",
+  "cat": "type",
+  "desc": "Returns an opened version of a record type, or the same type, if it is already open.",
+  "href": "type-openrecord"
+ },
+ {
+  "name": "Type.RecordFields",
+  "cat": "type",
+  "desc": "Returns a record describing the fields of a record type with each field of the returned record type having a corresponding name and a value that is a record of the form [ Type = type, Optional = logical ] .",
+  "href": "type-recordfields"
+ },
+ {
+  "name": "Type.ReplaceFacets",
+  "cat": "type",
+  "desc": "Replaces the facets of a type.",
+  "href": "type-replacefacets"
+ },
+ {
+  "name": "Type.ReplaceTableKeys",
+  "cat": "type",
+  "desc": "Replaces the keys in a table type.",
+  "href": "type-replacetablekeys"
+ },
+ {
+  "name": "Type.ReplaceTablePartitionKey",
+  "cat": "type",
+  "desc": "Returns a new table type with the partition key replaced by the specified partition key.",
+  "href": "type-replacetablepartitionkey"
+ },
+ {
+  "name": "Type.TableColumn",
+  "cat": "type",
+  "desc": "Returns the type of a column in a table.",
+  "href": "type-tablecolumn"
+ },
+ {
+  "name": "Type.TableKeys",
+  "cat": "type",
+  "desc": "Returns keys from a table type.",
+  "href": "type-tablekeys"
+ },
+ {
+  "name": "Type.TablePartitionKey",
+  "cat": "type",
+  "desc": "Returns the partition key for the given table type if it has one.",
+  "href": "type-tablepartitionkey"
+ },
+ {
+  "name": "Type.TableRow",
+  "cat": "type",
+  "desc": "Returns a row type from a table type.",
+  "href": "type-tablerow"
+ },
+ {
+  "name": "Type.TableSchema",
+  "cat": "type",
+  "desc": "Returns a table containing a description of the columns (i.e. the schema) of the specified table type.",
+  "href": "type-tableschema"
+ },
+ {
+  "name": "Type.Union",
+  "cat": "type",
+  "desc": "Returns the union of a list of types.",
+  "href": "type-union"
+ },
+ {
+  "name": "Uri.BuildQueryString",
+  "cat": "uri",
+  "desc": "Assemble a record into a URI query string.",
+  "href": "uri-buildquerystring"
+ },
+ {
+  "name": "Uri.Combine",
+  "cat": "uri",
+  "desc": "Returns a Uri based on the combination of the base and relative parts.",
+  "href": "uri-combine"
+ },
+ {
+  "name": "Uri.EscapeDataString",
+  "cat": "uri",
+  "desc": "Encodes special characters in accordance with RFC 3986.",
+  "href": "uri-escapedatastring"
+ },
+ {
+  "name": "Uri.Parts",
+  "cat": "uri",
+  "desc": "Returns a record value with the fields set to the parts of a Uri text value.",
+  "href": "uri-parts"
+ },
+ {
+  "name": "Value.Alternates",
+  "cat": "value",
+  "desc": "Expresses alternate query plans.",
+  "href": "value-alternates"
+ },
+ {
+  "name": "Value.Compare",
+  "cat": "value",
+  "desc": "Returns -1, 0, or 1 based on whether the first value is less than, equal to, or greater than the second.",
+  "href": "value-compare"
+ },
+ {
+  "name": "Value.Equals",
+  "cat": "value",
+  "desc": "Returns whether two values are equal.",
+  "href": "value-equals"
+ },
+ {
+  "name": "Value.Expression",
+  "cat": "value",
+  "desc": "Returns an abstract syntax tree (AST) that represents the value's expression.",
+  "href": "value-expression"
+ },
+ {
+  "name": "Value.VersionIdentity",
+  "cat": "value",
+  "desc": "Returns the version identity of a value.",
+  "href": "value-versionidentity"
+ },
+ {
+  "name": "Value.Versions",
+  "cat": "value",
+  "desc": "Returns a navigation table containing the available versions of a value.",
+  "href": "value-versions"
+ },
+ {
+  "name": "Value.NativeQuery",
+  "cat": "value",
+  "desc": "Evaluates a query against a target.",
+  "href": "value-nativequery"
+ },
+ {
+  "name": "Value.NullableEquals",
+  "cat": "value",
+  "desc": "Returns a logical value or null based on two values.",
+  "href": "value-nullableequals"
+ },
+ {
+  "name": "Value.Optimize",
+  "cat": "value",
+  "desc": "If value represents a query that can be optimized, returns the optimized query. Otherwise returns value.",
+  "href": "value-optimize"
+ },
+ {
+  "name": "Value.Type",
+  "cat": "value",
+  "desc": "Returns the type of the given value.",
+  "href": "value-type"
+ },
+ {
+  "name": "Value.Add",
+  "cat": "value",
+  "desc": "Returns the sum of the two values.",
+  "href": "value-add"
+ },
+ {
+  "name": "Value.Divide",
+  "cat": "value",
+  "desc": "Returns the result of dividing the first value by the second.",
+  "href": "value-divide"
+ },
+ {
+  "name": "Value.Multiply",
+  "cat": "value",
+  "desc": "Returns the product of the two values.",
+  "href": "value-multiply"
+ },
+ {
+  "name": "Value.Subtract",
+  "cat": "value",
+  "desc": "Returns the difference of the two values.",
+  "href": "value-subtract"
+ },
+ {
+  "name": "Value.As",
+  "cat": "value",
+  "desc": "Returns the value if it is compatible with the specified type.",
+  "href": "value-as"
+ },
+ {
+  "name": "Value.Is",
+  "cat": "value",
+  "desc": "Determines whether a value is compatible with the specified type.",
+  "href": "value-is"
+ },
+ {
+  "name": "Value.ReplaceType",
+  "cat": "value",
+  "desc": "Replaces the value's type.",
+  "href": "value-replacetype"
+ },
+ {
+  "name": "Action.WithErrorContext",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "action-witherrorcontext"
+ },
+ {
+  "name": "DirectQueryCapabilities.From",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "directquerycapabilities-from"
+ },
+ {
+  "name": "Embedded.Value",
+  "cat": "value",
+  "desc": "Accesses a value by name in an embedded mashup.",
+  "href": "embedded-value"
+ },
+ {
+  "name": "Excel.ShapeTable",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "excel-shapetable"
+ },
+ {
+  "name": "Module.Versions",
+  "cat": "value",
+  "desc": "Returns a record of module versions for the current module and its dependencies.",
+  "href": "module-versions"
+ },
+ {
+  "name": "Progress.DataSourceProgress",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "progress-datasourceprogress"
+ },
+ {
+  "name": "SqlExpression.SchemaFrom",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "sqlexpression-schemafrom"
+ },
+ {
+  "name": "SqlExpression.ToExpression",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "sqlexpression-toexpression"
+ },
+ {
+  "name": "Value.Firewall",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "value-firewall"
+ },
+ {
+  "name": "Value.ViewError",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "value-viewerror"
+ },
+ {
+  "name": "Value.ViewFunction",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "value-viewfunction"
+ },
+ {
+  "name": "Variable.Value",
+  "cat": "value",
+  "desc": "Returns the value of the specified variable.",
+  "href": "variable-value"
+ },
+ {
+  "name": "Variable.ValueOrDefault",
+  "cat": "value",
+  "desc": "Returns the value of the specified variable or the default value if the variable is not defined.",
+  "href": "variable-valueordefault"
+ },
+ {
+  "name": "Value.Metadata",
+  "cat": "value",
+  "desc": "Returns a record containing the input's metadata.",
+  "href": "value-metadata"
+ },
+ {
+  "name": "Value.RemoveMetadata",
+  "cat": "value",
+  "desc": "Removes the metadata on the value and returns the original value.",
+  "href": "value-removemetadata"
+ },
+ {
+  "name": "Value.ReplaceMetadata",
+  "cat": "value",
+  "desc": "Replaces the metadata on a value with the new metadata record provided and returns the original value with the new metadata attached.",
+  "href": "value-replacemetadata"
+ },
+ {
+  "name": "Graph.Nodes",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "graph-nodes"
+ },
+ {
+  "name": "Value.Lineage",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "value-lineage"
+ },
+ {
+  "name": "Value.Traits",
+  "cat": "value",
+  "desc": "This function is intended for internal use only.",
+  "href": "value-traits"
+ }
+]

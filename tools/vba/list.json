@@ -1,0 +1,632 @@
+[
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/asc-function",
+  "label": "Asc"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/chr-function",
+  "label": "Chr"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/cverr-function",
+  "label": "CVErr"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/format-function-visual-basic-for-applications",
+  "label": "Format"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/hex-function",
+  "label": "Hex"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/oct-function",
+  "label": "Oct"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/str-function",
+  "label": "Str"
+ },
+ {
+  "cat": "Conversion functions",
+  "href": "user-interface-help/val-function",
+  "label": "Val"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/abs-function",
+  "label": "Abs"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/atn-function",
+  "label": "Atn"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/cos-function",
+  "label": "Cos"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/derived-math-functions",
+  "label": "Derived math"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/exp-function",
+  "label": "Exp"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/int-fix-functions",
+  "label": "Int, Fix"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/log-function",
+  "label": "Log"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/rnd-function",
+  "label": "Rnd"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/sgn-function",
+  "label": "Sgn"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/sin-function",
+  "label": "Sin"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/sqr-function",
+  "label": "Sqr"
+ },
+ {
+  "cat": "Math functions",
+  "href": "user-interface-help/tan-function",
+  "label": "Tan"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/array-function",
+  "label": "Array"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/callbyname-function",
+  "label": "CallByName"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/choose-function",
+  "label": "Choose"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/command-function",
+  "label": "Command"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/createobject-function",
+  "label": "CreateObject"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/curdir-function",
+  "label": "CurDir"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/date-function",
+  "label": "Date"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/dateadd-function",
+  "label": "DateAdd"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/datediff-function",
+  "label": "DateDiff"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/datepart-function",
+  "label": "DatePart"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/dateserial-function",
+  "label": "DateSerial"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/datevalue-function",
+  "label": "DateValue"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/day-function",
+  "label": "Day"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ddb-function",
+  "label": "DDB"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/dir-function",
+  "label": "Dir"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/doevents-function",
+  "label": "DoEvents"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/environ-function",
+  "label": "Environ"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/eof-function",
+  "label": "EOF"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/error-function",
+  "label": "Error"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/fileattr-function",
+  "label": "FileAttr"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/filedatetime-function",
+  "label": "FileDateTime"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/filelen-function",
+  "label": "FileLen"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/filter-function",
+  "label": "Filter"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/formatcurrency-function",
+  "label": "FormatCurrency"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/formatdatetime-function",
+  "label": "FormatDateTime"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/formatnumber-function",
+  "label": "FormatNumber"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/formatpercent-function",
+  "label": "FormatPercent"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/freefile-function",
+  "label": "FreeFile"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/fv-function",
+  "label": "FV"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/getallsettings-function",
+  "label": "GetAllSettings"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/getattr-function",
+  "label": "GetAttr"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/getobject-function",
+  "label": "GetObject"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/getsetting-function",
+  "label": "GetSetting"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/hour-function",
+  "label": "Hour"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/iif-function",
+  "label": "IIf"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/imestatus-function",
+  "label": "IMEStatus"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/input-function",
+  "label": "Input"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/inputbox-function",
+  "label": "InputBox"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/instr-function",
+  "label": "InStr"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/instrrev-function",
+  "label": "InStrRev"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ipmt-function",
+  "label": "IPmt"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/irr-function",
+  "label": "IRR"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/isarray-function",
+  "label": "IsArray"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/isdate-function",
+  "label": "IsDate"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/isempty-function",
+  "label": "IsEmpty"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/iserror-function",
+  "label": "IsError"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ismissing-function",
+  "label": "IsMissing"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/isnull-function",
+  "label": "IsNull"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/isnumeric-function",
+  "label": "IsNumeric"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/isobject-function",
+  "label": "IsObject"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/join-function",
+  "label": "Join"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/lbound-function",
+  "label": "LBound"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/lcase-function",
+  "label": "LCase"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/left-function",
+  "label": "Left"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/len-function",
+  "label": "Len"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/loc-function",
+  "label": "Loc"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/lof-function",
+  "label": "LOF"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ltrim-rtrim-and-trim-functions",
+  "label": "LTrim, RTrim, and Trim"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/macid-function",
+  "label": "MacID"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/macscript-function",
+  "label": "MacScript"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/mid-function",
+  "label": "Mid"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/minute-function",
+  "label": "Minute"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/mirr-function",
+  "label": "MIRR"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/month-function",
+  "label": "Month"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/monthname-function",
+  "label": "MonthName"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/msgbox-function",
+  "label": "MsgBox"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/now-function",
+  "label": "Now"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/nper-function",
+  "label": "NPer"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/npv-function",
+  "label": "NPV"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/partition-function",
+  "label": "Partition"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/pmt-function",
+  "label": "Pmt"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ppmt-function",
+  "label": "PPmt"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/pv-function",
+  "label": "PV"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/qbcolor-function",
+  "label": "QBColor"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/rate-function",
+  "label": "Rate"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/replace-function",
+  "label": "Replace"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/rgb-function",
+  "label": "RGB"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/right-function",
+  "label": "Right"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/round-function",
+  "label": "Round"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/second-function",
+  "label": "Second"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/seek-function",
+  "label": "Seek"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/shell-function",
+  "label": "Shell"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/sln-function",
+  "label": "SLN"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/space-function",
+  "label": "Space"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/spc-function",
+  "label": "Spc"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/split-function",
+  "label": "Split"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/strcomp-function",
+  "label": "StrComp"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/strconv-function",
+  "label": "StrConv"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/string-function",
+  "label": "String"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/strreverse-function",
+  "label": "StrReverse"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/switch-function",
+  "label": "Switch"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/syd-function",
+  "label": "SYD"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/tab-function",
+  "label": "Tab"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/time-function",
+  "label": "Time"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/timer-function",
+  "label": "Timer"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/timeserial-function",
+  "label": "TimeSerial"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/timevalue-function",
+  "label": "TimeValue"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/typename-function",
+  "label": "TypeName"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ubound-function",
+  "label": "UBound"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/ucase-function",
+  "label": "UCase"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/vartype-function",
+  "label": "VarType"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/weekday-function",
+  "label": "Weekday"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/weekdayname-function",
+  "label": "WeekdayName"
+ },
+ {
+  "cat": "Other functions",
+  "href": "user-interface-help/year-function",
+  "label": "Year"
+ },
+ {
+  "cat": "See also",
+  "href": "user-interface-help/data-type-summary",
+  "label": "Data types"
+ },
+ {
+  "cat": "See also",
+  "href": "user-interface-help/keywords-by-task",
+  "label": "Keywords by task"
+ }
+]
