@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.1.0";
+const APP_VERSION = "5.1.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -6585,7 +6585,7 @@ function openHowTo() {
     `Your share right is <b>${Math.round(EDU.weight * 100)}% of match performance</b> — taken ${Math.round(EDU.fromSkill * 100)}% from Skill and ${Math.round(EDU.fromPhys * 100)}% from Health. Guessing (1 in 4 right) scores exactly what those would have, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
-    "End Day or End Week asks first whenever the days they'd run reach a match. Close the quiz and it waits where you left it.",
+    "End Day or End Week asks first whenever the days they'd run reach a match. Once started, a quiz has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
   ]));
 
   sec("completion", "📈", "Completion", ul([
@@ -7626,7 +7626,9 @@ function eduSyntaxHtml(f, picks, qs) {
   qs.forEach((q, i) => q.k === "arg" && (marks[q.i] = picks[i] === q.a));
   return `<code>${escapeHtml(f.name)}(${f.args.map((a, i) => `<span class="${marks[i] === false ? "edu-wrong" : "edu-right"}">${escapeHtml(a.rep ? "…" : a.label)}</span>`).join(", ")})</code>`;
 }
-// Opens (or picks up) the quiz for the match `m`, then runs onDone.
+// Opens (or picks up) the quiz for the match `m`, then runs onDone. Once
+// started it has to be finished: no ✕, and tapping outside just brings the
+// same question back (an answer given stays given).
 function openEduQuiz(m, onDone) {
   let cur = state.edu.current;
   if (!cur || cur.key !== m.key) {
@@ -7647,23 +7649,28 @@ function openEduQuiz(m, onDone) {
       <div class="edu-options">${q.o.map((o, i) => `<button class="edu-opt${q.k === "arg" ? " edu-mono" : ""}" data-edu-opt="${i}">${escapeHtml(o)}</button>`).join("")}</div>
       <div class="edu-feedback" id="eduFeedback"></div>
       <button class="primary-btn" id="eduNext" hidden>Next ▶</button>
-    </div>`);
+    </div>`, { ownClose: true, onDismiss: () => openEduQuiz(m, onDone) });
   const buttons = [...document.querySelectorAll("[data-edu-opt]")];
+  const showAnswer = (pick) => {
+    buttons.forEach((x) => {
+      x.disabled = true;
+      const o = q.o[Number(x.dataset.eduOpt)];
+      if (o === q.a) x.classList.add("edu-correct");
+      else if (o === pick) x.classList.add("edu-incorrect");
+    });
+    $("eduFeedback").innerHTML = pick === q.a ? "✅ Right!" : `❌ It's <b>${escapeHtml(q.a)}</b>.`;
+    const next = $("eduNext");
+    next.hidden = false;
+    next.textContent = cur.i + 1 >= cur.qs.length ? "See how you did ▶" : "Next ▶";
+  };
+  // Already answered (the app was closed, say): show it, ready for Next.
+  if (cur.picks.length > cur.i) showAnswer(cur.picks[cur.i]);
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
       if (cur.picks.length > cur.i) return;
       const pick = q.o[Number(b.dataset.eduOpt)];
       cur.picks.push(pick);
-      const ok = pick === q.a;
-      buttons.forEach((x) => {
-        x.disabled = true;
-        if (q.o[Number(x.dataset.eduOpt)] === q.a) x.classList.add("edu-correct");
-      });
-      if (!ok) b.classList.add("edu-incorrect");
-      $("eduFeedback").innerHTML = ok ? "✅ Right!" : `❌ It's <b>${escapeHtml(q.a)}</b>.`;
-      const next = $("eduNext");
-      next.hidden = false;
-      next.textContent = cur.i + 1 >= cur.qs.length ? "See how you did ▶" : "Next ▶";
+      showAnswer(pick);
       saveState();
     })
   );
@@ -7724,12 +7731,15 @@ function eduReview(m, cur, f, onDone) {
       <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
       <div class="kv-row"><span>📘 Quiz for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>
       <button class="primary-btn" id="eduPlay">${m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
-    </div>`);
-  $("eduPlay").addEventListener("click", () => {
-    closeModal();
-    renderAll();
-    if (onDone) onDone();
+    </div>`, {
+    ownClose: true,
+    // Closing it any way carries on to the match.
+    onDismiss: () => {
+      renderAll();
+      if (onDone) onDone();
+    },
   });
+  $("eduPlay").addEventListener("click", closeModal);
 }
 
 /* ---------------------------------------------------------------------- */
