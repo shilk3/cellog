@@ -24,7 +24,12 @@ question right in one go masters a function: it isn't asked again until the
 rest are, and Career and Completion count them. The 471 functions (all of
 Excel's bar compatibility and add-in ones), each marked esports or extra,
 are in `edu-functions.js`, built from Microsoft's function reference by the
-scripts in `tools/edu/`.
+scripts in `tools/edu/`. Every check ends with one 💡 general question
+(Windows keyboard shortcuts, PivotTables, tables, charts, formats,
+references, errors…), worth another 5% taken from Skill and mastered on its
+own — so with the mode on it's Skill 40%, Health 20%, Calm 15%, Rest 5%,
+functions 15%, general 5%. The 489 questions are in `edu-general.js`, built
+by `tools/gk/`.
 
 **🐞 Report a bug or suggestion** (☰ menu): no account needed. Each report
 becomes an issue in the private `shilk3/cellog-feedback` repo, filed by
