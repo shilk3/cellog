@@ -8,6 +8,7 @@ const ASSETS = [
   "game.js",
   "edu-functions.js",
   "edu-banks.js",
+  "edu-general.js",
   "manifest.webmanifest",
   "icons/icon-192.png",
   "icons/icon-512.png",

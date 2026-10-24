@@ -981,6 +981,7 @@ details.match-more[open] { padding-bottom: 8px; }
 .edu-bar { height: 4px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; }
 .edu-bar > div { height: 100%; background: var(--accent); }
 .edu-prompt { font-size: 17px; line-height: 1.4; font-weight: 600; }
+.edu-gen { margin-top: 6px; }
 .edu-prompt code, .edu-syntax code, .edu-mono { font-family: ui-monospace, Menlo, monospace; }
 .edu-syntax { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--bg-elev-2); font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
 .edu-blank { display: inline-block; min-width: 2.2em; text-align: center; border-bottom: 2px solid var(--accent); color: var(--accent); font-weight: 700; }

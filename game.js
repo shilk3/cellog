@@ -731,6 +731,8 @@ function completionGoals(stage = completionStage()) {
     const avail = eduAvailable();
     const done = eduMasteredCount(avail);
     goals.push(goal(`formulas${state.peakLeagueTier}`, "📘", "Formulas mastered", EDU.masteryWeight, (EDU.masteryWeight * done) / Math.max(1, avail.length), done, avail.length));
+    const gAvail = eduGenAvailable(), gDone = eduGenMasteredCount(gAvail);
+    if (gAvail.length) goals.push(goal(`knowledge${state.peakLeagueTier}`, "💡", "General knowledge mastered", EDU.genGoalWeight, (EDU.genGoalWeight * gDone) / gAvail.length, gDone, gAvail.length));
     if (stage >= 2 && state.python && state.python.revealed) {
       const py = eduMasteredCount(EDU_PY);
       goals.push(goal("pandas", "🐍", "Python functions mastered", EDU.pandasWeight, (EDU.pandasWeight * py) / EDU_PY.length, py, EDU_PY.length));
@@ -1639,7 +1641,7 @@ function freshState() {
     // 📘 Knowledge mode: on/off and its set ("esports" / "completionist"),
     // each function's record (seen, mastered), the Knowledge check in
     // progress and the last one finished (for its match). On for new games.
-    edu: { on: true, set: "esports", fns: {}, current: null, quiz: null, asked: 0, correct: 0 },
+    edu: { on: true, set: "esports", fns: {}, gen: {}, current: null, quiz: null, asked: 0, correct: 0, genAsked: 0, genCorrect: 0 },
     staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
@@ -2423,6 +2425,10 @@ function performanceBreakdown(keys = state.activeSkills) {
   const quizAcc = W.quiz ? eduMatchAcc() : null;
   const quiz = W.quiz ? eduValue(quizAcc, eduNeutral(skillComponent, s.phys)) : null;
   if (W.quiz) weighted.quiz = quiz * W.quiz;
+  // …and its general question (right, wrong, or not taken: a guess).
+  const genRight = W.gen ? eduMatchGen() : null;
+  const gen = W.gen ? eduGenValue(genRight, skillComponent) : null;
+  if (W.gen) weighted.gen = gen * W.gen;
   // Raw inputs, snapshotted for the match result table.
   const raw = {
     skills: keys.map((k) => ({ key: k, value: s.skills[k] })),
@@ -2433,8 +2439,10 @@ function performanceBreakdown(keys = state.activeSkills) {
     rest: s.rest,
     quiz,
     quizAcc,
+    gen,
+    genRight,
   };
-  let score = clamp(weighted.skill + weighted.phys + weighted.composure + weighted.rest + (weighted.quiz || 0), 0, 100);
+  let score = clamp(weighted.skill + weighted.phys + weighted.composure + weighted.rest + (weighted.quiz || 0) + (weighted.gen || 0), 0, 100);
   // Pros who fall behind on current technique compete at a real disadvantage
   // — every not-yet-mastered entry in the queue costs match performance,
   // not training. Capped so a long backlog can't go negative.
@@ -2502,7 +2510,8 @@ function rivalPerformance(r) {
   const W = perfWeights();
   // 📘 Education mode: their quiz, at their league's rate of right answers.
   const quiz = W.quiz ? W.quiz * eduValue(eduRivalAcc(r), eduNeutral(avg, condition)) : 0;
-  return clamp(W.skill * avg + (W.phys + W.composure + W.rest) * condition + quiz + movesPerf(rivalTopMoves(r)), 0, 100);
+  const gen = W.gen ? W.gen * eduGenExpected(eduRivalAcc(r), avg) : 0;
+  return clamp(W.skill * avg + (W.phys + W.composure + W.rest) * condition + quiz + gen + movesPerf(rivalTopMoves(r)), 0, 100);
 }
 // The week's focus keys for a rival-vs-rival match: the top tier's three
 // for its players; the seven for everyone else (the week's own focus,
@@ -4903,7 +4912,7 @@ function performanceTableHtml(b) {
     if (raw.skills.length > 1) skillDetail += sub("Average", one(raw.skillAvg));
     if (b.composureMult < 1) skillDetail += sub(`😰 Low Calm (under ${BAL.composureMatchMid})`, `×${b.composureMult.toFixed(2)}`).replace("perf-sub", "perf-sub perf-warn");
   }
-  const subtotal = b.weighted.skill + b.weighted.phys + b.weighted.composure + b.weighted.rest + (b.weighted.quiz || 0);
+  const subtotal = b.weighted.skill + b.weighted.phys + b.weighted.composure + b.weighted.rest + (b.weighted.quiz || 0) + (b.weighted.gen || 0);
   const W = b.weights || PERF_WEIGHTS;
   const techRow =
     b.techniquePenaltyMult < 1
@@ -4920,6 +4929,7 @@ function performanceTableHtml(b) {
         ${row("🎮 Calm", raw ? fmt(raw.composure) : "", W.composure, b.weighted.composure)}
         ${row("🌙 Rest", raw ? fmt(raw.rest) : "", W.rest, b.weighted.rest)}
         ${b.weighted.quiz != null ? row(`📘 Knowledge check${raw && raw.quizAcc != null ? ` (${Math.round(raw.quizAcc * 100)}% right)` : " (not taken: a guess)"}`, raw ? fmt(raw.quiz) : "", W.quiz, b.weighted.quiz) : ""}
+        ${b.weighted.gen != null ? row(`💡 General question${raw && raw.genRight != null ? (raw.genRight ? " (right)" : " (wrong)") : " (not taken: a guess)"}`, raw ? fmt(raw.gen) : "", W.gen, b.weighted.gen) : ""}
         ${techRow}
         ${movesRow}
       </tbody>
@@ -7174,6 +7184,7 @@ function openHowTo() {
     `On for new games, with three settings — change it any time in ☰ → 🎮 Games. It's <b>${eduModeLabel()}</b> for this game.`,
     `<b>📘 Esports</b> (the default) asks about the ${EDU_CORE.length} functions that matter in Excel esports. <b>📚 Completionist</b> adds Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. <b>Off</b> skips the questions.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
+    `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's worth <b>${Math.round(EDU.genWeight * 100)}% of match performance</b>, taken from Skill, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
     `Your share right is <b>${Math.round(EDU.weight * 100)}% of match performance</b> — taken ${Math.round(EDU.fromSkill * 100)}% from Skill and ${Math.round(EDU.fromPhys * 100)}% from Health. Guessing (1 in 4 right) scores exactly what those would have, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
@@ -7993,6 +8004,8 @@ function renderAll() {
 // and 5% from Health — scaled so guessing (1 in 4) scores exactly what
 // those would have, and knowing them is an edge.
 const EDU = {
+  genWeight: 0.05, // the general question's share of performance (from Skill)
+  genGoalWeight: 3, // completion weight of "Knowledge mastered"
   sprinkle: 0.25, // share of normal checks drawn from a played invitational's bank
   weight: 0.15,
   fromSkill: 0.1,
@@ -8041,6 +8054,48 @@ function eduBankList(id) {
   return eduCompletionist() ? EDU_BANK[id] : eduBankCore(id);
 }
 const eduRecKey = (f) => (f.bank ? `${f.bank}:${f.name}` : f.name);
+// 💡 General knowledge (edu-general.js): one question per Knowledge check,
+// mastered on its own (answer it right once).
+const EDU_GEN = (typeof EDU_GENERAL === "undefined" ? [] : EDU_GENERAL).map(([id, skill, titan, tier, topic, text, a, ...wrong]) => ({ id, skill, titan, tier, topic, text, a, wrong }));
+function eduGenAvailable(tier = state.peakLeagueTier) {
+  return EDU_GEN.filter((g) => g.tier >= tier);
+}
+function eduGenMasteredCount(list) {
+  const rec = state.edu.gen || {};
+  return list.filter((g) => rec[g.id] && rec[g.id].mastered).length;
+}
+// The week's focus skills (the top tier: its own three) up to your
+// league's level; an invitational's or a practice check draws on any skill.
+// Not yet mastered first (those got wrong before, half the time).
+function eduPickGeneral(m) {
+  const upTo = EDU_GEN.filter((g) => g.tier >= state.leagueTier);
+  let pool = upTo;
+  if (!m.event && !m.practice) {
+    const keys = state.activeSkills || [];
+    const mine = upTo.filter((g) => (inTop() ? keys.includes(g.titan) : keys.includes(g.skill)));
+    if (mine.length) pool = mine;
+  }
+  if (!pool.length) return null;
+  const rec = state.edu.gen || {};
+  const r = (g) => rec[g.id];
+  const open = pool.filter((g) => !(r(g) && r(g).mastered));
+  if (!open.length) {
+    const oldest = pool.slice().sort((a, b) => ((r(a) && r(a).last) || 0) - ((r(b) && r(b).last) || 0)).slice(0, 5);
+    return oldest[randInt(0, oldest.length - 1)];
+  }
+  const wrong = open.filter((g) => r(g) && r(g).seen);
+  const fresh = open.filter((g) => !(r(g) && r(g).seen));
+  let cand = wrong.length && (!fresh.length || Math.random() < 0.5) ? wrong : fresh;
+  const own = cand.filter((g) => g.tier === state.leagueTier);
+  if (own.length && Math.random() < 0.6) cand = own;
+  return cand[randInt(0, cand.length - 1)];
+}
+// Adds the general question as a Knowledge check's last.
+function eduAddGeneral(quiz, m) {
+  const g = eduPickGeneral(m);
+  if (g) quiz.qs.push({ k: "gen", gid: g.id, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
+  return quiz;
+}
 
 function eduOn(s) {
   s = s || liveState();
@@ -8255,7 +8310,7 @@ function eduBuildQuiz(f, m) {
   });
   const descs = pool.map((g) => g.desc);
   qs.push({ k: "desc", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrong(f.desc, descs)]) });
-  return { key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] };
+  return eduAddGeneral({ key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] }, m);
 }
 // Like eduPickWrong, but keeps the candidates' order (best look-alikes first).
 function eduPickWrongOrdered(right, candidates) {
@@ -8283,17 +8338,17 @@ function eduBuildCommandQuiz(f, m) {
   const groups = [...new Set(EDU_BANK.robot.map((g) => g.group).filter(Boolean))];
   if (f.group && groups.length >= 4) qs.push({ k: "group", a: f.group, o: eduShuffle([f.group, ...eduPickWrong(f.group, groups)]) });
   qs.push({ k: "desc", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrong(f.desc, list.filter((g) => g !== f).map((g) => g.desc))]) });
-  return { key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] };
+  return eduAddGeneral({ key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] }, m);
 }
 
 // 📚 Completionist: every function — extras and Python included — mastered.
 function eduAllMastered() {
-  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && Object.values(EDU_BANK).every((list) => eduMasteredCount(list) === list.length);
+  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && Object.values(EDU_BANK).every((list) => eduMasteredCount(list) === list.length) && eduGenMasteredCount(EDU_GEN) === EDU_GEN.length;
 }
 function eduCheckCompletionist() {
   if (!eduCompletionist() || (state.trophies && state.trophies.completionist) || !eduAllMastered()) return;
   state.trophies.completionist = state.year;
-  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions and every invitational's set mastered — a trophy for the cabinet.`, cls: "event-good" };
+  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions, every invitational's set and all ${EDU_GEN.length} general questions mastered — a trophy for the cabinet.`, cls: "event-good" };
   state.logEntries.push(e);
   appendLog(e.html, e.cls);
 }
@@ -8301,8 +8356,23 @@ function eduCheckCompletionist() {
 // A finished quiz: its score for the match, and the function's record —
 // mastered once every question is right in one go.
 function eduFinishQuiz(cur) {
-  const right = cur.picks.filter((p, i) => p === cur.qs[i].a).length;
-  const total = cur.qs.length;
+  // The general question is scored and mastered on its own.
+  const gi = cur.qs.findIndex((q) => q.k === "gen");
+  let gen = null;
+  if (gi >= 0) {
+    const gq = cur.qs[gi];
+    gen = cur.picks[gi] === gq.a;
+    const g = (state.edu.gen = state.edu.gen || {});
+    const grec = (g[gq.gid] = g[gq.gid] || { seen: 0, mastered: false, last: 0 });
+    grec.seen += 1;
+    grec.last = state.day;
+    if (gen) grec.mastered = true;
+    state.edu.genAsked = (state.edu.genAsked || 0) + 1;
+    state.edu.genCorrect = (state.edu.genCorrect || 0) + (gen ? 1 : 0);
+  }
+  const fq = cur.qs.map((q, i) => i).filter((i) => i !== gi);
+  const right = fq.filter((i) => cur.picks[i] === cur.qs[i].a).length;
+  const total = fq.length;
   const rec = (state.edu.fns[cur.fn] = state.edu.fns[cur.fn] || { seen: 0, right: 0, mastered: false, last: 0 });
   rec.seen += 1;
   rec.last = state.day;
@@ -8312,7 +8382,7 @@ function eduFinishQuiz(cur) {
   if (full) rec.right += 1;
   state.edu.asked = (state.edu.asked || 0) + total;
   state.edu.correct = (state.edu.correct || 0) + right;
-  state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly };
+  state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly, gen };
   state.edu.current = null;
   if (newly) eduCheckCompletionist();
   return state.edu.quiz;
@@ -8342,14 +8412,30 @@ function eduRivalAcc(r) {
   const base = EDU_RIVAL_ACC[tier] != null ? EDU_RIVAL_ACC[tier] : EDU_RIVAL_ACC[5];
   return clamp(base + (r.rating - leagueRatingMid(r.top ? TOP_TIER : r.league)) * 0.0003, 0.2, 0.95);
 }
-// Performance weights in play: Knowledge mode moves 15% to the check.
+// Performance weights in play: Knowledge mode moves 15% to the check's
+// function questions and 5% more (from Skill) to its general question.
 function perfWeights() {
   const r2 = (x) => Math.round(x * 100) / 100;
-  return eduOn() ? { skill: r2(PERF_WEIGHTS.skill - EDU.fromSkill), phys: r2(PERF_WEIGHTS.phys - EDU.fromPhys), composure: PERF_WEIGHTS.composure, rest: PERF_WEIGHTS.rest, quiz: EDU.weight } : PERF_WEIGHTS;
+  return eduOn() ? { skill: r2(PERF_WEIGHTS.skill - EDU.fromSkill - EDU.genWeight), phys: r2(PERF_WEIGHTS.phys - EDU.fromPhys), composure: PERF_WEIGHTS.composure, rest: PERF_WEIGHTS.rest, quiz: EDU.weight, gen: EDU.genWeight } : PERF_WEIGHTS;
+}
+// The general question: right is worth 100; wrong is set so that guessing
+// (1 in 4) is worth exactly the Skill it replaces — `neutral`.
+function eduGenValue(right, neutral) {
+  if (right == null) return neutral;
+  return right ? 100 : Math.max(0, (neutral - 100 * EDU.guess) / (1 - EDU.guess));
+}
+function eduGenExpected(acc, neutral) {
+  return acc * 100 + (1 - acc) * eduGenValue(false, neutral);
+}
+// This match's general question, if you've answered it.
+function eduMatchGen() {
+  const q = state.edu && state.edu.quiz;
+  return q && !q.used && q.gen != null ? q.gen : null;
 }
 
 /* ---- The quiz screen ---- */
 function eduPrompt(f, q) {
+  if (q.k === "gen") return `💡 <b>General knowledge</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
   if (q.k === "cat") return `📱 In the function picker, which category is <code>${escapeHtml(f.name)}</code> in?`;
   if (q.k === "src") return `🤖 Which OA Robot add-in has the <b>${escapeHtml(f.name)}</b> command?`;
   if (q.k === "group") return `🤖 Which group is <b>${escapeHtml(f.name)}</b> in?`;
@@ -8437,7 +8523,7 @@ function eduModeChoiceHtml({ intro = false } = {}) {
 function openEduModeInfo() {
   openModal(`
     ${stickyHeadHtml("📘 Knowledge mode")}
-    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does. Your score is <b>15% of match performance</b> (10% from Skill, 5% from Health) — guessing scores what those would have, so knowing them is an edge. The functions follow the week's focus skills and get harder as you climb.</p>
+    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does — then one 💡 <b>general question</b> (shortcuts, PivotTables, formats…). The function questions are <b>15% of match performance</b> (10% from Skill, 5% from Health) and the general one <b>5%</b> (from Skill) — guessing scores what those would have, so knowing them is an edge. Questions follow the week's focus skills and get harder as you climb.</p>
     ${eduModeChoiceHtml()}
     <p class="modal-sub">What you've mastered is kept whatever you switch to. Completionist extras don't count towards Completion — mastering everything earns a 📚 trophy instead.</p>
     <button class="primary-btn" id="eduSwitch">Save</button>`, { ownClose: true });
@@ -8460,6 +8546,7 @@ function eduCareerHtml() {
       <h3>📘 Knowledge mode · ${eduModeLabel()}</h3>
       <div class="kv-row"><span>🏅 Formulas mastered</span><span>${eduMasteredCount(avail)} of ${avail.length}</span></div>
       ${extras ? `<div class="kv-row"><span>📚 Extras mastered</span><span>${eduMasteredCount(extras)} of ${extras.length}</span></div>` : ""}
+      <div class="kv-row"><span>💡 General knowledge mastered</span><span>${eduGenMasteredCount(eduGenAvailable())} of ${eduGenAvailable().length}</span></div>
       ${eduPlayedBanks().map((id) => { const list = eduBankList(id); return `<div class="kv-row"><span>${EDU_BANK_INFO[id].icon} ${EDU_BANK_INFO[id].name} mastered</span><span>${eduMasteredCount(list)} of ${list.length}</span></div>`; }).join("")}
       <div class="kv-row"><span>✅ Answers right</span><span>${e.asked ? `${Math.round((100 * e.correct) / e.asked)}% of ${e.asked}` : "none yet"}</span></div>
       <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every esports-set function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
@@ -8479,9 +8566,12 @@ function eduReview(m, cur, f, onDone) {
   const neutral = eduNeutral(b.raw.skillComponent, b.raw.phys);
   const value = eduValue(res.acc, neutral);
   const edge = (value - neutral) * EDU.weight;
+  const gi = qs.findIndex((q) => q.k === "gen");
+  const genEdge = res.gen == null ? 0 : (eduGenValue(res.gen, b.raw.skillComponent) - b.raw.skillComponent) * EDU.genWeight;
+  const genLine = gi < 0 ? "" : `<div class="kv-row edu-line"><span>💡 ${escapeHtml(qs[gi].t)}</span><span>${res.gen ? "✅" : `❌ <b>${escapeHtml(qs[gi].a)}</b>`}</span></div>`;
   const line = (q, i) => {
     const ok = picks[i] === q.a;
-    const label = q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
+    const label = q.k === "gen" ? "💡 General" : q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
     return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}</span></div>`;
   };
   openModal(`
@@ -8490,8 +8580,10 @@ function eduReview(m, cur, f, onDone) {
       <div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
       <p class="edu-desc">${escapeHtml(f.desc)}</p>
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${escapeHtml(f.name)} won't come up again until you've mastered the rest.</div>` : ""}
+      ${genLine}
       <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
       ${m.practice ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
+      ${m.practice || gi < 0 ? "" : `<div class="kv-row"><span>💡 General question</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
       <button class="primary-btn" id="eduPlay">${!m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,
