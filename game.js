@@ -8466,13 +8466,14 @@ function openEduQuiz(m, onDone) {
   }
   const f = eduFnByKey(cur.fn);
   const who = m.info.opponentName || m.info.eventName || "";
-  const head = `<div class="edu-head"><span>📘 ${m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
+  const head = `<div class="edu-head"><span>📘 ${m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span class="edu-qn">Q${Math.min(cur.i + 1, cur.qs.length)}</span></div>`;
+  // No total and no progress bar: how many questions there are would give
+  // away how many arguments the function has.
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
   const q = cur.qs[cur.i];
   openModal(`
     <div class="edu-quiz">
       ${head}
-      <div class="edu-bar"><div style="width:${(100 * cur.i) / cur.qs.length}%"></div></div>
       <div class="edu-prompt">${eduPrompt(f, q)}</div>
       <div class="edu-options">${q.o.map((o, i) => `<button class="edu-opt${q.k === "arg" ? " edu-mono" : ""}" data-edu-opt="${i}">${escapeHtml(o)}</button>`).join("")}</div>
       <div class="edu-feedback" id="eduFeedback"></div>

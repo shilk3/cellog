@@ -978,8 +978,7 @@ details.match-more[open] { padding-bottom: 8px; }
 /* 📘 Education mode quiz */
 .edu-quiz { display: flex; flex-direction: column; gap: 12px; }
 .edu-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--text-dim); font-weight: 600; padding-right: 36px; }
-.edu-bar { height: 4px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; }
-.edu-bar > div { height: 100%; background: var(--accent); }
+.edu-qn { white-space: nowrap; flex: none; }
 .edu-prompt { font-size: 17px; line-height: 1.4; font-weight: 600; }
 .edu-gen { margin-top: 6px; }
 .edu-prompt code, .edu-syntax code, .edu-mono { font-family: ui-monospace, Menlo, monospace; }
