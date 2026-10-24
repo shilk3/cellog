@@ -58,16 +58,16 @@ rows = []
 for c in sorted(C, key=lambda c: c["name"]):
     d = DESC.get(c["name"]) or tidy(c["desc"])
     assert len(d) <= 110, (c["name"], len(d), d)
-    rows.append([c["name"], c["skill"], c["titan"], c["tier"], d, spec(c["args"]), c["cat"]])
+    rows.append([c["name"], c["skill"], c["titan"], c["tier"], d, spec(c["args"]), c["cat"], 1 if c["extra"] else 0])
 
-js = """// Excel's functions for 📘 Education mode — built by tools/build_edu.py
+js = """// Excel's functions for 📘 Knowledge mode — built by tools/edu/build.py
 // from Microsoft's function reference (support.microsoft.com, Excel
 // functions alphabetical + each function's syntax page). Argument names are
 // exactly as Excel shows them; descriptions are Microsoft's, some shortened
 // to fit a phone. Compatibility versions and add-in functions are left out.
 // Each row: [name, skill, Titan skill, league tier (5 easiest … 0 Titan),
 //            description, arguments ("[x]" optional, "..." repeats),
-//            Microsoft's category].
+//            Microsoft's category, 1 = a 📚 Completionist extra].
 const EDU_FUNCS = [
 """ + "".join("  " + json.dumps(r, ensure_ascii=False) + ",\n" for r in rows) + "];\n"
 pandas = json.load(open("pandas.json"))

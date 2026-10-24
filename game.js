@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.1.1";
+const APP_VERSION = "5.2.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -581,9 +581,10 @@ function completionGoals(stage = completionStage()) {
       flag("unbeaten", "🛡️", "Unbeaten regular season", state.trophies.unbeaten.length > 0),
     );
   }
-  // 📘 Education mode only: every function you can be asked so far, mastered
-  // (the total grows with your best league, so its id does too — the goal
-  // can drop like the stages do).
+  // 📘 Knowledge mode only: every esports-set function you can be asked so
+  // far, mastered (the total grows with your best league, so its id does
+  // too — the goal can drop like the stages do). Completionist extras don't
+  // count here: they have a trophy of their own.
   if (eduOn()) {
     const avail = eduAvailable();
     const done = eduMasteredCount(avail);
@@ -1479,9 +1480,10 @@ function freshState() {
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
     camp: null, // { year, joined, price, days } — this off-season's all-inclusive training camp (joinCamp)
-    // 📘 Education mode: on/off, each function's record (seen, mastered), the
-    // quiz in progress and the last one finished (for its match).
-    edu: { on: false, fns: {}, current: null, quiz: null, asked: 0, correct: 0 },
+    // 📘 Knowledge mode: on/off and its set ("esports" / "completionist"),
+    // each function's record (seen, mastered), the Knowledge check in
+    // progress and the last one finished (for its match). On for new games.
+    edu: { on: true, set: "esports", fns: {}, current: null, quiz: null, asked: 0, correct: 0 },
     staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
@@ -1575,6 +1577,7 @@ function migrateSave(parsed) {
   Object.keys(fresh).forEach((k) => {
     if (parsed[k] !== undefined) fresh[k] = parsed[k];
   });
+  const hadEdu = !!parsed.edu;
   SAVE_DEFAULT_PATHS.forEach((path) => {
     const keys = path.split(".");
     const last = keys.pop();
@@ -1589,6 +1592,8 @@ function migrateSave(parsed) {
     fresh.allocation.work = requiredWorkHours(fresh.employment.status);
     fresh.logEntries.push({ html: `🏖️ Annual leave has moved: it's now the whole ${BAL.preseasonDays}-day preseason, which starts the day after the Final. Work is back in your plan for the rest of camp.`, cls: "event-season" });
   }
+  // Knowledge mode is on for new games only: saves from before it stay off.
+  if (!hadEdu) fresh.edu.on = false;
   fresh.rivals.forEach(ensureRivalProfile); // v7: rivals' skill profiles
   fresh.rivals.forEach((r) => {
     if (r.top && TOP_RENAMED[r.name]) r.name = TOP_RENAMED[r.name];
@@ -4397,7 +4402,7 @@ function performanceTableHtml(b) {
         ${row("🏃 Health", raw ? fmt(raw.phys) : "", W.phys, b.weighted.phys)}
         ${row("🎮 Calm", raw ? fmt(raw.composure) : "", W.composure, b.weighted.composure)}
         ${row("🌙 Rest", raw ? fmt(raw.rest) : "", W.rest, b.weighted.rest)}
-        ${b.weighted.quiz != null ? row(`📘 Quiz${raw && raw.quizAcc != null ? ` (${Math.round(raw.quizAcc * 100)}% right)` : " (not taken: a guess)"}`, raw ? fmt(raw.quiz) : "", W.quiz, b.weighted.quiz) : ""}
+        ${b.weighted.quiz != null ? row(`📘 Knowledge check${raw && raw.quizAcc != null ? ` (${Math.round(raw.quizAcc * 100)}% right)` : " (not taken: a guess)"}`, raw ? fmt(raw.quiz) : "", W.quiz, b.weighted.quiz) : ""}
         ${techRow}
         ${movesRow}
       </tbody>
@@ -5005,7 +5010,7 @@ function gameCardHtml(len, { first = false } = {}) {
     const phase = PHASE_NAMES[s.seasonPhase] || s.seasonPhase;
     status = `<div class="staff-line staff-stat">${s.playerName ? escapeHtml(s.playerName) + " · " : ""}Year ${s.year} · ${lg(s.leagueTier)} · ${phase} · Day ${s.day}</div>`;
     buttons = `${current ? `<span class="staff-hired">▶ Playing now</span>` : `<button class="staff-chip" data-game-play="${len}">Continue</button>`}<button class="staff-chip staff-unlock" data-game-restart="${len}">Restart</button>`;
-    if (current) status += `<div class="staff-line"><button class="staff-chip" id="eduToggle">📘 Education mode: ${eduOn() ? "on" : "off"}</button></div>`;
+    if (current) status += `<div class="staff-line"><button class="staff-chip" id="eduToggle">📘 Knowledge mode: ${eduModeLabel()}</button></div>`;
   } else {
     buttons = `<button class="staff-chip" data-game-new="${len}">New ${g.name} game</button>`;
   }
@@ -5116,7 +5121,7 @@ function openNameModal(isFirstTime) {
     <div class="modal-section">
       <p>${isFirstTime ? "What should we call your Excel esports pro?" : "Enter a new name:"}</p>
       <input type="text" id="playerNameInput" maxlength="20" placeholder="Your name" value="${state.playerName ? escapeHtml(state.playerName) : ""}" class="name-input" />
-      ${isFirstTime ? `<label class="feedback-check"><input type="checkbox" id="eduModeInput" ${eduOn() ? "checked" : ""} /> 📘 Education mode — answer questions about real Excel functions before every match (you can change this later in 🎮 Games)</label>` : ""}
+      ${isFirstTime ? eduModeChoiceHtml({ intro: true }) : ""}
       <button class="primary-btn" id="nameSaveBtn">Save</button>
     </div>`;
   openModal(html);
@@ -5126,7 +5131,8 @@ function openNameModal(isFirstTime) {
     const val = input.value.trim().slice(0, 20);
     if (!val) return;
     state.playerName = val;
-    if ($("eduModeInput")) state.edu.on = $("eduModeInput").checked;
+    const mode = document.querySelector('input[name="eduMode"]:checked');
+    if (mode) eduSetMode(mode.value);
     saveState();
     closeModal();
     if (!state.specialisations) openSpecialisations({ required: true, onDone: () => !state.tutorialSeen && openTutorial(0) });
@@ -5227,7 +5233,7 @@ function completionSectionHtml() {
 function trophyCabinetHtml() {
   const t = state.trophies || { sweeps: [], unbeaten: [] };
   const m = state.mobile || { wonYears: [], sweeps: [] };
-  if (!state.gameComplete && !t.sweeps.length && !t.unbeaten.length && !m.wonYears.length) return "";
+  if (!state.gameComplete && !t.sweeps.length && !t.unbeaten.length && !m.wonYears.length && !t.completionist) return "";
   const years = (ys) => (ys.length ? ys.map((y) => `Y${y}`).join(", ") : "not yet");
   const py = pyUnlocked() && state.python && state.python.revealed;
   const top = state.peakLeagueTier === TOP_TIER;
@@ -5239,6 +5245,7 @@ function trophyCabinetHtml() {
       ${mobRevealed() ? `<div class="kv-row"><span>📱 ${MOB_EVENT_NAME}</span><span>${years(m.wonYears)}</span></div>
       <div class="kv-row"><span>🧹 Mobile clean sweeps (3–0)</span><span>${years(m.sweeps)}</span></div>` : ""}
       ${top ? `<div class="kv-row"><span>🛡️ Unbeaten seasons</span><span>${years(t.unbeaten)}</span></div>` : ""}
+      ${t.completionist ? `<div class="kv-row"><span>📚 Completionist — every function mastered</span><span class="mastered-tag">Year ${t.completionist}</span></div>` : ""}
     </div>`;
 }
 
@@ -6579,13 +6586,14 @@ function openHowTo() {
       "<b>Match History</b> shows your <b>upcoming</b> matches (the rest of the season, then your playoff path), your past matches, and every league result for this season and last.",
     ])}`);
 
-  sec("edu", "📘", "Education mode", ul([
-    `Optional, per game: turn it on when you start one, or any time in ☰ → 🎮 Games. It's <b>${eduOn() ? "on" : "off"}</b> for this game.`,
-    "Before every match you're asked about one real Excel function (all of Excel's, from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
+  sec("edu", "📘", "Knowledge mode", ul([
+    `On for new games, with three settings — change it any time in ☰ → 🎮 Games. It's <b>${eduModeLabel()}</b> for this game.`,
+    `<b>📘 Esports</b> (the default) asks about the ${EDU_CORE.length} functions that matter in Excel esports. <b>📚 Completionist</b> adds Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. <b>Off</b> skips the questions.`,
+    "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
     `Your share right is <b>${Math.round(EDU.weight * 100)}% of match performance</b> — taken ${Math.round(EDU.fromSkill * 100)}% from Skill and ${Math.round(EDU.fromPhys * 100)}% from Health. Guessing (1 in 4 right) scores exactly what those would have, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
-    "End Day or End Week asks first whenever the days they'd run reach a match. Once started, a quiz has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
+    "End Day or End Week asks first whenever the days they'd run reach a match. Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
   ]));
 
   sec("completion", "📈", "Completion", ul([
@@ -7379,7 +7387,7 @@ function renderAll() {
 }
 
 /* ---------------------------------------------------------------------- */
-/* 📘 Education mode: real Excel functions, quizzed before every match    */
+/* 📘 Knowledge mode: real Excel functions, quizzed before every match    */
 /* ---------------------------------------------------------------------- */
 // Optional, per game. Before each match you're asked about one function
 // (edu-functions.js, from Microsoft's reference): how many mandatory and
@@ -7404,7 +7412,9 @@ const EDU_CATS = ["Financial", "Logical", "Text", "Date and time", "Lookup and r
 function eduParseArgs(spec) {
   return (spec ? spec.split("|") : []).map((label) => ({ label, rep: label === "...", opt: label === "..." || label.startsWith("["), n: label.replace(/[[\]]/g, "") }));
 }
-const EDU_LIST = (typeof EDU_FUNCS === "undefined" ? [] : EDU_FUNCS).map(([name, skill, titan, tier, desc, args, cat]) => ({ name, skill, titan, tier, desc, cat, args: eduParseArgs(args) }));
+const EDU_LIST = (typeof EDU_FUNCS === "undefined" ? [] : EDU_FUNCS).map(([name, skill, titan, tier, desc, args, cat, extra]) => ({ name, skill, titan, tier, desc, cat, extra: !!extra, args: eduParseArgs(args) }));
+// The esports set: everything but the 📚 Completionist extras.
+const EDU_CORE = EDU_LIST.filter((f) => !f.extra);
 const EDU_PY = (typeof EDU_PANDAS === "undefined" ? [] : EDU_PANDAS).map(([name, desc, args]) => ({ name, skill: "python", titan: "python", tier: 0, desc, cat: "Python", args: eduParseArgs(args), py: true }));
 const eduRecKey = (f) => (f.py ? `py:${f.name}` : f.name);
 
@@ -7412,10 +7422,30 @@ function eduOn(s) {
   s = s || liveState();
   return !!(s && s.edu && s.edu.on);
 }
-// Functions you can be asked about at a stage of your career: everything
-// up to your best league's level (the top tier: all of them).
+// The two sets: 📘 Esports (the default) and 📚 Completionist (plus extras).
+function eduCompletionist(s) {
+  s = s || liveState();
+  return eduOn(s) && s.edu.set === "completionist";
+}
+function eduModeLabel() {
+  return !eduOn() ? "off" : eduCompletionist() ? "📚 Completionist" : "Esports";
+}
+function eduSetMode(mode) {
+  state.edu.on = mode !== "off";
+  if (mode !== "off") state.edu.set = mode;
+}
+// Every function the setting asks about.
+function eduList() {
+  return eduCompletionist() ? EDU_LIST : EDU_CORE;
+}
+// Esports-set functions you can be asked about at a stage of your career:
+// everything up to your best league's level (the top tier: all of them).
 function eduAvailable(tier = state.peakLeagueTier) {
-  return EDU_LIST.filter((f) => f.tier >= tier);
+  return EDU_CORE.filter((f) => f.tier >= tier);
+}
+// The extras so far (📚 Completionist).
+function eduExtrasAvailable(tier = state.peakLeagueTier) {
+  return EDU_LIST.filter((f) => f.extra && f.tier >= tier);
 }
 function eduMasteredCount(list) {
   const rec = state.edu.fns;
@@ -7446,7 +7476,7 @@ function eduQuizDue(days) {
 function eduPool(m) {
   if (m.event === "py") return EDU_PY;
   const tier = state.leagueTier;
-  const upTo = EDU_LIST.filter((f) => f.tier >= tier);
+  const upTo = eduList().filter((f) => f.tier >= tier);
   if (m.event === "mob") return upTo;
   const keys = state.activeSkills || [];
   const pool = upTo.filter((f) => (inTop() ? keys.includes(f.titan) : keys.includes(f.skill)));
@@ -7509,7 +7539,7 @@ function eduOptLabel(n, rep) {
 function eduBuildQuiz(f, m) {
   const tier = m.event === "py" ? 1 : state.leagueTier;
   const hard = tier <= 1, mid = tier <= 3;
-  const source = f.py ? EDU_PY : EDU_LIST;
+  const source = f.py ? EDU_PY : eduList();
   const near = mid ? source.filter((g) => g.skill === f.skill && g !== f) : source.filter((g) => g !== f);
   const pool = near.length >= 8 ? near : source.filter((g) => g !== f);
   const mand = f.args.filter((a) => !a.opt).length;
@@ -7561,6 +7591,18 @@ function eduFnByKey(key) {
   return key.startsWith("py:") ? EDU_PY.find((f) => f.name === key.slice(3)) : EDU_LIST.find((f) => f.name === key);
 }
 
+// 📚 Completionist: every function — extras and Python included — mastered.
+function eduAllMastered() {
+  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && eduMasteredCount(EDU_PY) === EDU_PY.length;
+}
+function eduCheckCompletionist() {
+  if (!eduCompletionist() || (state.trophies && state.trophies.completionist) || !eduAllMastered()) return;
+  state.trophies.completionist = state.year;
+  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions and all ${EDU_PY.length} Python ones mastered — a trophy for the cabinet.`, cls: "event-good" };
+  state.logEntries.push(e);
+  appendLog(e.html, e.cls);
+}
+
 // A finished quiz: its score for the match, and the function's record —
 // mastered once every question is right in one go.
 function eduFinishQuiz(cur) {
@@ -7577,6 +7619,7 @@ function eduFinishQuiz(cur) {
   state.edu.correct = (state.edu.correct || 0) + right;
   state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly };
   state.edu.current = null;
+  if (newly) eduCheckCompletionist();
   return state.edu.quiz;
 }
 
@@ -7604,7 +7647,7 @@ function eduRivalAcc(r) {
   const base = EDU_RIVAL_ACC[tier] != null ? EDU_RIVAL_ACC[tier] : EDU_RIVAL_ACC[5];
   return clamp(base + (r.rating - leagueRatingMid(r.top ? TOP_TIER : r.league)) * 0.0003, 0.2, 0.95);
 }
-// Performance weights in play: Education mode moves 15% to the quiz.
+// Performance weights in play: Knowledge mode moves 15% to the check.
 function perfWeights() {
   const r2 = (x) => Math.round(x * 100) / 100;
   return eduOn() ? { skill: r2(PERF_WEIGHTS.skill - EDU.fromSkill), phys: r2(PERF_WEIGHTS.phys - EDU.fromPhys), composure: PERF_WEIGHTS.composure, rest: PERF_WEIGHTS.rest, quiz: EDU.weight } : PERF_WEIGHTS;
@@ -7638,7 +7681,7 @@ function openEduQuiz(m, onDone) {
   }
   const f = eduFnByKey(cur.fn);
   const who = m.info.opponentName || (m.event && nextEventGame() && nextEventGame().rival.name) || "";
-  const head = `<div class="edu-head"><span>📘 Before the match${who ? ` vs ${escapeHtml(who)}` : ""}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
+  const head = `<div class="edu-head"><span>📘 Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
   const q = cur.qs[cur.i];
   openModal(`
@@ -7679,16 +7722,29 @@ function openEduQuiz(m, onDone) {
     openEduQuiz(m, onDone);
   });
 }
-// Turning it on or off (per game, any time).
+// The three settings, as radio buttons (the name screen and Games).
+function eduModeChoiceHtml({ intro = false } = {}) {
+  const cur = !eduOn() ? "off" : eduCompletionist() ? "completionist" : "esports";
+  const opt = (v, label, blurb) => `<label class="edu-mode-opt"><input type="radio" name="eduMode" value="${v}" ${cur === v ? "checked" : ""} /><span><b>${label}</b><span class="kv-dim">${blurb}</span></span></label>`;
+  return `<div class="edu-mode-choice" role="radiogroup" aria-label="Knowledge mode">
+      ${intro ? `<div class="callout-label">📘 Knowledge mode — a quick Excel question set before every match</div>` : ""}
+      ${opt("esports", "📘 Esports", `the ${EDU_CORE.length} functions that matter in Excel esports (recommended)`)}
+      ${opt("completionist", "📚 Completionist", `all ${EDU_LIST.length} of Excel's functions — the esports set plus every rarer one`)}
+      ${opt("off", "Off", "no questions — pure management")}
+      ${intro ? `<p class="modal-sub">You can change this any time in ☰ → 🎮 Games.</p>` : ""}
+    </div>`;
+}
+// Changing the setting (per game, any time).
 function openEduModeInfo() {
-  const on = eduOn();
   openModal(`
-    ${stickyHeadHtml("📘 Education mode")}
-    <p class="modal-sub">Before every match you're asked about one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does. Your score is <b>15% of match performance</b> (10% from Skill, 5% from Health) — guessing scores what those would have, so knowing them is an edge. The functions follow the week's focus skills and get harder as you climb.</p>
-    <p class="modal-sub">It's <b>${on ? "on" : "off"}</b> for this game. What you've mastered is kept if you turn it off and on again.</p>
-    <button class="primary-btn" id="eduSwitch">${on ? "Turn it off" : "Turn it on"}</button>`, { ownClose: true });
+    ${stickyHeadHtml("📘 Knowledge mode")}
+    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does. Your score is <b>15% of match performance</b> (10% from Skill, 5% from Health) — guessing scores what those would have, so knowing them is an edge. The functions follow the week's focus skills and get harder as you climb.</p>
+    ${eduModeChoiceHtml()}
+    <p class="modal-sub">What you've mastered is kept whatever you switch to. Completionist extras don't count towards Completion — mastering everything earns a 📚 trophy instead.</p>
+    <button class="primary-btn" id="eduSwitch">Save</button>`, { ownClose: true });
   $("eduSwitch").addEventListener("click", () => {
-    state.edu.on = !on;
+    const mode = document.querySelector('input[name="eduMode"]:checked');
+    if (mode) eduSetMode(mode.value);
     saveState();
     closeModal();
     renderAll();
@@ -7701,12 +7757,14 @@ function eduCareerHtml() {
   const avail = eduAvailable();
   const e = state.edu;
   const py = pyUnlocked() && state.python && state.python.revealed;
+  const extras = eduCompletionist() ? eduExtrasAvailable() : null;
   return `<div class="modal-section">
-      <h3>📘 Education mode</h3>
+      <h3>📘 Knowledge mode · ${eduModeLabel()}</h3>
       <div class="kv-row"><span>🏅 Formulas mastered</span><span>${eduMasteredCount(avail)} of ${avail.length}</span></div>
+      ${extras ? `<div class="kv-row"><span>📚 Extras mastered</span><span>${eduMasteredCount(extras)} of ${extras.length}</span></div>` : ""}
       ${py ? `<div class="kv-row"><span>🐍 Python functions mastered</span><span>${eduMasteredCount(EDU_PY)} of ${EDU_PY.length}</span></div>` : ""}
       <div class="kv-row"><span>✅ Answers right</span><span>${e.asked ? `${Math.round((100 * e.correct) / e.asked)}% of ${e.asked}` : "none yet"}</span></div>
-      <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
+      <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every esports-set function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
     </div>`;
 }
 function eduReview(m, cur, f, onDone) {
@@ -7729,7 +7787,7 @@ function eduReview(m, cur, f, onDone) {
       <p class="edu-desc">${escapeHtml(f.desc)}</p>
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${escapeHtml(f.name)} won't come up again until you've mastered the rest.</div>` : ""}
       <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
-      <div class="kv-row"><span>📘 Quiz for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>
+      <div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>
       <button class="primary-btn" id="eduPlay">${m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,

@@ -9,18 +9,22 @@ also on GitHub Pages at [shilk3.github.io/cellog](https://shilk3.github.io/cello
 (the repository was renamed from `excel-run-sim`; the old Pages address no
 longer works). The cellog.website domain has been retired.
 
-**📘 Education mode** (optional, per game — a tick box when you name a new
-player, or ☰ → 🎮 Games): before every match you answer questions about one
+**📘 Knowledge mode** (on for new games, with three settings chosen when
+you name a new player or later in ☰ → 🎮 Games: 📘 Esports, the default —
+the 311 functions that matter in Excel esports; 📚 Completionist — all 471,
+whose extras earn a trophy of their own rather than counting towards
+Completion; or Off): before every match a Knowledge check asks about one
 real Excel function — how many mandatory and optional arguments it has, each
 argument in order, then what it does (four choices each). The share right is
 15% of match performance, taken 10% from Skill and 5% from Health; guessing
 (1 in 4) scores exactly what those would have. Functions follow the week's
-focus skills and your league (SUM and TODAY in League 5, rarer ones higher
-up), with wrong answers that get closer to the right one as you climb. Every
+focus skills and your league (SUM, XLOOKUP and FILTER in League 5, rarer
+ones higher up — weighted towards the lower leagues so they never run dry), with wrong answers that get closer to the right one as you climb. Every
 question right in one go masters a function: it isn't asked again until the
 rest are, and Career and Completion count them. The 471 functions (all of
-Excel's bar compatibility and add-in ones) are in `edu-functions.js`, built
-from Microsoft's function reference by the scripts in `tools/edu/`.
+Excel's bar compatibility and add-in ones), each marked esports or extra,
+are in `edu-functions.js`, built from Microsoft's function reference by the
+scripts in `tools/edu/`.
 
 **🐞 Report a bug or suggestion** (☰ menu): no account needed. Each report
 becomes an issue in the private `shilk3/cellog-feedback` repo, filed by

@@ -77,7 +77,7 @@ const counts = (list) => { const l = list || []; const mand = l.filter((a) => !a
 const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Random" };
 const LEAGUE = { 5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan" };
 const TABS = [
-  { id: "excel", label: "Excel functions", note: "In every Knowledge check. League = the first league it can be asked in.",
+  { id: "excel", label: "Excel functions", note: "In every Knowledge check. League = the first league it can be asked in (rebalanced towards League 5 so early leagues have plenty to master).",
     rows: EDU_FUNCS.map(([n, sk, ti, tier, d, a]) => ({ n, f: LEAGUE[tier], cols: [SKILL[sk]], args: a ? a.split("|") : [], d })),
     head: ["Function", "League", "Skill", "Mand.", "Opt.", "Arguments", "Description"] },
   { id: "pq", label: "⚡ Power Query", note: "Microsoft's Power Query M reference, all 653. Levels (my picks): Common = asked from League 4 · Everyday = from League 3 · Rare = from League 2.",

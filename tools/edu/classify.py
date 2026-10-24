@@ -39,12 +39,66 @@ TIERS = {
           SUMX2PY2 SUMXMY2 SUMX2MY2 SERIESSUM ISO.CEILING HEX2BIN BIN2HEX DEC2OCT OCT2DEC BITAND BITOR BITXOR BITLSHIFT
           BITRSHIFT DOLLARDE DOLLARFR DISC INTRATE RECEIVED""",
 }
+# The default (esports) set's leagues, rebalanced after the review: skewed
+# towards League 5 so early pools don't run dry (about 95/73/55/41/26/21),
+# with the everyday dynamic-array functions low and the rare maths high.
+# The extras (tools/bank/sets.json) keep their tiers from TIERS above.
+CORE_TIERS = {
+    5: """CHOOSE COMBIN FACT RAND RANDBETWEEN RANDARRAY PERMUT CHOOSECOLS
+          AVERAGE COUNT COUNTA COUNTBLANK COUNTIF LARGE MAX MEDIAN MIN SMALL AVERAGEIF COUNTIFS MAXIFS MINIFS
+          AND FALSE IF ISBLANK NA NOT OR TRUE IFERROR ISNUMBER ISTEXT ISEVEN ISODD
+          COLUMN COLUMNS ROW ROWS VLOOKUP XLOOKUP FILTER SORT UNIQUE INDEX MATCH
+          ABS INT MOD PI POWER PRODUCT ROUND SQRT SUM SUMIF SUMIFS SUMPRODUCT ROUNDUP ROUNDDOWN SEQUENCE TRUNC SIGN
+          EVEN ODD MROUND SUMSQ QUOTIENT
+          CONCAT CONCATENATE LEFT LEN LOWER PROPER RIGHT TRIM UPPER MID FIND SEARCH SUBSTITUTE TEXTJOIN TEXT VALUE
+          DATE DAY MONTH NOW TODAY WEEKDAY YEAR HOUR MINUTE SECOND TIME""",
+    4: """CHOOSEROWS COMBINA STANDARDIZE
+          AVERAGEIFS RANK.EQ STDEV.S VAR.S FREQUENCY AVERAGEA MAXA MINA MODE.MULT
+          ISERROR IFS IFNA SWITCH XOR LET N ISNA ISERR
+          HLOOKUP LOOKUP XMATCH SORTBY TAKE DROP VSTACK HSTACK TOCOL TRANSPOSE OFFSET INDIRECT
+          CEILING.MATH FLOOR.MATH DEGREES RADIANS GCD LCM SUBTOTAL AGGREGATE LOG LOG10 LN EXP SIN COS TAN ROMAN ARABIC
+          BASE DECIMAL DEC2BIN BIN2DEC MMULT PERCENTOF
+          CHAR CODE EXACT REPLACE REPT TEXTSPLIT TEXTBEFORE TEXTAFTER UNICHAR UNICODE
+          DAYS EDATE EOMONTH NETWORKDAYS WEEKNUM WORKDAY DATEDIF""",
+    3: """PERMUTATIONA FACTDOUBLE
+          STDEV.P VAR.P TRIMMEAN GEOMEAN SLOPE TREND
+          ISFORMULA ISLOGICAL ISNONTEXT ISREF TYPE ERROR.TYPE LAMBDA MAP
+          TOROW WRAPROWS WRAPCOLS EXPAND ADDRESS GROUPBY PIVOTBY HYPERLINK
+          ACOS ASIN ATAN ATAN2 CEILING.PRECISE FLOOR.PRECISE CONVERT DEC2HEX HEX2DEC BITAND BITOR BITXOR BITLSHIFT
+          BITRSHIFT MDETERM MINVERSE MUNIT ISO.CEILING
+          CLEAN DOLLAR FIXED T NUMBERVALUE REGEXTEST REGEXEXTRACT REGEXREPLACE
+          DATEVALUE TIMEVALUE ISOWEEKNUM NETWORKDAYS.INTL WORKDAY.INTL""",
+    2: """MULTINOMIAL PROB
+          AVEDEV DEVSQ KURT SKEW STDEVA VARA
+          BYROW BYCOL REDUCE SCAN MAKEARRAY SHEET SHEETS
+          TRIMRANGE FORMULATEXT AREAS
+          BIN2HEX HEX2BIN DEC2OCT OCT2DEC BIN2OCT OCT2BIN HEX2OCT OCT2HEX SQRTPI SERIESSUM SUMX2MY2 SUMX2PY2 SUMXMY2
+          COMPLEX IMREAL IMAGINARY IMABS
+          ARRAYTOTEXT VALUETOTEXT TRANSLATE DETECTLANGUAGE
+          YEARFRAC DAYS360""",
+    1: """PHI HARMEAN STDEVPA ISOMITTED CELL GETPIVOTDATA
+          IMARGUMENT IMCONJUGATE IMSUM IMSUB IMPRODUCT IMDIV IMPOWER IMSQRT IMEXP IMLN IMLOG10 IMLOG2
+          SINH COSH TANH ASINH ACOSH ATANH ASC DBCS""",
+    0: """LOGNORM.INV VARPA INFO IMAGE ACOT ACOTH COT COTH CSC CSCH SEC SECH DELTA GESTEP ERF ERF.PRECISE ERFC
+          ERFC.PRECISE BAHTTEXT JIS PHONETIC""",
+}
+EXTRA = set(json.load(open("../bank/sets.json"))["extra"]["excel"])
 tier = {}
 for t, s in TIERS.items():
     for n in s.split():
         assert n in names, f"unknown {n}"
         assert n not in tier, f"twice {n}"
         tier[n] = t
+
+core = {}
+for t, s in CORE_TIERS.items():
+    for n in s.split():
+        assert n in names and n not in EXTRA, f"not a default-set function: {n}"
+        assert n not in core, f"twice {n}"
+        core[n] = t
+missing = names - EXTRA - set(core)
+assert not missing, f"default-set functions without a league: {sorted(missing)}"
+tier.update(core)
 
 # The seven skills (leagues 5-1): by Microsoft's category, with probability,
 # combinatorics and random picks under Cards & Random.
@@ -72,11 +126,12 @@ for f in F:
     n = f["name"]
     skill = "cards" if (n in CARDS or (f["cat"] == "Statistical" and is_prob(n))) else CAT_SKILL[f["cat"]]
     titan = "lambda" if n in LAMBDA else "single" if n in SINGLE else "speed"
-    out.append({**f, "skill": skill, "titan": titan, "tier": tier.get(n, 0)})
+    out.append({**f, "skill": skill, "titan": titan, "tier": tier.get(n, 0), "extra": n in EXTRA})
 json.dump(out, open("classified.json", "w"), indent=1)
 import collections
 print(len(out))
 print("tiers", sorted(collections.Counter(o["tier"] for o in out).items()))
+print("default-set tiers", sorted(collections.Counter(o["tier"] for o in out if not o["extra"]).items()))
 print("skills", collections.Counter(o["skill"] for o in out))
 print("titan", collections.Counter(o["titan"] for o in out))
 print("skill x tier", {s: sorted(collections.Counter(o["tier"] for o in out if o["skill"] == s).items()) for s in CAT_SKILL.values()})
