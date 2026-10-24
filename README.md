@@ -11,7 +11,7 @@ longer works). The cellog.website domain has been retired.
 
 **📘 Knowledge mode** (on for new games, with three settings chosen when
 you name a new player or later in ☰ → 🎮 Games: 📘 Esports, the default —
-the 311 functions that matter in Excel esports; 📚 Completionist — all 471,
+the 283 functions that matter in Excel esports; 📚 Completionist — all 471,
 whose extras earn a trophy of their own rather than counting towards
 Completion; or Off): before every match a Knowledge check asks about one
 real Excel function — how many mandatory and optional arguments it has, each

@@ -8,6 +8,24 @@ import openpyxl
 # Removed outright (per the review): the Easter egg, and Excel's own LAMBDA
 # functions, which are already in the Excel bank.
 REMOVED = {"cmds": ["Eggy"], "lams": ["LAMBDA", "LET", "MAP", "REDUCE", "SCAN", "BYROW", "BYCOL", "MAKEARRAY", "ISOMITTED"]}
+# Moves agreed after the review, applied on top of it (to_extra: Esports →
+# Completionist; to_core: the other way).
+ADJUST = {
+    "excel": {
+        "to_extra": "ASC DBCS JIS PHONETIC BAHTTEXT SINH COSH TANH ASINH ACOSH ATANH SEC SECH CSC CSCH COT COTH ACOT ACOTH "
+                    "ERF ERF.PRECISE ERFC ERFC.PRECISE DELTA GESTEP SERIESSUM SQRTPI SUMX2MY2 SUMX2PY2 SUMXMY2 "
+                    "LOGNORM.INV PHI HARMEAN STDEVPA VARPA".split(),
+        "to_core": "MODE.SNGL PERCENTILE.INC QUARTILE.INC CORREL RANK.AVG FORECAST.LINEAR INTERCEPT".split(),
+    },
+    "pq": {
+        "to_extra": "DateTimeZone.FixedLocalNow DateTimeZone.FixedUtcNow DateTimeZone.From DateTimeZone.FromFileTime "
+                    "DateTimeZone.FromText DateTimeZone.LocalNow DateTimeZone.RemoveZone DateTimeZone.SwitchZone "
+                    "DateTimeZone.ToLocal DateTimeZone.ToRecord DateTimeZone.ToText DateTimeZone.ToUtc DateTimeZone.UtcNow "
+                    "DateTimeZone.ZoneHours DateTimeZone.ZoneMinutes #datetimezone "
+                    "Access.Database Odbc.DataSource Odbc.InferOptions Odbc.Query OleDb.DataSource OleDb.Query "
+                    "SharePoint.Contents SharePoint.Files SharePoint.Tables OData.Feed WebAction.Request Identity.IsMemberOf".split(),
+    },
+}
 TABS = {"Excel": "excel", "Power Query": "pq", "VBA": "vba", "Robot commands": "cmds", "Lambdas": "lams", "Python": "py"}
 wb = openpyxl.load_workbook(sys.argv[1], read_only=True)
 out = {"extra": {}, "removed": REMOVED, "notes": {}}
@@ -27,5 +45,7 @@ for tab, key in TABS.items():
     # A name listed twice (Power Query files a couple under two categories)
     # is kept if either listing was.
     out["extra"][key] = sorted(set(extra) - kept, key=extra.index)
+    adj = ADJUST.get(key, {})
+    out["extra"][key] = [n for n in out["extra"][key] if n not in adj.get("to_core", [])] + [n for n in adj.get("to_extra", []) if n not in out["extra"][key]]
 json.dump(out, open("tools/bank/sets.json", "w"), indent=1, ensure_ascii=False)
 print({k: len(v) for k, v in out["extra"].items()})
