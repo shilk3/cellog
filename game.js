@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.3.0";
+const APP_VERSION = "5.4.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -578,6 +578,12 @@ function mobOnOffer() {
 // 🧩 Lambda the third, then a free choice of everything (or nothing).
 function eventOptions() {
   const must = (id) => ({ options: [id], def: id, must: true });
+  // Retired: every invitational you haven't played this year, or none.
+  if (state.retired) {
+    const done = state.retired.done || [];
+    const opts = EVENT_ORDER_TOP.filter((id) => !done.includes(id));
+    return { options: [...opts, null], def: opts.find((id) => evRevealed(id)) || opts[0] || null };
+  }
   if (inTop()) {
     const y = topYear();
     if (y <= 1) return { options: [], def: null };
@@ -623,6 +629,11 @@ function chooseEvent(choice) {
   if (!canChooseEvent() || !state.events.options.includes(choice)) return;
   state.events.choice = choice;
   if (choice) initEvent(choice);
+  // Retired, an invitational you never had: this is its first.
+  if (choice && !evRevealed(choice)) {
+    evState(choice).revealed = true;
+    evState(choice).firstYear = state.year;
+  }
 }
 // Sets an invitational up the first time it's needed (s: a save being
 // migrated, before it's the live state).
@@ -1362,7 +1373,7 @@ function meetsProSkillBar() {
   return state.peakLeagueTier <= BAL.goProLeagueTier && skillAverage() >= proAverageBar();
 }
 function checkGoProEligible() {
-  return meetsProSkillBar();
+  return !state.retired && meetsProSkillBar();
 }
 // Fractional strikes for falling short of the daily requirement — indexed by
 // hours actually worked. Hand-tuned, not a formula: a near-miss costs far
@@ -1615,7 +1626,13 @@ function freshState() {
     python: null, // its preseason exhibition — see initEvent
     mobile: null, // the Mobile Invitational — see initEvent
     events: null, // { year, choice, options, must, chosen } — this year's preseason invitational (decidePreseasonEvent)
-    gameComplete: null, // { year } once everything's been won in one year
+    gameComplete: null, // { year } once everything's been won
+    // 🏖️ Retirement (after the finish): { since, block, done } while retired —
+    // a year of RETIRED_BLOCKS invitationals; pending changes take effect as
+    // the next year starts.
+    retired: null,
+    retirePending: false,
+    rejoinPending: false,
     trophies: { sweeps: [], unbeaten: [] }, // 3–0 exhibitions, unbeaten regular seasons at the top (not needed to finish)
     finishReveal: false,
     camp: null, // { year, joined, price, days } — this off-season's all-inclusive training camp (joinCamp)
@@ -3548,6 +3565,75 @@ function checkGameComplete() {
   state.gameComplete = { year: state.year, day: state.day, rating: state.rank, peakRating: state.peakRank };
   state.finishReveal = true;
 }
+// ---- 🏖️ Retirement ----
+// Once the game is complete you can retire from the league: from the next
+// year, a year is RETIRED_BLOCKS invitationals back to back (one every
+// preseason's length), on your work rate with no Work. You can come back to
+// the top tier the same way.
+const RETIRED_BLOCKS = 4;
+// The splash as each block after the first starts: this block's choice.
+function retiredBlockSplash() {
+  const r = state.retired, evs = state.events;
+  const next = [["🎟️ Invitational", `${r.block + 1} of ${RETIRED_BLOCKS} this year — ${BAL.preseasonDays} days to prepare`]];
+  if ((r.done || []).length) next.push(["✅ Played this year", r.done.map((id) => `${EVENTS[id].icon} ${EVENTS[id].skill.name}`).join(", ")]);
+  return {
+    icon: "🎟️", title: `Invitational ${r.block + 1} of ${RETIRED_BLOCKS}`, sub: `Year ${state.year} · retired`, fromName: "Block",
+    how: [], next, notes: [], choice: evs && evs.options.length > 1 ? evs.options.slice() : null,
+  };
+}
+// Career: retire, or come back (each from the next year).
+function retirementSectionHtml() {
+  if (!state.gameComplete) return "";
+  const r = state.retired;
+  let body;
+  if (r) {
+    body = state.rejoinPending
+      ? `<p class="modal-sub">🏛️ Back to the ${TOP_LEAGUE_NAME} when Year ${state.year + 1} starts.</p><button class="link-btn" data-retire="undo">Stay retired</button>`
+      : `<p class="modal-sub">Retired since Year ${r.since}: ${RETIRED_BLOCKS} invitationals a year, no league matches, paid your work rate.</p><button class="ghost-btn" data-retire="rejoin">🏛️ Return to the ${TOP_LEAGUE_NAME} next year</button>`;
+  } else {
+    body = state.retirePending
+      ? `<p class="modal-sub">🏖️ Retiring when Year ${state.year + 1} starts — the invitationals carry on.</p><button class="link-btn" data-retire="undo">Keep playing the league</button>`
+      : `<p class="modal-sub">You've finished the game. Retire from the league and keep playing <b>just the invitationals</b> — ${RETIRED_BLOCKS} a year.</p><button class="ghost-btn" data-retire="ask">🏖️ Retire from the league (invitationals carry on)</button>`;
+  }
+  return `<div class="modal-section"><h3>🏖️ Retirement</h3>${body}</div>`;
+}
+function openRetireInfo() {
+  openModal(`
+    ${stickyHeadHtml("🏖️ Retire from the league?")}
+    <p class="modal-sub">You stop playing ${TOP_LEAGUE_NAME} seasons — <b>but not the invitationals</b>. From Year ${state.year + 1}:</p>
+    <ul class="howto-list">
+      <li>🎟️ A year is <b>${RETIRED_BLOCKS} invitationals</b>, one every ${BAL.preseasonDays} days. Before each, you pick which (each at most once a year) — or none.</li>
+      <li>🏖️ No Work or Pro Duties: you're paid your <b>work rate</b> ($${fmt(Math.max(state.employment.workPay, Math.min(state.employment.proPay || 0, workPayCap())))}/day) every day. No sponsorship.</li>
+      ${eduOn() ? `<li>📘 A <b>practice Knowledge check</b> each day (skip it if you like) — from Excel and every invitational you've played, to master the lot.</li>` : ""}
+      <li>🏛️ Change your mind any year: return to the ${TOP_LEAGUE_NAME} from Career, from the next year.</li>
+    </ul>
+    <button class="primary-btn" id="retireYes">Retire when Year ${state.year + 1} starts</button>
+    <button class="ghost-btn" id="retireNo">Not now</button>`, { ownClose: true });
+  $("retireYes").addEventListener("click", () => {
+    state.retirePending = true;
+    saveState();
+    closeModal();
+    openCareer();
+  });
+  $("retireNo").addEventListener("click", () => {
+    closeModal();
+    openCareer();
+  });
+}
+function wireRetirement() {
+  document.querySelectorAll("[data-retire]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const v = b.dataset.retire;
+      if (v === "ask") return openRetireInfo();
+      if (v === "rejoin") state.rejoinPending = true;
+      if (v === "undo") state.retirePending = state.rejoinPending = false;
+      saveState();
+      closeModal();
+      openCareer();
+    })
+  );
+}
+
 // The finish's screen rows (shown with whatever completed it).
 function gameCompleteRows() {
   const t = state.trophies, how = [], notes = [];
@@ -3808,10 +3894,26 @@ function startNewYear() {
   };
   state.yearCashFlow = { workPay: 0, matchCash: 0, expenses: 0 };
 
+  // 🏖️ Retiring (or coming back) as the year turns. Retired, you're paid
+  // your work rate — whatever you were (pro, employed or job-hunting).
+  const emp = state.employment;
+  let retireNote = "";
+  if (state.retirePending && state.gameComplete && !state.retired) {
+    state.retired = { since: state.year + 1, block: 0, done: [] };
+    if (emp.status === "pro") keepProPayForWork(emp);
+    emp.status = "employed";
+    emp.strikes = [];
+    retireNote = ` 🏖️ You've retired from the ${TOP_LEAGUE_NAME}: ${RETIRED_BLOCKS} invitationals a year from now on.`;
+  } else if (state.rejoinPending && state.retired) {
+    state.retired = null;
+    retireNote = ` 🏛️ Back in the ${TOP_LEAGUE_NAME} — a full season again.`;
+  }
+  state.retirePending = state.rejoinPending = false;
+  if (state.retired) state.retired = { ...state.retired, block: 0, done: [] };
+
   // Pro sponsorship runs to the end of the year, whatever skills do in the
   // meantime; it's renewed only if every skill is still at the bar now.
   // If not, you're back to finding a job.
-  const emp = state.employment;
   if (emp.status === "pro") {
     if (!meetsProSkillBar()) {
       emp.status = "unemployed";
@@ -3849,7 +3951,9 @@ function startNewYear() {
   state.leagueRoundRobins = newLeagueData.roundRobins;
   state.leaguePoints = newLeagueData.points;
   state.playoff = null;
-  let phaseEvent = `🎉 Year ${state.year} begins! A fresh ${roundsFor(state.leagueTier)}-round season has been scheduled — good luck.`;
+  let phaseEvent = state.retired
+    ? `🎉 Year ${state.year} begins — retired: ${RETIRED_BLOCKS} invitationals, one every ${BAL.preseasonDays} days.${retireNote}`
+    : `🎉 Year ${state.year} begins! A fresh ${roundsFor(state.leagueTier)}-round season has been scheduled — good luck.${retireNote}`;
   if (yearSummary.proEnded) phaseEvent += ` 📉 Sponsorship not renewed — your skill average was ${yearSummary.proEnded.avg}, under the ${yearSummary.proEnded.bar} needed. Time to find a job: ${yearSummary.proEnded.searchHours}h of Job Search.`;
   else if (yearSummary.proRenewed) phaseEvent += ` 🏆 Sponsorship renewed for Year ${state.year}.`;
   if (worn.length) phaseEvent += ` Last year's equipment has worn out (${worn.map((e) => e.name).join(", ")}).`;
@@ -3882,6 +3986,22 @@ function processDayEnd() {
         phaseEvent = game.event;
         eventSplash = game.splash || null;
       }
+    }
+    if (state.phaseDay >= BAL.preseasonDays && state.retired) {
+      // Retired: the next invitational's block, or (after the last) a new year.
+      const r = state.retired;
+      if (state.events && state.events.choice && !(r.done || []).includes(state.events.choice)) r.done = [...(r.done || []), state.events.choice];
+      EVENT_IDS.forEach((id) => (state.allocation[EVENTS[id].courseAct] = 0));
+      if (r.block >= RETIRED_BLOCKS - 1) {
+        newYearNow = true;
+        return { matchResult, phaseEvent, yearSummary, newYearNow, eventSplash };
+      }
+      r.block += 1;
+      state.phaseDay = 0;
+      decidePreseasonEvent();
+      eventSplash = [].concat(eventSplash || [], retiredBlockSplash());
+      phaseEvent = `${phaseEvent ? phaseEvent + " " : ""}🎟️ Invitational ${r.block + 1} of ${RETIRED_BLOCKS} — ${BAL.preseasonDays} days to prepare.`;
+      return { matchResult, phaseEvent, yearSummary, newYearNow, eventSplash };
     }
     if (state.phaseDay >= BAL.preseasonDays) {
       state.seasonPhase = "regular";
@@ -4067,6 +4187,10 @@ function getNextMatchInfo() {
         labelLine1: `${E.icon} ${what} vs ${name}`,
         labelLine2: matchOddsLine(g.winPct, g.daysUntil) + score,
       };
+    }
+    if (s.retired) {
+      const left = (RETIRED_BLOCKS - 1 - s.retired.block) * BAL.preseasonDays + daysUntil;
+      return { kind: "preseason", label: `🏖️ Retired · invitational ${s.retired.block + 1}/${RETIRED_BLOCKS} · ${s.retired.block + 1 < RETIRED_BLOCKS ? `next block ${daysUntilPhrase(daysUntil)}` : `new year ${daysUntilPhrase(left)}`}` };
     }
     return { kind: "preseason", label: `Season starts ${daysUntilPhrase(daysUntil)}` };
   }
@@ -4392,7 +4516,7 @@ function workRowHtml() {
     const back = leaveDaysLeft();
     return comboRowHtml("work", {
       icon: "🏖️",
-      label: "Annual leave",
+      label: state.retired ? "Retired" : "Annual leave",
       // Days of leave left — kept short: iPhone's font leaves little room
       // beside the label and the Net tag.
       outcomeText: `${back} day${back === 1 ? "" : "s"} left`,
@@ -5581,7 +5705,9 @@ function employmentSectionHtml() {
     return `${expensesLine}<p>🔍 <b>Unemployed</b> — job searching: ${fmt(emp.jobSearchHours)} / ${jobSearchTarget()}h accumulated (each search needs a random ${BAL.jobSearchHoursRange[0]}–${BAL.jobSearchHoursRange[1]}h). Every hour counts toward it, and you need at least ${BAL.jobSearchMinHours}h a day to end the day.</p>`;
   }
 
-  const leaveLine = onLeave() ? `<p>🏖️ <b>Annual leave</b> — no ${emp.status === "pro" ? "Pro Duties" : "Work"} until the season starts in ${leaveDaysLeft()} days, paid as normal.</p>` : "";
+  const leaveLine = state.retired
+    ? `<p>🏖️ <b>Retired</b> from the league — no Work, paid at your work rate ($${fmt(emp.workPay)}/day). Invitationals only: ${RETIRED_BLOCKS} a year.</p>`
+    : onLeave() ? `<p>🏖️ <b>Annual leave</b> — no ${emp.status === "pro" ? "Pro Duties" : "Work"} until the season starts in ${leaveDaysLeft()} days, paid as normal.</p>` : "";
   if (emp.status === "pro") {
     const queue = emp.techniqueQueue;
     const penalty = Math.round(Math.min(1, penaltyQueueLength() * BAL.techniquePenaltyPerUnmastered) * 100);
@@ -5761,6 +5887,7 @@ function openCareer() {
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
     ${trophyCabinetHtml()}
+    ${retirementSectionHtml()}
     ${completionSectionHtml()}
     <div class="modal-section">
       <h3>Next Up</h3>
@@ -5812,6 +5939,7 @@ function openCareer() {
       ${currentStatsHtml()}
     </div>`;
   openModal(html, { ownClose: true, page: { key: "career", reopen: openCareer } });
+  wireRetirement();
   if ($("careerSpecs")) $("careerSpecs").addEventListener("click", () => openSpecialisations());
   $("viewLeaguesLink").addEventListener("click", () => openLeagues(state.leagueTier));
   $("viewHistoryLink").addEventListener("click", () => openHistory());
@@ -6487,7 +6615,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       notes.push(...done.notes);
     }
   } else if (from === "offseason" && to === "preseason") {
-    icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)} · another year of the slog`;
+    icon = "🎉"; title = `Year ${state.year} begins`; sub = state.retired ? `🏖️ Retired · ${RETIRED_BLOCKS} invitationals this year` : `${lg(state.leagueTier)} · another year of the slog`;
     if (state.topReveal) {
       icon = "🏛️"; title = `Welcome to the ${TOP_LEAGUE_NAME}`;
       state.topReveal = false;
@@ -6518,7 +6646,8 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       if (title === `Year ${state.year} begins`) { icon = EVENTS[revealed].icon; title = `An invitation: the ${EVENTS[revealed].name}`; }
       features.push(eventRevealFeatures(revealed, evs));
     }
-    next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
+    if (state.retired) next.push(["🎟️ Invitationals", `${RETIRED_BLOCKS} this year, one every ${BAL.preseasonDays} days — this is the first`]);
+    else next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
     if (evs && evs.options.length > 1) {
       choice = evs.options.slice();
       next.push(["🎯 Skills", "depends on your choice below"]);
@@ -6527,7 +6656,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
       next.push(["🎯 Skills", inTop() && ev ? `${EVENTS[ev].icon} ${EVENTS[ev].skill.name} and its course only` : ev ? `all ${playSkillKeys().length}, plus ${EVENTS[ev].icon} ${EVENTS[ev].skill.name} and its course` : `all ${playSkillKeys().length} trainable`]);
       if (ev && !features.length) next.push([`${EVENTS[ev].icon} ${EVENTS[ev].name}`, EVENTS[ev].tri ? `🔺 Triangle Series vs ${evRivals(ev).map((r) => r.name).join(" & ")}, the last ${PY_GAMES} days` : `best of ${PY_GAMES} vs ${evRival(ev) ? evRival(ev).name : ""}, the last ${PY_GAMES} days`]);
     }
-    next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", "all preseason, paid"]);
+    next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : state.retired ? ["🏖️ Retired", `no Work, paid $${fmt(state.employment.workPay)}/day`] : ["🏖️ Annual leave", "all preseason, paid"]);
     if (!inTop()) {
       next.push(["🧑‍🏫 Skill coaches", "half price"]);
       next.push(["📈 Skill cap", `${leagueSkillCap()} ⭐ · ${leagueSkillCap() - BAL.otherSkillCapGap} others`]);
@@ -7051,6 +7180,13 @@ function openHowTo() {
     "End Day or End Week asks first whenever the days they'd run reach a match. Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
   ]));
 
+  if (state.gameComplete) sec("retire", "🏖️", "Retirement", ul([
+    `Once you've finished the game you can <b>retire from the league</b> (Career → 🏖️ Retirement). It starts with the next year, and you can come back to the ${TOP_LEAGUE_NAME} the same way.`,
+    `Retired, a year is <b>${RETIRED_BLOCKS} invitationals</b>, one every ${BAL.preseasonDays} days: before each you pick which (each at most once a year) or none, and its sliders replace everything else, as at the top. No league matches.`,
+    `No Work or Pro Duties — you're paid your work rate every day (no sponsorship).`,
+    ...(eduOn() ? [`📘 Each day brings an optional <b>practice Knowledge check</b>, from Excel and every invitational you've played — no match at stake, just mastery.`] : []),
+  ]));
+
   sec("completion", "📈", "Completion", ul([
     `<b>Completion</b> (in Career) is how much of CELLOG you've done: every goal listed there counts — partly done counts partly. It never goes back down while a goal slips (rust, a lost title); each goal keeps its best.`,
     `Each pro technique${inTop() ? " and signature move" : ""} counts half a goal.`,
@@ -7499,7 +7635,7 @@ function runDay() {
   // preview of the next) and start a fresh snapshot for the next one. They're
   // kept on the state until dismissed, so closing the app doesn't lose them.
   const splashes = [];
-  if (dayEnd.eventSplash) splashes.push(dayEnd.eventSplash);
+  if (dayEnd.eventSplash) splashes.push(...[].concat(dayEnd.eventSplash));
   if (state.seasonPhase !== phaseBefore) {
     splashes.push(buildPhaseSplash(phaseBefore, state.seasonPhase, { yearSummary, tierBefore }));
     state.phaseStart = phaseSnapshot();
@@ -7597,6 +7733,8 @@ function endDay() {
   // 📘 A match as today ends: its quiz first.
   const quiz = eduQuizDue(1);
   if (quiz) return openEduQuiz(quiz, endDay);
+  const practice = eduPracticeDue();
+  if (practice) return openEduPractice(practice, endDay);
   const before = weekSnapshot();
   const { matchResult, splashes } = runDay();
   finishTurn();
@@ -7654,6 +7792,8 @@ function endWeek() {
   // so taking it before the days run changes nothing).
   const quiz = eduQuizDue(planned);
   if (quiz) return openEduQuiz(quiz, endWeek);
+  const practice = eduPracticeDue();
+  if (practice) return openEduPractice(practice, endWeek);
   const start = weekSnapshot();
   const startPhase = state.seasonPhase;
   let daysRun = 0;
@@ -7958,6 +8098,7 @@ function eduQuizDue(days) {
 // function). The Python Invitational asks its own set; the Mobile one asks
 // from your league's functions, plus which menu category each is in.
 function eduPool(m) {
+  if (m.practice) return eduPracticePool();
   if (m.event && EDU_BANK[m.event]) return eduBankList(m.event);
   // Once you've played an invitational, its bank turns up in normal checks
   // now and then (Power Query twice as often).
@@ -8001,6 +8142,37 @@ function eduPickFunction(pool) {
     if (own.length && Math.random() < 0.6) cand = own;
   }
   return cand[randInt(0, cand.length - 1)];
+}
+// 🏖️ Retired: a practice check each day (skippable) — from Excel and every
+// bank you've played, Power Query twice as often. Mastery only, no match.
+function eduPracticeDue() {
+  if (!eduOn() || !state.retired || state.edu.practiceDay === state.day) return null;
+  return { practice: true, event: null, key: `practice·${state.day}`, info: { kind: "practice", daysUntil: 1 } };
+}
+function eduPracticePool() {
+  const banks = ["excel", ...eduPlayedBanks()];
+  const weight = (id) => (id === "excel" ? 1 : EDU_BANK_INFO[id].weight);
+  let r = Math.random() * banks.reduce((a, id) => a + weight(id), 0);
+  const id = banks.find((b) => (r -= weight(b)) < 0) || "excel";
+  return id === "excel" ? eduList() : eduBankList(id);
+}
+// Offers today's practice check (or picks one up that was started).
+function openEduPractice(m, onDone) {
+  if (state.edu.current && state.edu.current.key === m.key) return openEduQuiz(m, onDone);
+  openModal(`
+    <div class="edu-quiz">
+      <div class="edu-head"><span>📘 Today's practice check</span><span>🏖️ Retired</span></div>
+      <p class="modal-sub">One function or command from Excel or an invitational you've played — mastery only, nothing at stake. Once started, it has to be finished.</p>
+      <button class="primary-btn" id="eduPracticeGo">Start ▶</button>
+      <button class="ghost-btn" id="eduPracticeSkip">Skip today</button>
+    </div>`, { ownClose: true, onDismiss: () => {} });
+  $("eduPracticeGo").addEventListener("click", () => openEduQuiz(m, onDone));
+  $("eduPracticeSkip").addEventListener("click", () => {
+    state.edu.practiceDay = state.day;
+    saveState();
+    closeModal();
+    if (onDone) onDone();
+  });
 }
 // Banks you've played the invitational for (Python: revealed and played).
 function eduPlayedBanks() {
@@ -8208,7 +8380,7 @@ function openEduQuiz(m, onDone) {
   }
   const f = eduFnByKey(cur.fn);
   const who = m.info.opponentName || m.info.eventName || "";
-  const head = `<div class="edu-head"><span>📘 Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
+  const head = `<div class="edu-head"><span>📘 ${m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
   const q = cur.qs[cur.i];
   openModal(`
@@ -8295,7 +8467,13 @@ function eduCareerHtml() {
 }
 function eduReview(m, cur, f, onDone) {
   const qs = cur.qs, picks = cur.picks;
+  // A practice check counts for mastery, never for a match.
+  const matchQuiz = state.edu.quiz;
   const res = eduFinishQuiz(cur);
+  if (m.practice) {
+    state.edu.quiz = matchQuiz;
+    state.edu.practiceDay = state.day;
+  }
   saveState();
   const b = performanceBreakdown();
   const neutral = eduNeutral(b.raw.skillComponent, b.raw.phys);
@@ -8313,8 +8491,8 @@ function eduReview(m, cur, f, onDone) {
       <p class="edu-desc">${escapeHtml(f.desc)}</p>
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${escapeHtml(f.name)} won't come up again until you've mastered the rest.</div>` : ""}
       <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
-      <div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>
-      <button class="primary-btn" id="eduPlay">${m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
+      ${m.practice ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
+      <button class="primary-btn" id="eduPlay">${!m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,
     // Closing it any way carries on to the match.
