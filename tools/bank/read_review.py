@@ -23,7 +23,15 @@ ADJUST = {
                     "DateTimeZone.ToLocal DateTimeZone.ToRecord DateTimeZone.ToText DateTimeZone.ToUtc DateTimeZone.UtcNow "
                     "DateTimeZone.ZoneHours DateTimeZone.ZoneMinutes #datetimezone "
                     "Access.Database Odbc.DataSource Odbc.InferOptions Odbc.Query OleDb.DataSource OleDb.Query "
-                    "SharePoint.Contents SharePoint.Files SharePoint.Tables OData.Feed WebAction.Request Identity.IsMemberOf".split(),
+                    "SharePoint.Contents SharePoint.Files SharePoint.Tables OData.Feed WebAction.Request Identity.IsMemberOf "
+                    # Type / Value / Comparer internals, operators and connector-builder tools.
+                    "Value.Add Value.Subtract Value.Multiply Value.Divide Value.Equals Value.Compare Value.NullableEquals Value.As "
+                    "Value.Metadata Value.RemoveMetadata Value.ReplaceMetadata Value.Expression Value.Alternates Value.Optimize "
+                    "Value.NativeQuery Value.Versions Value.VersionIdentity Embedded.Value Variable.Value Variable.ValueOrDefault "
+                    "Comparer.Equals Comparer.FromCulture Type.ForFunction Type.FunctionParameters Type.FunctionRequiredParameters "
+                    "Type.FunctionReturn Type.ForRecord Type.RecordFields Type.OpenRecord Type.ClosedRecord Type.IsOpenRecord "
+                    "Type.AddTableKey Type.TableKeys Type.ReplaceTableKeys Type.TablePartitionKey Type.ReplaceTablePartitionKey "
+                    "Type.Facets Type.ReplaceFacets Type.ListItem Type.TableRow Type.Union".split(),
     },
 }
 TABS = {"Excel": "excel", "Power Query": "pq", "VBA": "vba", "Robot commands": "cmds", "Lambdas": "lams", "Python": "py"}
