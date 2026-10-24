@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.2.0";
+const APP_VERSION = "5.3.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -354,13 +354,14 @@ const PY_GAMES = 3; // best of three
 const PY_RIVAL = { name: "JasPy", rating: 2700, python: 100, xp: 20, condition: 95 };
 const PY_EVENT_NAME = "Python Invitational";
 
-// ---- The Mobile Invitational (from your first League 3 preseason) ----
+// ---- The Mobile Invitational (after a season without promotion) ----
 // The same shape — one skill (it never rusts), a three-part course, a
 // best of three on the preseason's last days — against PocketLacaze, who
 // plays Excel on a phone. Below the top its two sliders sit alongside your
 // seven skills; at the top it sets everything else aside, like Python.
-// He plays to your league, and a series win pays a prize. Kept quiet until
-// it starts.
+// He plays to your league, and a series win pays a prize. Offered from
+// League 4 up, in a preseason after a season with no promotion. Kept quiet
+// until it starts.
 const MOB_SKILL = { key: "mobile", name: "Mobile Excel", icon: "📱" };
 const MOB_COURSE = [
   { name: "Touch Navigation", icon: "👆", hours: 20, desc: "+2 Mobile Excel in the focus-skill edge", edge: { mobile: 2 } },
@@ -373,18 +374,80 @@ const MOB_EVENT_NAME = "Mobile Invitational";
 // PocketLacaze by your league (0 = the top), and the series prize. Below
 // the top, its preseasons are in the leagues listed here.
 const MOB_BY_TIER = {
+  4: { mobile: 50, xp: 0, condition: 75, rating: 750, prize: 400 },
   3: { mobile: 60, xp: 5, condition: 80, rating: 1050, prize: 500 },
   2: { mobile: 75, xp: 10, condition: 85, rating: 1400, prize: 750 },
   1: { mobile: 90, xp: 15, condition: 90, rating: 1900, prize: 1000 },
   0: { mobile: 100, xp: 20, condition: 95, rating: 2650, prize: 1500 },
 };
-const MOB_TIERS = Object.keys(MOB_BY_TIER).map(Number).filter((t) => t !== TOP_TIER);
-// Both invitationals, for what they share.
+// ---- The Triangle Series invitationals ----
+// Three players: you and two specialists. Everyone plays everyone (you vs
+// A, you vs B, and A vs B off-screen), then a final on the last day: the
+// player who won both against the one who won one — or, if all three are
+// 1–1, a three-way final where the highest score wins. Lose both and you
+// watch the final. Same skill + three-part course as the others; the
+// first one each is a must (Power Query in your first League 4 preseason,
+// VBA in League 3, OA Robot in League 2, Lambda in your third year at the
+// top). Each stays quiet until it starts.
+const TRI_EVENTS = {
+  pq: {
+    skill: { key: "pq", name: "Power Query", icon: "⚡" }, name: "Power Query Invitational", icon: "⚡", firstTier: 4, rivals: ["UnpivotAshleigh", "OzOfQueries"],
+    course: [
+      { name: "Merge & Append", icon: "🔗", hours: 20, desc: "+2 Power Query in the focus-skill edge", edge: { pq: 2 } },
+      { name: "Unpivot & Group By", icon: "🔄", hours: 30, desc: "+3 Power Query in the focus-skill edge", edge: { pq: 3 } },
+      { name: "Custom M Functions", icon: "🧮", hours: 40, desc: "finish 45s sooner", seconds: 45 },
+    ],
+  },
+  vba: {
+    skill: { key: "vba", name: "VBA", icon: "💾" }, name: "VBA Invitational", icon: "💾", firstTier: 3, rivals: ["LoopLindén", "ForEachFreelove"],
+    course: [
+      { name: "Recorded Macros", icon: "⏺️", hours: 20, desc: "+2 VBA in the focus-skill edge", edge: { vba: 2 } },
+      { name: "Loops & Ranges", icon: "🔁", hours: 30, desc: "+3 VBA in the focus-skill edge", edge: { vba: 3 } },
+      { name: "Events & UserForms", icon: "🪟", hours: 40, desc: "finish 45s sooner", seconds: 45 },
+    ],
+  },
+  robot: {
+    skill: { key: "robot", name: "OA Robot", icon: "🤖" }, name: "OA Robot Invitational", icon: "🤖", firstTier: 2, rivals: ["JaqBot", "RoboOehm"],
+    course: [
+      { name: "Command Shortcuts", icon: "🎛️", hours: 20, desc: "+2 OA Robot in the focus-skill edge", edge: { robot: 2 } },
+      { name: "Exact Pastes", icon: "📋", hours: 30, desc: "+3 OA Robot in the focus-skill edge", edge: { robot: 3 } },
+      { name: "Colour-aware Commands", icon: "🎨", hours: 40, desc: "finish 45s sooner", seconds: 45 },
+    ],
+  },
+  lam: {
+    skill: { key: "lamlib", name: "Lambda Library", icon: "🧩" }, name: "Lambda Invitational", icon: "🧩", firstTier: TOP_TIER, topYear: 3, rivals: ["RydobonFire", "LetWisemanLambda"],
+    course: [
+      { name: "Name Manager Libraries", icon: "📇", hours: 20, desc: "+2 Lambda Library in the focus-skill edge", edge: { lamlib: 2 } },
+      { name: "Recursion", icon: "♾️", hours: 30, desc: "+3 Lambda Library in the focus-skill edge", edge: { lamlib: 3 } },
+      { name: "Array Wizardry", icon: "🪄", hours: 40, desc: "finish 45s sooner", seconds: 45 },
+    ],
+  },
+};
+// The two specialists play to your league (A a little stronger than B),
+// and a series win pays a prize.
+const TRI_BY_TIER = {
+  4: { skill: 52, xp: 0, condition: 75, rating: 700, prize: 400 },
+  3: { skill: 62, xp: 5, condition: 80, rating: 1000, prize: 500 },
+  2: { skill: 74, xp: 10, condition: 85, rating: 1300, prize: 750 },
+  1: { skill: 87, xp: 15, condition: 90, rating: 1800, prize: 1000 },
+  0: { skill: 97, xp: 20, condition: 95, rating: 2600, prize: 1500 },
+};
+const TRI_SPREAD = 3; // A's skill above the table, B's below
+// Every invitational, for what they share.
 const EVENTS = {
   py: { id: "py", skill: PY_SKILL, course: PY_COURSE, name: PY_EVENT_NAME, icon: "🐍", courseAct: "pycourse", stateKey: "python" },
   mob: { id: "mob", skill: MOB_SKILL, course: MOB_COURSE, name: MOB_EVENT_NAME, icon: "📱", courseAct: "mobcourse", stateKey: "mobile" },
+  ...Object.fromEntries(Object.entries(TRI_EVENTS).map(([id, t]) => [id, { id, ...t, tri: true, courseAct: `${id}course`, stateKey: `${id}Inv` }])),
 };
-const EVENT_SKILL_KEYS = [PY_SKILL.key, MOB_SKILL.key];
+const EVENT_IDS = Object.keys(EVENTS);
+const TRI_IDS = EVENT_IDS.filter((id) => EVENTS[id].tri);
+const EVENT_SKILL_KEYS = EVENT_IDS.map((id) => EVENTS[id].skill.key);
+// Skills of the invitationals that first come below the top: they train
+// twice as fast, sharing the preseason with your seven.
+const EVENT_BOOSTED = ["mob", ...eventIdsBelowTop()].map((id) => EVENTS[id].skill.key);
+function eventIdsBelowTop() {
+  return TRI_IDS.filter((id) => EVENTS[id].firstTier > TOP_TIER);
+}
 let exhibitionEvent = null; // set while an exhibition game is being played
 function inTop(s) {
   // Safe while a new career's state is still being built.
@@ -458,16 +521,32 @@ function evCurrent(id) {
   const i = EVENTS[id].course.findIndex((t) => !evMastered(id).includes(t.name));
   return i < 0 ? null : i;
 }
-// Which invitational a rival plays ("py" / "mob"), and their fixed profile
+// Which invitational a rival plays (an EVENTS id), and their fixed profile
 // ({ <skill key>, xp, condition }).
 function rivalEvent(r) {
-  return r && r.py ? "py" : r && r.mob ? "mob" : null;
+  return !r ? null : r.py ? "py" : r.mob ? "mob" : r.ev || null;
 }
 function rivalEventProfile(r) {
-  return r.py || r.mob;
+  return r.py || r.mob || r.evp;
 }
 function evRival(id, s = state) {
   return s.rivals.find((r) => rivalEvent(r) === id);
+}
+// A Triangle Series' two specialists, A then B.
+function evRivals(id, s = state) {
+  return s.rivals.filter((r) => rivalEvent(r) === id).sort((a, b) => (a.slot || 0) - (b.slot || 0));
+}
+function evRevealed(id, s = state) {
+  const e = s[EVENTS[id].stateKey];
+  return !!(e && e.revealed);
+}
+function evWon(id, s = state) {
+  const e = s[EVENTS[id].stateKey];
+  return !!(e && e.wonYears.length);
+}
+// Your year at the top: 1 the first, 2 the next…
+function topYear(s = state) {
+  return s.leagueTier === TOP_TIER && s.topSince != null ? s.year - s.topSince + 1 : 0;
 }
 function pyCourseHours(i) {
   return evCourseHours("py", i);
@@ -482,31 +561,58 @@ function pyRival() {
 function mobRevealed() {
   return !!(state.mobile && state.mobile.revealed);
 }
-// What this year's preseason offers. The first eligible one below the top
-// is a must; after that it's yours to join or not. At the top Python is a
-// must from your second year until you've finished the game — then it's
-// Python, Mobile or neither.
-function eventOptions() {
-  if (inTop()) {
-    if (!pyUnlocked()) return { options: [], def: null };
-    if (!state.gameComplete) return { options: ["py"], def: "py", must: true };
-    return { options: ["py", "mob", null], def: "py" };
-  }
-  if (!MOB_TIERS.includes(state.leagueTier)) return { options: [], def: null };
-  if (!mobRevealed()) return { options: ["mob"], def: "mob", must: true };
-  return { options: ["mob", null], def: null };
+// The invitationals' order of first appearance, below the top and at it.
+const EVENT_ORDER_BELOW = ["pq", "vba", "robot"];
+const EVENT_ORDER_TOP = ["py", "lam", "pq", "vba", "robot", "mob"];
+// The Mobile Invitational's door: from League 4 up, after a season without
+// a promotion (stayed up or went down). At the top, any year from the fourth.
+function mobOnOffer() {
+  const s = state;
+  return s.leagueTier <= 4 && s.lastStandingsTier != null && s.leagueTier >= s.lastStandingsTier;
 }
-// Called as each year starts: the default stands until you choose. Being
-// offered the Mobile Invitational for the first time is its reveal (the
-// new year's splash tells you about it: revealMob).
+// What this year's preseason offers. Each invitational's first time is a
+// must (one a year; any you missed are caught up, in order); after that it's
+// yours to join or not. Below the top: ⚡ Power Query from League 4, 💾 VBA
+// from League 3, 🤖 OA Robot from League 2, 📱 Mobile after a season without
+// promotion. At the top: nothing the first year, 🐍 Python the second,
+// 🧩 Lambda the third, then a free choice of everything (or nothing).
+function eventOptions() {
+  const must = (id) => ({ options: [id], def: id, must: true });
+  if (inTop()) {
+    const y = topYear();
+    if (y <= 1) return { options: [], def: null };
+    if (y === 2) return must("py");
+    if (y === 3) return must("lam");
+    const missed = EVENT_ORDER_TOP.find((id) => !evRevealed(id));
+    if (missed) return must(missed);
+    const def = !evWon("py") ? "py" : !evWon("lam") ? "lam" : null;
+    return { options: [...EVENT_ORDER_TOP, null], def };
+  }
+  const tier = state.leagueTier;
+  const missed = EVENT_ORDER_BELOW.find((id) => tier <= EVENTS[id].firstTier && !evRevealed(id));
+  if (missed) return must(missed);
+  if (mobOnOffer() && !evRevealed("mob")) return must("mob");
+  const opts = EVENT_ORDER_BELOW.filter((id) => evRevealed(id));
+  if (mobOnOffer()) opts.push("mob");
+  return opts.length ? { options: [...opts, null], def: null } : { options: [], def: null };
+}
+// Called as each year starts: the default stands until you choose. An
+// invitational's first time is its reveal (the new year's splash tells you
+// about it: events.reveal).
 function decidePreseasonEvent() {
   const o = eventOptions();
-  state.events = { year: state.year, choice: o.def, options: o.options, must: !!o.must, revealMob: false };
+  state.events = { year: state.year, choice: o.def, options: o.options, must: !!o.must, reveal: null };
   o.options.filter(Boolean).forEach((id) => initEvent(id));
-  if (o.options.includes("mob") && !state.mobile.revealed) {
-    state.mobile.revealed = true;
-    state.events.revealMob = true;
+  const first = o.must && o.def && !evRevealed(o.def) ? o.def : null;
+  if (first) {
+    evState(first).revealed = true;
+    evState(first).firstYear = state.year;
+    state.events.reveal = first;
   }
+}
+// The invitational revealed this year (older saves: revealMob).
+function eventRevealedNow(evs) {
+  return evs ? evs.reveal || (evs.revealMob ? "mob" : null) : null;
 }
 // The choice can change until the invitational's first game.
 function canChooseEvent() {
@@ -522,9 +628,22 @@ function chooseEvent(choice) {
 // migrated, before it's the live state).
 function initEvent(id, s = state) {
   const E = EVENTS[id];
-  if (!s[E.stateKey]) s[E.stateKey] = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], sweeps: [], revealed: false };
+  if (!s[E.stateKey]) s[E.stateKey] = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], sweeps: [], revealed: false, ...(E.tri ? { lastStanding: [] } : {}) };
   if (s.stats.skills[E.skill.key] == null) s.stats.skills[E.skill.key] = 0;
   if (s.stats.xp[E.skill.key] == null) s.stats.xp[E.skill.key] = 0;
+  if (E.tri) {
+    if (!evRivals(id, s).length) {
+      const t = TRI_BY_TIER[4];
+      E.rivals.forEach((name, slot) => {
+        s.rivals.push({
+          id: Math.max(...s.rivals.map((r) => r.id)) + 1, name, rating: t.rating, league: -1, ev: id, slot,
+          evp: { [E.skill.key]: t.skill + (slot ? -TRI_SPREAD : TRI_SPREAD), xp: t.xp, condition: t.condition },
+          wins: 0, draws: 0, losses: 0, promotions: 0, relegations: 0,
+        });
+      });
+    }
+    return;
+  }
   if (!evRival(id, s)) {
     const profile = id === "py" ? { python: PY_RIVAL.python, xp: PY_RIVAL.xp, condition: PY_RIVAL.condition } : { ...MOB_BY_TIER[3] };
     s.rivals.push({
@@ -570,6 +689,18 @@ function completionGoals(stage = completionStage()) {
       flag("mobSweep", "🧹", "Mobile clean sweep (3–0)", m.sweeps.length > 0),
     );
   }
+  // Each Triangle Series, once it's been revealed.
+  TRI_IDS.filter((id) => evRevealed(id)).forEach((id) => {
+    const E = EVENTS[id], es = evState(id), key = E.skill.key;
+    const course = E.course.reduce((a, t, i) => a + (evMastered(id).includes(t.name) ? 1 : Math.min(1, (es.course[i] || 0) / evCourseHours(id, i))), 0);
+    goals.push(
+      goal(`${id}Skill`, E.skill.icon, `${E.skill.name} at 100`, 1, unit(s.skills[key]), unit(s.skills[key]) >= 1 ? 1 : 0, 1),
+      goal(`${id}Course`, "📚", `${E.skill.name} course`, E.course.length, course, evMastered(id).length, E.course.length),
+      flag(`${id}Won`, E.icon, E.name, es.wonYears.length > 0),
+      flag(`${id}Sweep`, "🧹", `${E.skill.name} clean sweep (3–0)`, es.sweeps.length > 0),
+      flag(`${id}Last`, "🔺", `${E.skill.name}: Last One Standing`, (es.lastStanding || []).length > 0),
+    );
+  });
   if (stage >= 1) {
     const moves = TOP_TECHNIQUE_NAMES.filter((n) => emp.includes(n)).length;
     goals.push(
@@ -593,6 +724,11 @@ function completionGoals(stage = completionStage()) {
       const py = eduMasteredCount(EDU_PY);
       goals.push(goal("pandas", "🐍", "Python functions mastered", EDU.pandasWeight, (EDU.pandasWeight * py) / EDU_PY.length, py, EDU_PY.length));
     }
+    // Each Triangle Series' bank (its esports set), once revealed.
+    TRI_IDS.filter((id) => evRevealed(id)).forEach((id) => {
+      const list = eduBankCore(id), done = eduMasteredCount(list);
+      goals.push(goal(`bank_${id}`, EVENTS[id].icon, `${EDU_BANK_INFO[id].name} mastered`, EDU.pandasWeight, (EDU.pandasWeight * done) / Math.max(1, list.length), done, list.length));
+    });
   }
   if (stage >= 2 && state.python) {
     const course = PY_COURSE.reduce((a, t, i) => a + (pyMastered().includes(t.name) ? 1 : Math.min(1, (state.python.course[i] || 0) / pyCourseHours(i))), 0);
@@ -623,9 +759,12 @@ function completionPct(stage = completionStage()) {
 function completionBarHtml(pct) {
   return `<div class="completion-bar"><div class="completion-fill" style="width:${pct}%"></div></div>`;
 }
-// PocketLacaze plays to your league.
+// PocketLacaze plays to your league — one league easier the first time
+// (below the top), since your Mobile Excel starts from nothing.
 function mobTierFor() {
-  return inTop() ? 0 : MOB_BY_TIER[state.leagueTier] ? state.leagueTier : 3;
+  if (inTop()) return 0;
+  const tier = MOB_BY_TIER[state.leagueTier] ? state.leagueTier : 4;
+  return state.mobile && state.mobile.firstYear === state.year ? Math.min(4, tier + 1) : tier;
 }
 // "League 3" — or the top tier's own name.
 function lg(tier) {
@@ -1523,6 +1662,10 @@ function freshState() {
       work: 0, // a new career starts in preseason, on annual leave
       pycourse: 0, // a later preseason's course
       mobcourse: 0, // the Mobile Invitational's course
+      pqcourse: 0, // …and the Triangle Series ones'
+      vbacourse: 0,
+      robotcourse: 0,
+      lamcourse: 0,
     },
     employment: {
       status: "employed", // "employed" | "unemployed" | "pro"
@@ -1802,7 +1945,7 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
     // to the ceiling just because the coach isn't on hand this week.
     // Python only exists in its preseason, and never rusts; the top tier's
     // skills are set aside (frozen) while it's on.
-    const eventMult = isEventSkill(key) ? (PY_GAIN_MULT[BAL.gameLength] || 1) * (key === MOB_SKILL.key ? MOB_GAIN_BOOST : 1) : 1;
+    const eventMult = isEventSkill(key) ? (PY_GAIN_MULT[BAL.gameLength] || 1) * (EVENT_BOOSTED.includes(key) ? MOB_GAIN_BOOST : 1) : 1;
     if (hours >= BAL.skillDecayThresholdHours) {
       const eff = effectiveHours(hours);
       const gain = eff * BAL.skillGainBase * focusMult * physMult * restMult * skillDiminish(s.skills[key]) * coachMult * (1 + gear.training) * eventMult;
@@ -2626,7 +2769,9 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   const oppFinalShown = oppPerfShown + oppEdgeShown + oppLuckShown;
 
   return {
-    edu: eduQuiz ? { fn: eduQuiz.fn.replace(/^py:/, ""), right: eduQuiz.right, total: eduQuiz.total } : null,
+    // The real draws, for a three-way final (removed before it's stored).
+    raw: { yourFinal, oppFinal, yourTime, oppTime },
+    edu: eduQuiz ? { fn: eduQuiz.fn.replace(/^[a-z]+:/, ""), right: eduQuiz.right, total: eduQuiz.total } : null,
     win,
     draw, // always false now — older results may hold a draw
     decidedOnTime, // a dead heat settled by the faster finish
@@ -3054,17 +3199,9 @@ function finalizeSeasonMovement(playerTierChampion) {
   // playoff champion, all seven skills and their XP at 100, and every
   // technique mastered — an invitation upstairs.
   const invited = playedTier === 1 && topEntryMet(champions[1]);
-  // The finish line: top of the table, playoff champion and the exhibition,
-  // all in one year at the top.
-  if (playedTier === TOP_TIER && !state.gameComplete) {
-    const tableTop = state.lastStandings && state.lastStandings[0] && state.lastStandings[0].isPlayer;
-    const champTop = champions[TOP_TIER] && champions[TOP_TIER].isPlayer;
-    const pyWon = state.python && state.python.wonYears.includes(state.year);
-    if (tableTop && champTop && pyWon) {
-      state.gameComplete = { year: state.year, day: state.day, rating: state.rank, peakRating: state.peakRank };
-      state.finishReveal = true;
-    }
-  }
+  // The finish line (any years, not all in one): top of the table and
+  // champion at the top, and the Python and Lambda invitationals won.
+  checkGameComplete();
   if (invited) newTier = enterTop();
   state.leagueTier = newTier;
   state.peakLeagueTier = Math.min(state.peakLeagueTier, newTier);
@@ -3081,6 +3218,7 @@ function finalizeSeasonMovement(playerTierChampion) {
 // The invitational's player, set to play at your level (PocketLacaze plays
 // to your league).
 function prepEventRival(id) {
+  if (EVENTS[id].tri) return prepTriRivals(id)[0];
   const rival = evRival(id);
   if (id === "mob") {
     const t = MOB_BY_TIER[mobTierFor()];
@@ -3095,6 +3233,7 @@ function nextEventGame() {
   const id = isPreseason() ? preseasonEvent() : null;
   if (!id) return null;
   initEvent(id);
+  if (EVENTS[id].tri) return triNextGame(id);
   const es = evState(id);
   const sr = es.series && es.series.year === state.year ? es.series : { you: 0, opp: 0 };
   const n = sr.you + sr.opp + 1;
@@ -3119,6 +3258,7 @@ function nextEventGame() {
 function playEventGame(id) {
   const E = EVENTS[id];
   initEvent(id);
+  if (E.tri) return triPlayDay(id);
   const es = evState(id);
   if (!es.series || es.series.year !== state.year) es.series = { year: state.year, you: 0, opp: 0 };
   const sr = es.series;
@@ -3153,6 +3293,7 @@ function playEventGame(id) {
     es.wonYears.push(state.year);
     res.series.won = true;
     event += ` 🏆 You've won the ${E.name}!`;
+    if (id === "py") checkGameComplete();
     if (id === "py" && first) {
       const emp = state.employment;
       emp.techniquesMastered = emp.techniquesMastered || [];
@@ -3179,8 +3320,256 @@ function playEventGame(id) {
     res.series.sweep = true;
     event += " 🧹 Clean sweep — a new trophy!";
   }
-  return { result: res, event };
+  return { result: res, event, splash: state.finishReveal ? gameCompleteSplash() : null };
 }
+// ---- The Triangle Series ----
+// The specialists play to your league (the top tier: their best) — one
+// league easier in your first series below the top, since your skill
+// starts from nothing.
+function triTier(id) {
+  if (inTop()) return TOP_TIER;
+  const tier = TRI_BY_TIER[state.leagueTier] ? state.leagueTier : 4;
+  const es = id && evState(id);
+  return es && es.firstYear === state.year ? Math.min(4, tier + 1) : tier;
+}
+function prepTriRivals(id) {
+  const t = TRI_BY_TIER[triTier(id)], key = EVENTS[id].skill.key;
+  return evRivals(id).map((r) => {
+    r.evp = { [key]: t.skill + (r.slot ? -TRI_SPREAD : TRI_SPREAD), xp: t.xp, condition: t.condition };
+    r.rating = t.rating + (r.slot ? -40 : 40);
+    return r;
+  });
+}
+// This year's series: { year, you: [beat A?, beat B?], ab: winner of A vs B
+// (rival id), final: { kind, ... } once played }.
+function triSeries(id) {
+  const es = evState(id);
+  if (!es.series || es.series.year !== state.year || !es.series.tri) es.series = { year: state.year, tri: true, you: [], ab: null, final: null };
+  return es.series;
+}
+// Which game the series has reached (1–3) by the preseason day it's played on.
+function triGameDay() {
+  return state.phaseDay - (BAL.preseasonDays - PY_GAMES);
+}
+// The final, once the group games are done: "duel" (you vs one of them),
+// "three" (all 1–1) or "out" (you lost both — the other two meet).
+function triFinal(id, sr = triSeries(id)) {
+  const [A, B] = evRivals(id);
+  if (sr.you.length < 2 || sr.ab == null) return null;
+  const wins = sr.you.filter(Boolean).length;
+  const abWinner = sr.ab === A.id ? A : B, abLoser = abWinner === A ? B : A;
+  if (wins === 2) return { kind: "duel", opp: abWinner };
+  if (wins === 0) return { kind: "out", a: abWinner, b: abLoser };
+  // 1–1: if the one who beat you also won their game, they're 2–0.
+  const beatYou = sr.you[0] ? B : A;
+  return abWinner === beatYou ? { kind: "duel", opp: beatYou } : { kind: "three" };
+}
+// One specialist against the other, off-screen: same odds as any match.
+function triSim(a, b) {
+  const gap = matchBase(rivalPerformance(a)) - matchBase(rivalPerformance(b));
+  const p = outcomeOdds(gap, { xpLead: rivalXp(a) - rivalXp(b) }).win;
+  return Math.random() < p ? a : b;
+}
+// Each player's record in the group games: [{ name, w, l, you? }].
+function triTable(id, sr = triSeries(id)) {
+  const [A, B] = evRivals(id);
+  const rec = { you: { name: "You", w: 0, l: 0, you: true }, [A.id]: { name: A.name, w: 0, l: 0 }, [B.id]: { name: B.name, w: 0, l: 0 } };
+  sr.you.forEach((won, i) => {
+    const opp = rec[i ? B.id : A.id];
+    if (won) { rec.you.w++; opp.l++; } else { rec.you.l++; opp.w++; }
+  });
+  if (sr.ab != null) {
+    rec[sr.ab].w++;
+    rec[sr.ab === A.id ? B.id : A.id].l++;
+  }
+  return [rec.you, rec[A.id], rec[B.id]];
+}
+function triNextGame(id) {
+  const sr = triSeries(id);
+  const [A, B] = prepTriRivals(id);
+  const n = sr.you.length + 1;
+  if (n > PY_GAMES || sr.final) return null;
+  let rival = n === 1 ? A : B, kind = "group", rivals = null;
+  if (n === 3) {
+    const f = triFinal(id, sr);
+    if (!f || f.kind === "out") return null;
+    kind = f.kind === "three" ? "three" : "final";
+    if (f.kind === "duel") rival = f.opp;
+    else rivals = [A, B];
+  }
+  const saved = state.activeSkills;
+  state.activeSkills = [EVENTS[id].skill.key];
+  exhibitionEvent = id;
+  let winPct;
+  try {
+    const p = (r) => winProbabilityAgainst({ rivalId: r.id, name: r.name });
+    winPct = oddsPct(rivals ? p(A) * p(B) : p(rival));
+  } finally {
+    exhibitionEvent = null;
+    state.activeSkills = saved;
+  }
+  const name = rivals ? `${A.name} & ${B.name}` : rival.name;
+  return { id, n, rival, rivals, name, kind, winPct, series: { you: sr.you.filter(Boolean).length, opp: sr.you.filter((w) => !w).length }, daysUntil: BAL.preseasonDays - PY_GAMES + n - state.phaseDay };
+}
+// The day's part of the series (called as each of the last PY_GAMES
+// preseason days ends): game 1 you vs A, game 2 you vs B (and A vs B),
+// game 3 the final — or, if you're out, the final you watch.
+function triPlayDay(id) {
+  const E = EVENTS[id], es = evState(id);
+  const sr = triSeries(id);
+  const day = triGameDay();
+  if (day < 1 || day > PY_GAMES || sr.final) return null;
+  const [A, B] = prepTriRivals(id);
+  es.played = true;
+  const t = TRI_BY_TIER[triTier(id)];
+  const play = (opp) => {
+    const saved = state.activeSkills;
+    state.activeSkills = [E.skill.key];
+    exhibitionEvent = id;
+    try {
+      return resolveMatch({ rivalId: opp.id, name: opp.name }, { exhibition: true });
+    } finally {
+      exhibitionEvent = null;
+      state.activeSkills = saved;
+    }
+  };
+  if (day <= 2) {
+    const opp = day === 1 ? A : B;
+    const res = play(opp);
+    sr.you.push(res.win);
+    let event = `${E.icon} ${E.name}, game ${day}: ${res.win ? "beat" : "lost to"} ${opp.name}.`;
+    if (day === 2) {
+      sr.ab = triSim(A, B).id;
+      const w = sr.ab === A.id ? A : B, l = w === A ? B : A;
+      event += ` ${w.name} beat ${l.name}.`;
+      const f = triFinal(id, sr);
+      event += f.kind === "out" ? ` You're out — ${f.a.name} meets ${f.b.name} in the final.` : f.kind === "three" ? " Everyone's 1–1: a three-way final tomorrow!" : ` The final tomorrow: you vs ${f.opp.name}.`;
+    }
+    Object.assign(res, { opponentName: opp.name, opponentRivalId: opp.id, eventId: id, roundLabel: `${E.icon} ${E.name} · Game ${day}` });
+    res.tri = { stage: "group", day, table: triTable(id, sr), next: day === 2 ? triFinalLabel(id, sr) : null };
+    return { result: res, event };
+  }
+  // The final.
+  const f = triFinal(id, sr);
+  if (f.kind === "out") {
+    const winner = triSim(f.a, f.b), loser = winner === f.a ? f.b : f.a;
+    sr.final = { kind: "out", winner: winner.id };
+    const event = `${E.icon} ${E.name} final: ${winner.name} beat ${loser.name}. You watched this one.`;
+    const splash = {
+      icon: E.icon, title: `${E.name}: the final`, sub: `Year ${state.year} · you were out after the group games`, fromName: "Series",
+      how: [["🏆 Final", `${winner.name} beat ${loser.name}`], ...triTable(id, sr).map((r) => [r.you ? "🙋 You" : `🆚 ${r.name}`, `${r.w}–${r.l} in the group`])],
+      next: [], notes: [`Two defeats in the group means no final. Next time: win one and you're in it.`],
+    };
+    return { result: null, event, splash };
+  }
+  let res, three = null;
+  if (f.kind === "duel") {
+    res = play(f.opp);
+    Object.assign(res, { opponentName: f.opp.name, opponentRivalId: f.opp.id });
+  } else {
+    // Three-way: you play both at once; the highest score on the day wins.
+    // Shown against the stronger of the two.
+    const saved = state.activeSkills;
+    state.activeSkills = [E.skill.key];
+    exhibitionEvent = id;
+    let muA, muB;
+    try {
+      muA = matchup({ rivalId: A.id, name: A.name });
+      muB = matchup({ rivalId: B.id, name: B.name });
+    } finally {
+      exhibitionEvent = null;
+      state.activeSkills = saved;
+    }
+    const main = muA.oppMatch >= muB.oppMatch ? A : B, other = main === A ? B : A;
+    const muO = main === A ? muB : muA;
+    res = play(main);
+    const raw = res.raw;
+    const oFinal = muO.oppMatch + matchLuckDraw(), oTime = finishTime(muO.oppXp, muO.oppBonus);
+    const beatOther = decideOutcome(raw.yourFinal - oFinal, raw.yourTime, oTime) === "W";
+    const won = res.win && beatOther;
+    let winner;
+    if (won) winner = null;
+    else if (res.win) winner = other;
+    else if (beatOther) winner = main;
+    else winner = decideOutcome(raw.oppFinal - oFinal, raw.oppTime, oTime) === "W" ? main : other;
+    res.win = won;
+    res.margin = null;
+    res.winProb = oddsPct(muA.winProb * muB.winProb);
+    // Places on the day: the winner first, then the higher of the other two.
+    const finals = [["You", raw.yourFinal], [main.name, raw.oppFinal], [other.name, oFinal]];
+    const first = won ? "You" : winner.name;
+    const rest = finals.filter(([n]) => n !== first).sort((a, b) => b[1] - a[1]).map(([n]) => n);
+    three = { other: other.name, winner: winner ? winner.name : null, places: [first, ...rest] };
+    // Head to head shows you against the stronger of the two.
+    Object.assign(res, { opponentName: `${A.name} & ${B.name}`, h2hName: main.name, opponentRivalId: main.id });
+  }
+  delete res.raw;
+  const won = res.win;
+  sr.final = { kind: f.kind, won };
+  Object.assign(res, { eventId: id, roundLabel: `${E.icon} ${E.name} · ${f.kind === "three" ? "Three-way final" : "Final"}` });
+  res.tri = { stage: f.kind === "three" ? "three" : "final", table: triTable(id, sr), three };
+  let event = `${E.icon} ${E.name} ${f.kind === "three" ? "three-way final" : "final"}: ${won ? "won" : `lost${three && three.winner ? ` — ${three.winner} took it` : ""}`}.`;
+  if (won) {
+    es.wonYears.push(state.year);
+    state.cash += t.prize;
+    state.yearCashFlow.matchCash += t.prize;
+    res.tri.won = true;
+    res.tri.prize = t.prize;
+    event += ` 🏆 You've won the ${E.name}! 💰 +$${fmt(t.prize)}.`;
+    if (sr.you.every(Boolean)) {
+      if (!es.sweeps.includes(state.year)) es.sweeps.push(state.year);
+      res.tri.sweep = true;
+      event += " 🧹 Clean sweep — every game won!";
+    }
+    if (f.kind === "three") {
+      es.lastStanding = es.lastStanding || [];
+      if (!es.lastStanding.includes(state.year)) es.lastStanding.push(state.year);
+      res.tri.lastStanding = true;
+      event += " 🔺 Last One Standing — a trophy of its own!";
+    }
+    checkGameComplete();
+  }
+  return { result: res, event, splash: state.finishReveal && won ? gameCompleteSplash() : null };
+}
+// After the group games: what the final is.
+function triFinalLabel(id, sr) {
+  const f = triFinal(id, sr);
+  return !f ? null : f.kind === "out" ? `You're out — ${f.a.name} vs ${f.b.name} in the final` : f.kind === "three" ? "Three-way final: everyone's 1–1" : `Final: you vs ${f.opp.name}`;
+}
+
+// The finish line: top of the top tier's table, its champion, and both of
+// its invitationals won — each at least once, in any years.
+function gameCompleteMet() {
+  const f = state.completion.feats;
+  return !!(f.topTable && f.topChamp && evWon("py") && evWon("lam"));
+}
+function checkGameComplete() {
+  if (state.gameComplete || !gameCompleteMet()) return;
+  state.gameComplete = { year: state.year, day: state.day, rating: state.rank, peakRating: state.peakRank };
+  state.finishReveal = true;
+}
+// The finish's screen rows (shown with whatever completed it).
+function gameCompleteRows() {
+  const t = state.trophies, how = [], notes = [];
+  how.push(["👑 " + TOP_LEAGUE_NAME, "top of the table and playoff champion"]);
+  how.push([`🐍 ${PY_EVENT_NAME}`, `won (Year ${state.python.wonYears[0]})`]);
+  how.push([`🧩 ${EVENTS.lam.name}`, `won (Year ${evState("lam").wonYears[0]})`]);
+  how.push(["📅 Years played", String(state.year)]);
+  how.push(["🏆 Best rating", fmt(state.peakRank)]);
+  how.push(["📋 All-time record", wdl(state.wins, state.draws, state.losses)]);
+  notes.push(`Everything there is to win. <b>You've finished CELLOG.</b> Your career carries on — keep playing as long as you like.`);
+  const left = [];
+  if (!t.sweeps.length) left.push(`a 🧹 <b>clean sweep</b> of the ${PY_EVENT_NAME} (3–0)`);
+  if (!t.unbeaten.length) left.push(`a 🛡️ <b>${TOP_LEAGUE_NAME} regular season without a single defeat</b>`);
+  if (left.length) notes.push(`Still to collect: ${left.join(", and ")}.`);
+  return { how, notes };
+}
+function gameCompleteSplash() {
+  state.finishReveal = false;
+  const { how, notes } = gameCompleteRows();
+  return { icon: "🌟", title: "Game complete!", sub: `Year ${state.year}`, fromName: "Career", how, next: [], notes };
+}
+
 // Completion: first in the League 1 or top table, as soon as it's final.
 function noteTableTop() {
   const top = state.lastStandings && state.lastStandings[0] && state.lastStandings[0].isPlayer;
@@ -3481,6 +3870,7 @@ function processDayEnd() {
   let phaseEvent = null;
   let yearSummary = null;
   let newYearNow = false;
+  let eventSplash = null;
 
   if (state.seasonPhase === "preseason") {
     // This year's invitational (if any): a game on each of the preseason's
@@ -3490,6 +3880,7 @@ function processDayEnd() {
       if (game) {
         matchResult = game.result;
         phaseEvent = game.event;
+        eventSplash = game.splash || null;
       }
     }
     if (state.phaseDay >= BAL.preseasonDays) {
@@ -3501,12 +3892,11 @@ function processDayEnd() {
       allSkillKeys().forEach((k) => {
         state.allocation.skills[k] = 0;
       });
-      state.allocation.pycourse = 0;
-      state.allocation.mobcourse = 0;
+      EVENT_IDS.forEach((id) => (state.allocation[EVENTS[id].courseAct] = 0));
       const focus = state.activeSkills.map((k) => `${skillMeta(k).icon} ${skillMeta(k).name}`).join(", ");
       phaseEvent = `${phaseEvent ? phaseEvent + " " : ""}🏁 Preseason over — the ${roundsFor(state.leagueTier)}-round regular season begins. This week's focus: ${focus}.`;
     }
-    return { matchResult, phaseEvent, yearSummary, newYearNow };
+    return { matchResult, phaseEvent, yearSummary, newYearNow, eventSplash };
   }
 
   if (state.seasonPhase === "regular") {
@@ -3666,12 +4056,15 @@ function getNextMatchInfo() {
     const g = nextEventGame();
     if (g) {
       const E = EVENTS[g.id];
-      const score = g.n > 1 ? ` · series ${g.series.you}–${g.series.opp}` : "";
+      const score = g.n > 1 ? ` · ${E.tri ? "you're" : "series"} ${g.series.you}–${g.series.opp}` : "";
+      const what = g.kind === "three" ? "Three-way final" : g.kind === "final" ? "Final" : `Game ${g.n}/${PY_GAMES}`;
+      const name = g.name || g.rival.name;
       return {
         kind: "event",
         daysUntil: g.daysUntil,
-        label: `${E.icon} Game ${g.n}/${PY_GAMES} vs ${g.rival.name} · ${g.winPct}% · ${daysUntilPhrase(g.daysUntil)}`,
-        labelLine1: `${E.icon} Game ${g.n}/${PY_GAMES} vs ${g.rival.name}`,
+        eventName: name,
+        label: `${E.icon} ${what} vs ${name} · ${g.winPct}% · ${daysUntilPhrase(g.daysUntil)}`,
+        labelLine1: `${E.icon} ${what} vs ${name}`,
         labelLine2: matchOddsLine(g.winPct, g.daysUntil) + score,
       };
     }
@@ -3786,7 +4179,7 @@ function phaseLabelText() {
 /* ---------------------------------------------------------------------- */
 const $ = (id) => document.getElementById(id);
 
-const ACT_MAX = { exercise: BAL.gymMaxHours, sleep: 12, relax: 12, nutrition: 4, pycourse: 16, mobcourse: 16 };
+const ACT_MAX = { exercise: BAL.gymMaxHours, sleep: 12, relax: 12, nutrition: 4, ...Object.fromEntries(EVENT_IDS.map((id) => [EVENTS[id].courseAct, 16])) };
 const SKILL_MAX_HOURS = 16;
 
 function markerPct(threshold, max) {
@@ -4422,6 +4815,27 @@ function gapLabel(gap) {
   return `${Math.abs(gap)} ${gap > 0 ? "ahead" : "behind"}`;
 }
 
+// A Triangle Series game's result: the group table so far, then what's next
+// (or how the final went).
+function triResultHtml(result) {
+  const t = result.tri, E = EVENTS[result.eventId];
+  const xpRows = (result.xp && result.xp.earned ? result.xp.skills : []).map((x) => `<tr><td>${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP</td><td>${fmt(x.before)}</td><td>${fmt(x.after)}</td><td class="wk-up">+${fmt(x.after - x.before)}</td></tr>`).join("");
+  const table = `<table class="perf-table result-table">
+      <thead><tr><th>${E.icon} Group</th><th>Won</th><th>Lost</th></tr></thead>
+      <tbody>${t.table.map((r) => `<tr class="${r.you ? "standings-you" : ""}"><td>${r.you ? "You" : escapeHtml(r.name)}</td><td>${r.w}</td><td>${r.l}</td></tr>`).join("")}</tbody>
+    </table>`;
+  const three = t.three ? `<table class="perf-table result-table">
+      <thead><tr><th>🔺 Three-way final</th><th>Place</th></tr></thead>
+      <tbody>${t.three.places.map((n, i) => `<tr class="${n === "You" ? "standings-you" : ""}"><td>${escapeHtml(n)}</td><td>${["🥇 1st", "2nd", "3rd"][i]}</td></tr>`).join("")}</tbody>
+    </table>
+    <div class="match-sub perf-note">Head to head above is you against ${escapeHtml(result.h2hName || "")}, the stronger of the two on the day.</div>` : "";
+  let note;
+  if (t.stage === "group") note = t.next ? `Group games done. ${t.next}.` : `Next: game 2 against ${evRivals(result.eventId)[1].name}.`;
+  else if (t.won) note = `🏆 <b>You've won the ${E.name}!</b> 💰 <b>+$${fmt(t.prize)}</b> prize.${t.sweep ? " 🧹 <b>Clean sweep</b> — every game won, a trophy!" : ""}${t.lastStanding ? " 🔺 <b>Last One Standing</b> — you won a three-way final, a trophy of its own!" : ""}`;
+  else note = `${t.three && t.three.winner ? `${escapeHtml(t.three.winner)} takes` : `${escapeHtml(result.opponentName)} takes`} the ${E.name} this year.${t.three ? " In a three-way final you have to beat both." : ""}`;
+  return `${table}${three}${xpRows ? `<table class="perf-table result-table"><tbody>${xpRows}</tbody></table>` : ""}
+    <div class="match-sub perf-note">An exhibition — no rating or record at stake. ${note}</div>`;
+}
 function matchResultTableHtml(result) {
   const bonus = result.championBonus || { cash: 0, rating: 0 };
   const ratingAfter = result.ratingAfter != null ? result.ratingAfter : state.rank;
@@ -4430,6 +4844,7 @@ function matchResultTableHtml(result) {
   const d0 = rec.draws || 0;
   const recAfter = { wins: rec.wins + (result.win ? 1 : 0), draws: d0 + (result.draw ? 1 : 0), losses: rec.losses + (result.win || result.draw ? 0 : 1) };
   const recText = (r) => wdl(r.wins, r.draws, r.losses);
+  if (result.exhibition && result.tri) return triResultHtml(result);
   if (result.exhibition && result.series) {
     const sr = result.series;
     const xpRows = (result.xp && result.xp.earned ? result.xp.skills : []).map((x) => `<tr><td>${skillMeta(x.key).icon} ${skillMeta(x.key).name} XP</td><td>${fmt(x.before)}</td><td>${fmt(x.after)}</td><td class="wk-up">+${fmt(x.after - x.before)}</td></tr>`).join("");
@@ -4543,7 +4958,7 @@ function headToHeadHtml(result) {
   const row = (label, a, b, cls = "") => `<tr class="${cls}"><td>${label}</td><td>${a}</td><td>${b}</td></tr>`;
   return `
     <table class="perf-table h2h-table">
-      <thead><tr><th>Head to Head</th><th>You</th><th class="h2h-opp">${result.opponentName || "Opponent"}</th></tr></thead>
+      <thead><tr><th>Head to Head</th><th>You</th><th class="h2h-opp">${result.h2hName || result.opponentName || "Opponent"}</th></tr></thead>
       <tbody>
         ${result.h2hTable ? row(result.h2hTable.label, `#${result.h2hTable.you}`, `#${result.h2hTable.opp}`, "h2h-context") : ""}
         ${row("🏆 Rating", y.rating, o.rating, skills ? "h2h-context" : "")}
@@ -5233,7 +5648,9 @@ function completionSectionHtml() {
 function trophyCabinetHtml() {
   const t = state.trophies || { sweeps: [], unbeaten: [] };
   const m = state.mobile || { wonYears: [], sweeps: [] };
-  if (!state.gameComplete && !t.sweeps.length && !t.unbeaten.length && !m.wonYears.length && !t.completionist) return "";
+  const tri = TRI_IDS.filter((id) => evRevealed(id));
+  const triAny = tri.some((id) => evState(id).wonYears.length);
+  if (!state.gameComplete && !t.sweeps.length && !t.unbeaten.length && !m.wonYears.length && !t.completionist && !triAny) return "";
   const years = (ys) => (ys.length ? ys.map((y) => `Y${y}`).join(", ") : "not yet");
   const py = pyUnlocked() && state.python && state.python.revealed;
   const top = state.peakLeagueTier === TOP_TIER;
@@ -5244,6 +5661,9 @@ function trophyCabinetHtml() {
       <div class="kv-row"><span>🧹 Clean sweeps (3–0)</span><span>${years(t.sweeps)}</span></div>` : ""}
       ${mobRevealed() ? `<div class="kv-row"><span>📱 ${MOB_EVENT_NAME}</span><span>${years(m.wonYears)}</span></div>
       <div class="kv-row"><span>🧹 Mobile clean sweeps (3–0)</span><span>${years(m.sweeps)}</span></div>` : ""}
+      ${tri.map((id) => { const E = EVENTS[id], es = evState(id); return `<div class="kv-row"><span>${E.icon} ${E.name}</span><span>${years(es.wonYears)}</span></div>
+      <div class="kv-row"><span>🧹 ${E.skill.name} clean sweeps</span><span>${years(es.sweeps)}</span></div>
+      <div class="kv-row"><span>🔺 ${E.skill.name}: Last One Standing</span><span>${years(es.lastStanding || [])}</span></div>`; }).join("")}
       ${top ? `<div class="kv-row"><span>🛡️ Unbeaten seasons</span><span>${years(t.unbeaten)}</span></div>` : ""}
       ${t.completionist ? `<div class="kv-row"><span>📚 Completionist — every function mastered</span><span class="mastered-tag">Year ${t.completionist}</span></div>` : ""}
     </div>`;
@@ -5313,7 +5733,7 @@ function openCareer() {
       <div class="kv-row"><span>🐍 Python</span><span>${fmt(state.stats.skills.python || 0)}/100${xpText(PY_SKILL.key)}</span></div>
       ${PY_COURSE.map((t, i) => `<div class="kv-row"><span>${t.icon} ${t.name}</span><span>${pyMastered().includes(t.name) ? "mastered ✓" : `${fmt(state.python.course[i])}/${pyCourseHours(i)}h`}</span></div>`).join("")}
       <div class="kv-row"><span>🏆 Won</span><span>${state.python.wonYears.length ? state.python.wonYears.map((y) => `Year ${y}`).join(", ") : "not yet"}</span></div>
-      <p class="modal-sub">Best of ${PY_GAMES} vs ${PY_RIVAL.name} at the end of ${state.gameComplete ? "a preseason you choose it" : "every preseason"}. Python and the course are only trained then.</p>
+      <p class="modal-sub">Best of ${PY_GAMES} vs ${PY_RIVAL.name} at the end of a preseason you join (a must in your second year at the top). Python and the course are only trained then.</p>
     </div>`
     : "";
   const mobSection = mobRevealed()
@@ -5323,9 +5743,21 @@ function openCareer() {
       ${MOB_COURSE.map((t, i) => `<div class="kv-row"><span>${t.icon} ${t.name}</span><span>${evMastered("mob").includes(t.name) ? "mastered ✓" : `${fmt(state.mobile.course[i])}/${evCourseHours("mob", i)}h`}</span></div>`).join("")}
       <div class="kv-row"><span>🏆 Won</span><span>${state.mobile.wonYears.length ? state.mobile.wonYears.map((y) => `Year ${y}`).join(", ") : "not yet"}</span></div>
       <div class="kv-row"><span>📅 This preseason</span><span>${state.events && state.events.year === state.year && state.events.options.includes("mob") ? (preseasonEvent() === "mob" ? "joined" : "not joined") : "not on offer"}</span></div>
-      <p class="modal-sub">Best of ${PY_GAMES} vs ${MOB_RIVAL_NAME} at the end of a preseason you join (Leagues 3, 2 and 1${state.gameComplete ? `, and the ${TOP_LEAGUE_NAME}` : ""}). Mobile Excel and the course are only trained then.</p>
+      <p class="modal-sub">Best of ${PY_GAMES} vs ${MOB_RIVAL_NAME} at the end of a preseason you join — offered from League 4 up after a season without a promotion (and any year at the top from your fourth). Mobile Excel and the course are only trained then.</p>
     </div>`
     : "";
+  const triSections = TRI_IDS.filter((id) => evRevealed(id)).map((id) => {
+    const E = EVENTS[id], es = evState(id), [A, B] = evRivals(id);
+    const offered = state.events && state.events.year === state.year && state.events.options.includes(id);
+    return `<div class="modal-section">
+      <h3>${E.icon} ${E.name}</h3>
+      <div class="kv-row"><span>${E.skill.icon} ${E.skill.name}</span><span>${fmt(state.stats.skills[E.skill.key] || 0)}/100${xpText(E.skill.key)}</span></div>
+      ${E.course.map((t, i) => `<div class="kv-row"><span>${t.icon} ${t.name}</span><span>${evMastered(id).includes(t.name) ? "mastered ✓" : `${fmt(es.course[i])}/${evCourseHours(id, i)}h`}</span></div>`).join("")}
+      <div class="kv-row"><span>🏆 Won</span><span>${es.wonYears.length ? es.wonYears.map((y) => `Year ${y}`).join(", ") : "not yet"}</span></div>
+      <div class="kv-row"><span>📅 This preseason</span><span>${offered ? (preseasonEvent() === id ? "joined" : "not joined") : "not on offer"}</span></div>
+      <p class="modal-sub">🔺 Triangle Series vs ${A ? A.name : ""} and ${B ? B.name : ""} at the end of a preseason you join. ${E.skill.name} and the course are only trained then.</p>
+    </div>`;
+  }).join("");
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
     ${trophyCabinetHtml()}
@@ -5373,6 +5805,7 @@ function openCareer() {
     </div>
     ${pySection}
     ${mobSection}
+    ${triSections}
     ${eduCareerHtml()}
     <div class="modal-section">
       <h3>Current Stats</h3>
@@ -6048,18 +6481,10 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     if (state.finishReveal) {
       state.finishReveal = false;
       icon = "🌟"; title = "Game complete!";
+      const done = gameCompleteRows();
       how.length = 0;
-      how.push(["👑 " + TOP_LEAGUE_NAME, "top of the table and playoff champion"]);
-      how.push([`🐍 ${PY_EVENT_NAME}`, `won (Year ${state.year})`]);
-      how.push(["📅 Years played", String(state.year)]);
-      how.push(["🏆 Best rating", fmt(state.peakRank)]);
-      how.push([`🐍 Invitationals won`, String(state.python.wonYears.length)]);
-      how.push(["📋 All-time record", wdl(state.wins, state.draws, state.losses)]);
-      notes.push(`Everything there is to win, all in one year. <b>You've finished CELLOG.</b> Your career carries on — keep playing as long as you like.`);
-      const left = [];
-      if (!state.trophies.sweeps.length) left.push(`a 🧹 <b>clean sweep</b> of the ${PY_EVENT_NAME} (3–0)`);
-      if (!state.trophies.unbeaten.length) left.push(`a 🛡️ <b>${TOP_LEAGUE_NAME} regular season without a single defeat</b>`);
-      if (left.length) notes.push(`Still to collect: ${left.join(", and ")}.`);
+      how.push(...done.how);
+      notes.push(...done.notes);
     }
   } else if (from === "offseason" && to === "preseason") {
     icon = "🎉"; title = `Year ${state.year} begins`; sub = `${lg(state.leagueTier)} · another year of the slog`;
@@ -6086,28 +6511,12 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     } else if (yearSummary && yearSummary.proRenewed) {
       next.push(["🏆 Sponsorship", `renewed (average ${skillAverage()})`]);
     }
-    if (pyUnlocked() && state.python && !state.python.revealed) {
-      state.python.revealed = true;
-      icon = "🐍"; title = `An invitation: the ${PY_EVENT_NAME}`;
-      features.push([
-        ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel — a game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played. Every preseason from now on.`],
-        ["🎚️", `Everything else is set aside for the preseason (your ${TOP_LEAGUE_NAME} skills are frozen, not rusting). Two sliders instead: 🐍 <b>Python</b> (it never rusts) and 📚 the <b>Python course</b> — ${PY_COURSE.map((t) => `${t.icon} ${t.name}`).join(" → ")}, each a bonus in the series.`],
-        ["✨", `Your first win brings a signature move for the league: <b>Python in Excel</b>. No rating, prize or record at stake.`],
-        ["🏁", `Win it, top the table and take the playoffs <b>in the same year</b>, and you've done it all.`],
-      ]);
-    }
-    // The Mobile Invitational: revealed by its first preseason.
+    // An invitational's first time: its reveal.
     const evs = state.events && state.events.year === state.year ? state.events : null;
-    if (evs && evs.revealMob) {
-      const t = MOB_BY_TIER[mobTierFor()];
-      if (title === `Year ${state.year} begins`) { icon = "📱"; title = `An invitation: the ${MOB_EVENT_NAME}`; }
-      features.push([
-        ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${MOB_RIVAL_NAME}</b>, who plays Excel on a phone — and wins. A game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played.`],
-        ["📱", `He plays to your league: Mobile Excel <b>${t.mobile}</b> here${inTop() ? "" : ` (${MOB_BY_TIER[2].mobile} in League 2, ${MOB_BY_TIER[1].mobile} in League 1)`}.`],
-        ["🎚️", `${inTop() ? "Like Python, it sets everything else aside. Two sliders instead:" : "Two sliders join your seven skills:"} 📱 <b>Mobile Excel</b> (it never rusts) and 📚 the <b>course</b> — ${MOB_COURSE.map((c) => `${c.icon} ${c.name}`).join(" → ")}, each a bonus in the series.`],
-        ["🏆", `Win it for <b>$${fmt(t.prize)}</b> and a trophy. A 3–0 is a 🧹 <b>clean sweep</b> — a trophy of its own. No rating or record at stake.`],
-        ...(evs.must ? [["📅", `This first one isn't optional. From next year, each ${inTop() ? "" : "League 3, 2 or 1 "}preseason you can join it or not.`]] : []),
-      ]);
+    const revealed = eventRevealedNow(evs);
+    if (revealed) {
+      if (title === `Year ${state.year} begins`) { icon = EVENTS[revealed].icon; title = `An invitation: the ${EVENTS[revealed].name}`; }
+      features.push(eventRevealFeatures(revealed, evs));
     }
     next.push(["🏋️ Preseason", `${BAL.preseasonDays} days, no matches`]);
     if (evs && evs.options.length > 1) {
@@ -6116,7 +6525,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     } else {
       const ev = preseasonEvent();
       next.push(["🎯 Skills", inTop() && ev ? `${EVENTS[ev].icon} ${EVENTS[ev].skill.name} and its course only` : ev ? `all ${playSkillKeys().length}, plus ${EVENTS[ev].icon} ${EVENTS[ev].skill.name} and its course` : `all ${playSkillKeys().length} trainable`]);
-      if (ev && !features.length) next.push([`${EVENTS[ev].icon} ${EVENTS[ev].name}`, `best of ${PY_GAMES} vs ${evRival(ev) ? evRival(ev).name : ""}, the last ${PY_GAMES} days`]);
+      if (ev && !features.length) next.push([`${EVENTS[ev].icon} ${EVENTS[ev].name}`, EVENTS[ev].tri ? `🔺 Triangle Series vs ${evRivals(ev).map((r) => r.name).join(" & ")}, the last ${PY_GAMES} days` : `best of ${PY_GAMES} vs ${evRival(ev) ? evRival(ev).name : ""}, the last ${PY_GAMES} days`]);
     }
     next.push(state.employment.status === "unemployed" ? ["🔍 Job search", "carries on as normal"] : ["🏖️ Annual leave", "all preseason, paid"]);
     if (!inTop()) {
@@ -6244,12 +6653,47 @@ function wireEventChoice() {
     })
   );
 }
-const eventChoiceLabel = (o) =>
-  o === "mob" ? `📱 ${inTop() ? "" : "Join the "}${MOB_EVENT_NAME}` : o === "py" ? `🐍 ${PY_EVENT_NAME}` : inTop() ? "Neither — a normal preseason" : "Not this year";
+const eventChoiceLabel = (o) => (o ? `${EVENTS[o].icon} ${EVENTS[o].name}` : "None — a normal preseason");
+// What an invitational's first preseason splash says about it.
+function eventRevealFeatures(id, evs) {
+  const E = EVENTS[id];
+  const must = evs && evs.must;
+  const sliders = `${inTop() ? "Everything else is set aside for the preseason (your skills are frozen, not rusting). Two sliders instead:" : "Two sliders join your seven skills:"} ${E.skill.icon} <b>${E.skill.name}</b> (it never rusts) and 📚 the <b>course</b> — ${E.course.map((c) => `${c.icon} ${c.name}`).join(" → ")}, each a bonus in the series.`;
+  const quiz = eduOn() && EDU_BANK_INFO[id] ? [["📘", `Knowledge mode: before each game, a Knowledge check on ${EDU_BANK_INFO[id].what}. Once you've played it, they turn up in your normal checks now and then too.`]] : [];
+  if (id === "py") return [
+    ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel — a game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played.`],
+    ["🎚️", sliders],
+    ["✨", `Your first win brings a signature move for the league: <b>Python in Excel</b>. No rating, prize or record at stake.`],
+    ...quiz,
+    ["🏁", `To finish the game: win it and the next invitational up here (any years), top the table and take the playoffs.`],
+    ["📅", `This one's a must. From your fourth year here, each preseason is your choice.`],
+  ];
+  if (id === "mob") {
+    const t = MOB_BY_TIER[mobTierFor()];
+    return [
+      ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${MOB_RIVAL_NAME}</b>, who plays Excel on a phone — and wins. A game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played.`],
+      ["📱", `He plays to your league: Mobile Excel <b>${t.mobile}</b> here.`],
+      ["🎚️", sliders],
+      ...quiz,
+      ["🏆", `Win it for <b>$${fmt(t.prize)}</b> and a trophy. A 3–0 is a 🧹 <b>clean sweep</b> — a trophy of its own. No rating or record at stake.`],
+      ...(must ? [["📅", `This first one isn't optional. After that it's offered after any season without a promotion — join it or not.`]] : []),
+    ];
+  }
+  const t = TRI_BY_TIER[triTier(id)], [A, B] = evRivals(id);
+  return [
+    ["🔺", `A <b>Triangle Series</b> against <b>${A.name}</b> and <b>${B.name}</b>, on the last ${PY_GAMES} preseason days: you play each of them (and they play each other), then a final — whoever won both against whoever won one. All 1–1? A <b>three-way final</b>: the highest score wins. Lose both and you watch it.`],
+    [E.skill.icon, `They play to your league: ${E.skill.name} <b>${t.skill + TRI_SPREAD}</b> and <b>${t.skill - TRI_SPREAD}</b> here.`],
+    ["🎚️", sliders],
+    ...quiz,
+    ["🏆", `Win the final for <b>$${fmt(t.prize)}</b> and a trophy. Win all three games for a 🧹 <b>clean sweep</b>, or a three-way final for 🔺 <b>Last One Standing</b> — trophies of their own. No rating or record at stake.`],
+    ...(id === "lam" ? [["🏁", `To finish the game: win it and the ${PY_EVENT_NAME} (any years), top the table and take the playoffs.`]] : []),
+    ...(must ? [["📅", `This first one isn't optional. After this, it's your choice each preseason.`]] : []),
+  ];
+}
 // In the plan until the first game: this preseason's choice, and a way to change it.
 function eventChoiceRowHtml() {
   const cur = preseasonEvent();
-  return `<div class="event-choice-row callout"><span>${cur ? `${EVENTS[cur].icon} ${EVENTS[cur].name}: <b>in</b>` : `🎟️ Invitational: <b>${inTop() ? "neither" : "not joined"}</b>`}</span><button class="link-btn" data-event-change="1">Change ›</button></div>`;
+  return `<div class="event-choice-row callout"><span>${cur ? `${EVENTS[cur].icon} ${EVENTS[cur].name}: <b>in</b>` : `🎟️ Invitational: <b>none</b>`}</span><button class="link-btn" data-event-change="1">Change ›</button></div>`;
 }
 function openEventChoice() {
   if (!canChooseEvent()) return;
@@ -6260,7 +6704,7 @@ function openEventChoice() {
 function eventChoiceHtml(options) {
   const cur = preseasonEvent();
   return `<div class="event-choice">
-      <p class="modal-sub">This preseason's invitational — your choice${inTop() ? " (one, or neither)" : ""}. You can change it in your plan until its first game.</p>
+      <p class="modal-sub">This preseason's invitational — your choice (one, or none). You can change it in your plan until its first game.</p>
       ${options.map((o) => `<button class="${o === cur ? "primary-btn" : "ghost-btn"} event-choice-btn" data-event-choice="${o || "none"}">${eventChoiceLabel(o)}</button>`).join("")}
     </div>`;
 }
@@ -6557,21 +7001,32 @@ function openHowTo() {
   ]));
 
   if (pyUnlocked() && state.python && state.python.revealed) sec("py", "🐍", PY_EVENT_NAME, ul([
-    `At the end of ${state.gameComplete ? "a preseason you choose it" : "every preseason"}: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. An exhibition — no rating, prize or record at stake.`,
+    `At the end of a preseason you join — a must in your second year at the top, your choice from the fourth: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. An exhibition — no rating, prize or record at stake.`,
     `Python stands in for the focus skills: it's the skill part of performance and the focus-skill edge. Health, Calm, Rest, luck and finish time count as usual (${PY_RIVAL.name}'s condition is ${PY_RIVAL.condition}).`,
     `During the preseason your ${TOP_LEAGUE_NAME} skills are set aside (frozen). Two sliders: 🐍 Python (never rusts) and 📚 the course, its parts in order: ${PY_COURSE.map((t, i) => `${t.icon} ${t.name} (${pyCourseHours(i)}h — ${t.desc})`).join(", ")}.`,
     `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
-    `<b>Finishing the game:</b> top of the table, the playoffs and the ${PY_EVENT_NAME}, all in the same year.`,
+    `<b>Finishing the game:</b> top of the ${TOP_LEAGUE_NAME} table, its playoffs, the ${PY_EVENT_NAME} and the invitational that follows it — each at least once, in any years.`,
     `<b>🧹 Clean sweep trophy:</b> win all ${PY_GAMES} games (3–0). Any year — not needed to finish the game.`,
-    ...(state.gameComplete ? [`<b>Now that you've finished:</b> each preseason here is your choice — the ${PY_EVENT_NAME}, the ${MOB_EVENT_NAME}, or neither.`] : []),
   ]));
 
   if (mobRevealed()) sec("mob", "📱", MOB_EVENT_NAME, ul([
-    `At the end of a preseason you join: <b>best of ${PY_GAMES}</b> against <b>${MOB_RIVAL_NAME}</b>, a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. Your first one (League 3) is a must; after that, each League 3, 2 or 1 preseason you can join or not${state.gameComplete ? `, and at the top you pick it, the ${PY_EVENT_NAME} or neither` : ""}.`,
-    `He plays to your league: 📱 Mobile Excel ${MOB_BY_TIER[3].mobile} in League 3, ${MOB_BY_TIER[2].mobile} in League 2, ${MOB_BY_TIER[1].mobile} in League 1${state.gameComplete ? `, ${MOB_BY_TIER[0].mobile} at the top` : ""}. Mobile Excel stands in for the focus skills in the series; Health, Calm, Rest, luck and finish time count as usual.`,
-    `Two sliders${state.gameComplete ? " (alongside your seven skills below the top; instead of everything else at the top)" : ", alongside your seven skills"}: 📱 Mobile Excel (never rusts) and 📚 the course, its parts in order: ${MOB_COURSE.map((t, i) => `${t.icon} ${t.name} (${evCourseHours("mob", i)}h — ${t.desc})`).join(", ")}.`,
-    `No rating or record at stake. Win the series for a prize — $${fmt(MOB_BY_TIER[3].prize)} in League 3, $${fmt(MOB_BY_TIER[2].prize)} in League 2, $${fmt(MOB_BY_TIER[1].prize)} in League 1${state.gameComplete ? `, $${fmt(MOB_BY_TIER[0].prize)} at the top` : ""} — and a 🏆 trophy. A 3–0 is a 🧹 clean sweep: a trophy of its own.`,
+    `At the end of a preseason you join: <b>best of ${PY_GAMES}</b> against <b>${MOB_RIVAL_NAME}</b>, a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. It's offered from League 4 up in a preseason after a season <b>without a promotion</b> (you stayed put or went down)${inTop() ? ", and any year at the top from your fourth" : ""}. The first one is a must; after that you can join or not.`,
+    `He plays to your league: 📱 Mobile Excel ${[4, 3, 2, 1].map((t) => `${MOB_BY_TIER[t].mobile} in League ${t}`).join(", ")}${inTop() ? `, ${MOB_BY_TIER[0].mobile} at the top` : ""}. Mobile Excel stands in for the focus skills in the series; Health, Calm, Rest, luck and finish time count as usual.`,
+    `Two sliders${inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: 📱 Mobile Excel (never rusts) and 📚 the course, its parts in order: ${MOB_COURSE.map((t, i) => `${t.icon} ${t.name} (${evCourseHours("mob", i)}h — ${t.desc})`).join(", ")}.`,
+    `No rating or record at stake. Win the series for a prize — ${[4, 3, 2, 1].map((t) => `$${fmt(MOB_BY_TIER[t].prize)} in League ${t}`).join(", ")}${inTop() ? `, $${fmt(MOB_BY_TIER[0].prize)} at the top` : ""} — and a 🏆 trophy. A 3–0 is a 🧹 clean sweep: a trophy of its own.`,
   ]));
+
+  // Each Triangle Series, once revealed.
+  TRI_IDS.filter((id) => evRevealed(id)).forEach((id) => {
+    const E = EVENTS[id], [A, B] = evRivals(id);
+    sec(id, E.icon, E.name, ul([
+      `A 🔺 <b>Triangle Series</b> against <b>${A.name}</b> and <b>${B.name}</b> at the end of a preseason you join (the first is a must). Day 1 you play ${A.name}, day 2 ${B.name} — and they play each other. Day 3 is the final: whoever won both against whoever won one. All three 1–1? A <b>three-way final</b>, where you have to beat both. Lose both group games and you watch the final.`,
+      `They play to your league: ${E.skill.name} ${Object.keys(TRI_BY_TIER).map(Number).filter((t) => t >= E.firstTier || id === "lam").reverse().map((t) => `${TRI_BY_TIER[t].skill + TRI_SPREAD}/${TRI_BY_TIER[t].skill - TRI_SPREAD} ${t === TOP_TIER ? "at the top" : `in League ${t}`}`).join(", ")}. ${E.skill.name} stands in for the focus skills; Health, Calm, Rest, luck and finish time count as usual.`,
+      `Two sliders${E.firstTier === TOP_TIER || inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: ${E.skill.icon} ${E.skill.name} (never rusts) and 📚 the course, its parts in order: ${E.course.map((t, i) => `${t.icon} ${t.name} (${evCourseHours(id, i)}h — ${t.desc})`).join(", ")}.`,
+      `No rating or record at stake. Win the final for a prize and a 🏆 trophy. Win all three games for a 🧹 <b>clean sweep</b>; win a three-way final for 🔺 <b>Last One Standing</b>.`,
+      ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is on ${EDU_BANK_INFO[id].what}. Once you've played it, they also turn up in your normal checks now and then.`] : []),
+    ]));
+  });
 
   sec("season", "📅", "Season & leagues", `
     ${ul([
@@ -7015,6 +7470,7 @@ function runDay() {
   updateCompletion();
   const { matchResult, phaseEvent, newYearNow } = dayEnd;
   let { yearSummary } = dayEnd;
+  if (matchResult) delete matchResult.raw;
   if (matchResult) {
     // Rating after everything this match did (incl. a champion bonus), so a
     // replay of the result screen shows the same numbers later on.
@@ -7043,6 +7499,7 @@ function runDay() {
   // preview of the next) and start a fresh snapshot for the next one. They're
   // kept on the state until dismissed, so closing the app doesn't lose them.
   const splashes = [];
+  if (dayEnd.eventSplash) splashes.push(dayEnd.eventSplash);
   if (state.seasonPhase !== phaseBefore) {
     splashes.push(buildPhaseSplash(phaseBefore, state.seasonPhase, { yearSummary, tierBefore }));
     state.phaseStart = phaseSnapshot();
@@ -7396,6 +7853,7 @@ function renderAll() {
 // and 5% from Health — scaled so guessing (1 in 4) scores exactly what
 // those would have, and knowing them is an edge.
 const EDU = {
+  sprinkle: 0.25, // share of normal checks drawn from a played invitational's bank
   weight: 0.15,
   fromSkill: 0.1,
   fromPhys: 0.05,
@@ -7415,8 +7873,34 @@ function eduParseArgs(spec) {
 const EDU_LIST = (typeof EDU_FUNCS === "undefined" ? [] : EDU_FUNCS).map(([name, skill, titan, tier, desc, args, cat, extra]) => ({ name, skill, titan, tier, desc, cat, extra: !!extra, args: eduParseArgs(args) }));
 // The esports set: everything but the 📚 Completionist extras.
 const EDU_CORE = EDU_LIST.filter((f) => !f.extra);
-const EDU_PY = (typeof EDU_PANDAS === "undefined" ? [] : EDU_PANDAS).map(([name, desc, args]) => ({ name, skill: "python", titan: "python", tier: 0, desc, cat: "Python", args: eduParseArgs(args), py: true }));
-const eduRecKey = (f) => (f.py ? `py:${f.name}` : f.name);
+const EDU_PY = (typeof EDU_PANDAS === "undefined" ? [] : EDU_PANDAS).map(([name, desc, args]) => ({ name, bank: "py", skill: "python", titan: "python", tier: 0, desc, cat: "Python", args: eduParseArgs(args), py: true }));
+// The invitationals' banks (edu-banks.js). pri: asked first while lower —
+// Power Query's common functions, VBA's common ones, the commands that are
+// hard in plain Excel.
+const EDU_RAW_BANKS = typeof EDU_BANKS === "undefined" ? {} : EDU_BANKS;
+const EDU_BANK = {
+  py: EDU_PY,
+  pq: (EDU_RAW_BANKS.pq || []).map(([name, level, cat, desc, args, extra]) => ({ name, bank: "pq", skill: "pq", tier: 0, pri: level, cat, desc, extra: !!extra, args: eduParseArgs(args) })),
+  vba: (EDU_RAW_BANKS.vba || []).map(([name, level, cat, desc, args, extra]) => ({ name, bank: "vba", skill: "vba", tier: 0, pri: level, cat, desc, extra: !!extra, args: eduParseArgs(args) })),
+  robot: (EDU_RAW_BANKS.robot || []).map(([name, hard, group, src, desc, extra]) => ({ name, bank: "robot", skill: "robot", tier: 0, pri: hard ? 1 : 2, group, src, desc, extra: !!extra, args: [], cmd: true })),
+  lam: (EDU_RAW_BANKS.lam || []).map(([name, desc, args, extra]) => ({ name, bank: "lam", skill: "lam", tier: 0, desc, extra: !!extra, args: eduParseArgs(args) })),
+};
+const EDU_BANK_INFO = {
+  py: { name: "Python functions", icon: "🐍", what: "Python in Excel and pandas", weight: 1 },
+  pq: { name: "Power Query functions", icon: "⚡", what: "a Power Query (M) function", weight: 2 },
+  vba: { name: "VBA functions", icon: "💾", what: "a VBA function", weight: 1 },
+  robot: { name: "OA Robot commands", icon: "🤖", what: "an OA Robot command", weight: 1 },
+  lam: { name: "Lambda library", icon: "🧩", what: "a LAMBDA from the OA Robot libraries", weight: 1 },
+};
+// Each bank's esports set (what counts towards Completion).
+function eduBankCore(id) {
+  return EDU_BANK[id].filter((f) => !f.extra);
+}
+// What the setting asks from a bank.
+function eduBankList(id) {
+  return eduCompletionist() ? EDU_BANK[id] : eduBankCore(id);
+}
+const eduRecKey = (f) => (f.bank ? `${f.bank}:${f.name}` : f.name);
 
 function eduOn(s) {
   s = s || liveState();
@@ -7474,7 +7958,18 @@ function eduQuizDue(days) {
 // function). The Python Invitational asks its own set; the Mobile one asks
 // from your league's functions, plus which menu category each is in.
 function eduPool(m) {
-  if (m.event === "py") return EDU_PY;
+  if (m.event && EDU_BANK[m.event]) return eduBankList(m.event);
+  // Once you've played an invitational, its bank turns up in normal checks
+  // now and then (Power Query twice as often).
+  if (!m.event) {
+    const banks = eduPlayedBanks();
+    if (banks.length && Math.random() < EDU.sprinkle) {
+      const total = banks.reduce((a, id) => a + EDU_BANK_INFO[id].weight, 0);
+      let r = Math.random() * total;
+      const id = banks.find((b) => (r -= EDU_BANK_INFO[b].weight) < 0) || banks[0];
+      return eduBankList(id);
+    }
+  }
   const tier = state.leagueTier;
   const upTo = eduList().filter((f) => f.tier >= tier);
   if (m.event === "mob") return upTo;
@@ -7496,9 +7991,23 @@ function eduPickFunction(pool) {
   const wrong = open.filter((f) => r(f) && r(f).seen);
   const fresh = open.filter((f) => !(r(f) && r(f).seen));
   let cand = wrong.length && (!fresh.length || Math.random() < 0.5) ? wrong : fresh;
-  const own = cand.filter((f) => f.tier === state.leagueTier);
-  if (own.length && Math.random() < 0.6) cand = own;
+  if (cand[0] && cand[0].bank) {
+    // A bank: its commoner items first (most of the time).
+    const best = Math.min(...cand.map((f) => f.pri || 1));
+    const first = cand.filter((f) => (f.pri || 1) === best);
+    if (Math.random() < 0.8) cand = first;
+  } else {
+    const own = cand.filter((f) => f.tier === state.leagueTier);
+    if (own.length && Math.random() < 0.6) cand = own;
+  }
   return cand[randInt(0, cand.length - 1)];
+}
+// Banks you've played the invitational for (Python: revealed and played).
+function eduPlayedBanks() {
+  return Object.keys(EDU_BANK).filter((id) => {
+    const es = state[EVENTS[id].stateKey];
+    return es && (es.played || es.wonYears.length || (!EVENTS[id].tri && es.series)) && EDU_BANK[id].length;
+  });
 }
 
 function eduShuffle(a) {
@@ -7537,9 +8046,10 @@ function eduOptLabel(n, rep) {
 // you climb: random at League 5–4, the same skill at 3–2, the same
 // function's other arguments and look-alikes at League 1 and the top.
 function eduBuildQuiz(f, m) {
-  const tier = m.event === "py" ? 1 : state.leagueTier;
+  if (f.cmd) return eduBuildCommandQuiz(f, m);
+  const tier = f.bank ? 1 : state.leagueTier;
   const hard = tier <= 1, mid = tier <= 3;
-  const source = f.py ? EDU_PY : eduList();
+  const source = f.bank ? eduBankList(f.bank) : eduList();
   const near = mid ? source.filter((g) => g.skill === f.skill && g !== f) : source.filter((g) => g !== f);
   const pool = near.length >= 8 ? near : source.filter((g) => g !== f);
   const mand = f.args.filter((a) => !a.opt).length;
@@ -7588,17 +8098,30 @@ function eduPickWrongOrdered(right, candidates) {
   return out;
 }
 function eduFnByKey(key) {
-  return key.startsWith("py:") ? EDU_PY.find((f) => f.name === key.slice(3)) : EDU_LIST.find((f) => f.name === key);
+  const m = key.match(/^([a-z]+):(.*)$/);
+  return m && EDU_BANK[m[1]] ? EDU_BANK[m[1]].find((f) => f.name === m[2]) : EDU_LIST.find((f) => f.name === key);
+}
+// An OA Robot command's questions: which add-in it's from, its group (when
+// it has one), then what it does.
+const EDU_ROBOT_SRCS = ["CompBot", "Array Robot", "Formula Robot", "MEWC Robot"];
+function eduBuildCommandQuiz(f, m) {
+  const list = eduBankList("robot");
+  const qs = [];
+  if (EDU_ROBOT_SRCS.includes(f.src)) qs.push({ k: "src", a: f.src, o: eduShuffle(EDU_ROBOT_SRCS.slice()) });
+  const groups = [...new Set(EDU_BANK.robot.map((g) => g.group).filter(Boolean))];
+  if (f.group && groups.length >= 4) qs.push({ k: "group", a: f.group, o: eduShuffle([f.group, ...eduPickWrong(f.group, groups)]) });
+  qs.push({ k: "desc", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrong(f.desc, list.filter((g) => g !== f).map((g) => g.desc))]) });
+  return { key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] };
 }
 
 // 📚 Completionist: every function — extras and Python included — mastered.
 function eduAllMastered() {
-  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && eduMasteredCount(EDU_PY) === EDU_PY.length;
+  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && Object.values(EDU_BANK).every((list) => eduMasteredCount(list) === list.length);
 }
 function eduCheckCompletionist() {
   if (!eduCompletionist() || (state.trophies && state.trophies.completionist) || !eduAllMastered()) return;
   state.trophies.completionist = state.year;
-  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions and all ${EDU_PY.length} Python ones mastered — a trophy for the cabinet.`, cls: "event-good" };
+  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions and every invitational's set mastered — a trophy for the cabinet.`, cls: "event-good" };
   state.logEntries.push(e);
   appendLog(e.html, e.cls);
 }
@@ -7656,6 +8179,9 @@ function perfWeights() {
 /* ---- The quiz screen ---- */
 function eduPrompt(f, q) {
   if (q.k === "cat") return `📱 In the function picker, which category is <code>${escapeHtml(f.name)}</code> in?`;
+  if (q.k === "src") return `🤖 Which OA Robot add-in has the <b>${escapeHtml(f.name)}</b> command?`;
+  if (q.k === "group") return `🤖 Which group is <b>${escapeHtml(f.name)}</b> in?`;
+  if (q.k === "desc" && f.cmd) return `What does the <b>${escapeHtml(f.name)}</b> command do?`;
   if (q.k === "mand") return `How many <b>mandatory</b> arguments does <code>${escapeHtml(f.name)}</code> have?`;
   if (q.k === "opt") return `How many <b>optional</b> arguments does <code>${escapeHtml(f.name)}</code> have?`;
   if (q.k === "desc") return `What does <code>${escapeHtml(f.name)}</code> do?`;
@@ -7665,6 +8191,7 @@ function eduPrompt(f, q) {
   return `What's the <b>${ord}</b> argument?<div class="edu-syntax"><code>${escapeHtml(f.name)}(${shown.map(escapeHtml).join(", ")}${shown.length ? ", " : ""}<span class="edu-blank">?</span>)</code></div>`;
 }
 function eduSyntaxHtml(f, picks, qs) {
+  if (f.cmd) return `<code>🤖 ${escapeHtml(f.name)}</code> <span class="kv-dim">${escapeHtml(f.src)}${f.group ? ` · ${escapeHtml(f.group)}` : ""}</span>`;
   const marks = {};
   qs.forEach((q, i) => q.k === "arg" && (marks[q.i] = picks[i] === q.a));
   return `<code>${escapeHtml(f.name)}(${f.args.map((a, i) => `<span class="${marks[i] === false ? "edu-wrong" : "edu-right"}">${escapeHtml(a.rep ? "…" : a.label)}</span>`).join(", ")})</code>`;
@@ -7680,7 +8207,7 @@ function openEduQuiz(m, onDone) {
     saveState();
   }
   const f = eduFnByKey(cur.fn);
-  const who = m.info.opponentName || (m.event && nextEventGame() && nextEventGame().rival.name) || "";
+  const who = m.info.opponentName || m.info.eventName || "";
   const head = `<div class="edu-head"><span>📘 Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}</span><span>${Math.min(cur.i + 1, cur.qs.length)} / ${cur.qs.length}</span></div>`;
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
   const q = cur.qs[cur.i];
@@ -7756,13 +8283,12 @@ function eduCareerHtml() {
   if (!eduOn()) return "";
   const avail = eduAvailable();
   const e = state.edu;
-  const py = pyUnlocked() && state.python && state.python.revealed;
   const extras = eduCompletionist() ? eduExtrasAvailable() : null;
   return `<div class="modal-section">
       <h3>📘 Knowledge mode · ${eduModeLabel()}</h3>
       <div class="kv-row"><span>🏅 Formulas mastered</span><span>${eduMasteredCount(avail)} of ${avail.length}</span></div>
       ${extras ? `<div class="kv-row"><span>📚 Extras mastered</span><span>${eduMasteredCount(extras)} of ${extras.length}</span></div>` : ""}
-      ${py ? `<div class="kv-row"><span>🐍 Python functions mastered</span><span>${eduMasteredCount(EDU_PY)} of ${EDU_PY.length}</span></div>` : ""}
+      ${eduPlayedBanks().map((id) => { const list = eduBankList(id); return `<div class="kv-row"><span>${EDU_BANK_INFO[id].icon} ${EDU_BANK_INFO[id].name} mastered</span><span>${eduMasteredCount(list)} of ${list.length}</span></div>`; }).join("")}
       <div class="kv-row"><span>✅ Answers right</span><span>${e.asked ? `${Math.round((100 * e.correct) / e.asked)}% of ${e.asked}` : "none yet"}</span></div>
       <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every esports-set function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
     </div>`;
@@ -7777,7 +8303,7 @@ function eduReview(m, cur, f, onDone) {
   const edge = (value - neutral) * EDU.weight;
   const line = (q, i) => {
     const ok = picks[i] === q.a;
-    const label = q.k === "cat" ? "Category" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
+    const label = q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
     return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}</span></div>`;
   };
   openModal(`
