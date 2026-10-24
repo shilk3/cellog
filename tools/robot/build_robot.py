@@ -36,6 +36,32 @@ def lambda_params(formula):
 def meta(formula,key):
     m=re.search(r"_xlpm\.\\\\"+key+r',\s*"([^"]*)"',formula or "")
     return m.group(1) if m else ""
+# Descriptions for the LAMBDAs that come without one, worked out from
+# their formulas (and Timer's arguments: it's a LET that returns a LAMBDA).
+LAM_DESC={
+ "ByColA":"Like BYCOL, but each column's result can be a whole array; the results sit side by side",
+ "ByRowA":"Like BYROW, but each row's result can be a whole array; the results are stacked top to bottom",
+ "CROSSJOIN":"Pairs every row of one table with every row of another (every combination), keeping headers",
+ "FilterArray":"Keeps the rows whose chosen columns all match one of the given filter values",
+ "GroupByFirstNColumns":"Groups by the first n columns and totals the rest (SUM unless told otherwise)",
+ "LeastFrequentValue":"Returns the value that appears least often in an array, optionally skipping some values",
+ "LETStack":"Shows a LET step's name above its value, trimmed to a size — to see every step of a LET at once",
+ "MapOffsets":"For each cell, applies a function to its neighbours at the given row and column offsets",
+ "ScanA":"Like SCAN, but each step can return a whole row or column; the running results are stacked",
+ "TILE":"Applies a function to each value in a grid and tiles the resulting arrays together in that layout",
+ "Timer":"Times a formula: how many seconds it took to calculate, optionally with its result below",
+ "UngroupColumn":"Splits a column of delimited lists into one row per item, repeating the other columns",
+ "UnTile":"Cuts an array into tiles of a given size and applies a function to each, one result per tile",
+}
+LAM_PARAMS={"Timer":["formula","[include_output]"]}
+CMD_DESC={
+ "Transpose Array":"Swaps the selected array's rows and columns",
+ "Unique Columns Of Array":"Keeps only the distinct columns of the selected array",
+ "Unique Rows Of Array":"Keeps only the distinct rows of the selected array",
+ "Unpivot Array":"Turns a wide table (a column per category) into a long list: one row per value",
+ "Unpivot Array (By Selected Columns)":"Unpivots a table, turning only the selected columns into rows",
+}
+DROP_CMDS={"eggy"}  # an Easter egg, not a command
 # --- LAMBDAs
 lams={}
 _,lr=book(SP+"lambda_robot.xlam")
@@ -45,7 +71,8 @@ for l in raw["lams"]:
     params=lambda_params(l["formula"])
     if params is None and l.get("params") and ":" not in l["params"]:
         params=[p.strip() for p in l["params"].split(",") if p.strip()]
-    desc=strip_names(l["desc"] or meta(l["formula"],"Description"))
+    desc=strip_names(l["desc"] or meta(l["formula"],"Description")) or LAM_DESC.get(name,"")
+    params=params if params is not None else LAM_PARAMS.get(name)
     key=name.lower()
     rec={"name":name,"params":params,"desc":desc,"src":l["src"]}
     if key in lams:
@@ -62,8 +89,8 @@ HARD=r"colou?r|background|exact formula|translat|volatile|search workbook|format
 cmds={}
 for c in raw["cmds"]:
     name=strip_names(c["name"])
-    if not name or "DEV ONLY" in (c["desc"] or ""): continue  # developer-only commands
-    desc=strip_names(c["desc"] or cmdDesc.get(c["name"].lower(),""))
+    if not name or "DEV ONLY" in (c["desc"] or "") or name.lower() in DROP_CMDS: continue  # developer-only commands
+    desc=strip_names(c["desc"] or cmdDesc.get(c["name"].lower(),"")) or CMD_DESC.get(name,"")
     group=strip_names(c["group"]).replace(" Related Commands","").replace(" Related Command","")
     key=name.lower()
     if key in cmds:

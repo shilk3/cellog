@@ -25,5 +25,10 @@ RARE_CATS = {"accessing-data", "binary", "comparer", "expression", "lines", "uri
 pq = json.load(open("parsed.json"))
 for x in pq:
     x["level"] = 1 if x["name"] in COMMON else 3 if x["cat"] in RARE_CATS else 2
+# A few functions are listed under two categories: keep the commoner listing.
+best = {}
+for x in pq:
+    if x["name"] not in best or x["level"] < best[x["name"]]["level"]: best[x["name"]] = x
+pq = [x for x in pq if best[x["name"]] is x]
 json.dump(pq, open("levelled.json", "w"))
 print(len(pq), "functions")

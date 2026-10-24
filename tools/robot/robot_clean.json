@@ -94,7 +94,7 @@
     "function",
     "[fill]"
    ],
-   "desc": "",
+   "desc": "Like BYCOL, but each column's result can be a whole array; the results sit side by side",
    "src": "Formula Robot"
   },
   {
@@ -116,7 +116,7 @@
     "function",
     "[fill]"
    ],
-   "desc": "",
+   "desc": "Like BYROW, but each row's result can be a whole array; the results are stacked top to bottom",
    "src": "Formula Robot"
   },
   {
@@ -221,7 +221,7 @@
     "table2",
     "[has_headers]"
    ],
-   "desc": "",
+   "desc": "Pairs every row of one table with every row of another (every combination), keeping headers",
    "src": "MEWC Robot"
   },
   {
@@ -384,7 +384,7 @@
     "column_indexes",
     "filter_values"
    ],
-   "desc": "",
+   "desc": "Keeps the rows whose chosen columns all match one of the given filter values",
    "src": "MEWC Robot"
   },
   {
@@ -457,7 +457,7 @@
     "[include_grand_total]",
     "[aggregate_function]"
    ],
-   "desc": "",
+   "desc": "Groups by the first n columns and totals the rest (SUM unless told otherwise)",
    "src": "MEWC Robot"
   },
   {
@@ -586,7 +586,7 @@
     "array",
     "[exclude]"
    ],
-   "desc": "",
+   "desc": "Returns the value that appears least often in an array, optionally skipping some values",
    "src": "MEWC Robot"
   },
   {
@@ -599,7 +599,7 @@
     "[spaced]",
     "[list_across]"
    ],
-   "desc": "",
+   "desc": "Shows a LET step's name above its value, trimmed to a size \u2014 to see every step of a LET at once",
    "src": "Lambda Robot"
   },
   {
@@ -648,7 +648,7 @@
     "offsets",
     "function"
    ],
-   "desc": "",
+   "desc": "For each cell, applies a function to its neighbours at the given row and column offsets",
    "src": "MEWC Robot"
   },
   {
@@ -990,7 +990,7 @@
     "array",
     "function"
    ],
-   "desc": "",
+   "desc": "Like SCAN, but each step can return a whole row or column; the running results are stacked",
    "src": "Formula Robot"
   },
   {
@@ -1083,13 +1083,16 @@
     "params",
     "function"
    ],
-   "desc": "",
+   "desc": "Applies a function to each value in a grid and tiles the resulting arrays together in that layout",
    "src": "Formula Robot"
   },
   {
    "name": "Timer",
-   "params": null,
-   "desc": "",
+   "params": [
+    "formula",
+    "[include_output]"
+   ],
+   "desc": "Times a formula: how many seconds it took to calculate, optionally with its result below",
    "src": "Formula Robot"
   },
   {
@@ -1120,7 +1123,7 @@
     "[column_index]",
     "[delimiter]"
    ],
-   "desc": "",
+   "desc": "Splits a column of delimited lists into one row per item, repeating the other columns",
    "src": "MEWC Robot"
   },
   {
@@ -1151,7 +1154,7 @@
     "tile_width",
     "function"
    ],
-   "desc": "",
+   "desc": "Cuts an array into tiles of a given size and applies a function to each, one result per tile",
    "src": "Formula Robot"
   },
   {
@@ -1595,14 +1598,6 @@
    "desc": "",
    "code": "",
    "src": "Array Robot",
-   "hard": false
-  },
-  {
-   "name": "Eggy",
-   "group": "",
-   "desc": "Easter Egg Fun",
-   "code": "",
-   "src": "CompBot",
    "hard": false
   },
   {
@@ -3144,7 +3139,7 @@
   {
    "name": "Transpose Array",
    "group": "Array Manipulation",
-   "desc": "",
+   "desc": "Swaps the selected array's rows and columns",
    "code": "",
    "src": "Array Robot",
    "hard": false
@@ -3160,7 +3155,7 @@
   {
    "name": "Unique Columns Of Array",
    "group": "Array Manipulation",
-   "desc": "",
+   "desc": "Keeps only the distinct columns of the selected array",
    "code": "",
    "src": "Array Robot",
    "hard": false
@@ -3168,7 +3163,7 @@
   {
    "name": "Unique Rows Of Array",
    "group": "Array Manipulation",
-   "desc": "",
+   "desc": "Keeps only the distinct rows of the selected array",
    "code": "",
    "src": "Array Robot",
    "hard": false
@@ -3184,7 +3179,7 @@
   {
    "name": "Unpivot Array",
    "group": "Array Manipulation",
-   "desc": "",
+   "desc": "Turns a wide table (a column per category) into a long list: one row per value",
    "code": "",
    "src": "Array Robot",
    "hard": false
@@ -3192,7 +3187,7 @@
   {
    "name": "Unpivot Array (By Selected Columns)",
    "group": "Array Manipulation",
-   "desc": "",
+   "desc": "Unpivots a table, turning only the selected columns into rows",
    "code": "",
    "src": "Array Robot",
    "hard": false

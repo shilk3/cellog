@@ -1,6 +1,7 @@
 # Builds the CELLOG Question Bank review page (an Artifact) from the banks:
 # edu-functions.js (Excel + Python), tools/pq/levelled.json,
-# tools/vba/levelled.json and tools/robot/robot_clean.json.
+# tools/vba/levelled.json and tools/robot/robot_clean.json, with the
+# esports/extra split from tools/bank/sets.json.
 # Usage (from the repo root): python3 tools/bank/build_bank.py out.html
 import json, re, sys
 def parse_vba_args(s):
@@ -24,15 +25,15 @@ vba = json.load(open("tools/vba/levelled.json"))
 rb = json.load(open("tools/robot/robot_clean.json"))
 js = open("edu-functions.js").read()
 excel = json.loads("[" + re.search(r"const EDU_FUNCS = \[(.*?)\];", js, re.S).group(1).strip().rstrip(",") + "]")
-EXCEL_LAMBDA = ["LAMBDA", "LET", "MAP", "REDUCE", "SCAN", "BYROW", "BYCOL", "MAKEARRAY", "ISOMITTED"]
+sets = json.load(open("tools/bank/sets.json"))
 data = {
     "pq": [[x["name"], PQLV[x["level"]], x["cat"].replace("-", " "), [("[" + a["n"] + "]") if a["opt"] else a["n"] for a in x["args"]], x["desc"]] for x in pq],
     "vba": [[v["name"], "Common" if v["level"] == 1 else "Other", v["cat"].replace(" functions", ""), parse_vba_args(v["syntax"]), v["desc"]] for v in sorted(vba, key=lambda v: v["name"].lower())],
     "cmds": [[c["name"], "Robot-only" if c["hard"] else "Easy in Excel", c["group"] or "—", c["desc"], c["src"]] for c in rb["cmds"]],
-    "lams": [[r[0], "Excel", [a if a != "..." else "…" for a in r[5].split("|")] if r[5] else [], r[4]] for r in excel if r[0] in EXCEL_LAMBDA]
-          + [[l["name"], l["src"], l["params"] or [], l["desc"]] for l in rb["lams"] if l["name"] != "ShowHighlights"],
+    "lams": [[l["name"], l["src"], l["params"] or [], l["desc"]] for l in rb["lams"] if l["name"] != "ShowHighlights"],
+    "extra": sets["extra"],
 }
 tpl = open("tools/bank/question_bank_tpl.html").read()
 out = tpl.replace("__EXCEL__\n", js).replace("__BANK__\n", "const BANK = " + json.dumps(data, ensure_ascii=False) + ";\n")
 open(sys.argv[1], "w").write(out)
-print({k: len(v) for k, v in data.items()})
+print({k: len(v) for k, v in data.items() if k != "extra"})
