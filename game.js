@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.5.2";
+const APP_VERSION = "5.5.3";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3785,9 +3785,9 @@ function campFeaturePoints() {
 function campChoiceHtml() {
   const price = campPrice(), short = price - state.cash;
   return `<div class="event-choice">
-      <button class="primary-btn" data-camp-choice="join" ${short > 0 ? "disabled" : ""}>🏕️ Go to camp · pay $${fmt(price)}</button>
+      <button class="${short > 0 ? "ghost-btn" : "primary-btn"}" data-camp-choice="join" ${short > 0 ? "disabled" : ""}>🏕️ Go to camp · pay $${fmt(price)}</button>
       ${short > 0 ? `<p class="modal-sub">You need $${fmt(short)} more. The price drops each day — you can join later from the top bar.</p>` : ""}
-      <button class="ghost-btn" data-camp-choice="home">🏠 ${short > 0 ? "OK — off-season at home" : "Off-season at home"}</button>
+      <button class="${short > 0 ? "primary-btn" : "ghost-btn"}" data-camp-choice="home">🏠 ${short > 0 ? "OK — off-season at home" : "Off-season at home"}</button>
     </div>`;
 }
 function wireCampChoice(after) {

@@ -854,6 +854,8 @@ details.match-more[open] { padding-bottom: 8px; }
 .tutorial-nav { display: flex; gap: 10px; }
 .tutorial-nav .ghost-btn, .tutorial-nav .primary-btn { flex: 1; margin-top: 0; }
 .tutorial-nav .ghost-btn:disabled { opacity: 0.35; }
+/* An option you can't take yet never looks like one you can. */
+.primary-btn:disabled, .ghost-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .tutorial-skip { display: block; margin: 12px auto 0; color: var(--text-dim); }
 
 /* Event screens (injury, job, burnout…) */
