@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.5.5";
+const APP_VERSION = "5.5.6";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1627,6 +1627,10 @@ function freshState() {
     topSince: null, // the first year played there
     python: null, // its preseason exhibition — see initEvent
     mobile: null, // the Mobile Invitational — see initEvent
+    pqInv: null, // the Triangle Series invitationals — see initEvent
+    vbaInv: null,
+    robotInv: null,
+    lamInv: null,
     events: null, // { year, choice, options, must, chosen } — this year's preseason invitational (decidePreseasonEvent)
     gameComplete: null, // { year } once everything's been won
     // 🏖️ Retirement (after the finish): { since, block, done } while retired —
@@ -1766,6 +1770,13 @@ function migrateSave(parsed) {
     const py = pyUnlocked(fresh);
     fresh.events = { year: fresh.year, choice: py ? "py" : null, options: py ? ["py"] : [], must: py, revealMob: false };
   }
+  // v5.5.5 and earlier dropped the Triangle Series' records on load: an
+  // event whose players exist has been offered, so it's been revealed.
+  TRI_IDS.forEach((id) => {
+    if (!evRivals(id, fresh).length) return;
+    initEvent(id, fresh);
+    fresh[EVENTS[id].stateKey].revealed = true;
+  });
   if (fresh.events.choice) initEvent(fresh.events.choice, fresh);
   // Staff unlocks for the best league so far were announced already.
   if (fresh.staffUnlockNoted == null) fresh.staffUnlockNoted = fresh.peakLeagueTier;
@@ -3435,7 +3446,8 @@ function triNextGame(id) {
     state.activeSkills = saved;
   }
   const name = rivals ? `${A.name} & ${B.name}` : rival.name;
-  return { id, n, rival, rivals, name, kind, winPct, series: { you: sr.you.filter(Boolean).length, opp: sr.you.filter((w) => !w).length }, daysUntil: BAL.preseasonDays - PY_GAMES + n - state.phaseDay };
+  // A series that's behind plays its next game as today ends.
+  return { id, n, rival, rivals, name, kind, winPct, series: { you: sr.you.filter(Boolean).length, opp: sr.you.filter((w) => !w).length }, daysUntil: Math.max(1, BAL.preseasonDays - PY_GAMES + n - state.phaseDay) };
 }
 // The day's part of the series (called as each of the last PY_GAMES
 // preseason days ends): game 1 you vs A, game 2 you vs B (and A vs B),
@@ -3447,6 +3459,9 @@ function triPlayDay(id) {
   if (day < 1 || day > PY_GAMES || sr.final) return null;
   const [A, B] = prepTriRivals(id);
   es.played = true;
+  // Which game is next goes by what's been played (one a day), so a series
+  // that lost a day somehow still carries on rather than skipping ahead.
+  const n = sr.you.length < 2 ? sr.you.length + 1 : 3;
   const t = TRI_BY_TIER[triTier(id)];
   const play = (opp) => {
     const saved = state.activeSkills;
@@ -3459,20 +3474,20 @@ function triPlayDay(id) {
       state.activeSkills = saved;
     }
   };
-  if (day <= 2) {
-    const opp = day === 1 ? A : B;
+  if (n <= 2) {
+    const opp = n === 1 ? A : B;
     const res = play(opp);
     sr.you.push(res.win);
-    let event = `${E.icon} ${E.name}, game ${day}: ${res.win ? "beat" : "lost to"} ${opp.name}.`;
-    if (day === 2) {
+    let event = `${E.icon} ${E.name}, game ${n}: ${res.win ? "beat" : "lost to"} ${opp.name}.`;
+    if (n === 2) {
       sr.ab = triSim(A, B).id;
       const w = sr.ab === A.id ? A : B, l = w === A ? B : A;
       event += ` ${w.name} beat ${l.name}.`;
       const f = triFinal(id, sr);
       event += f.kind === "out" ? ` You're out — ${f.a.name} meets ${f.b.name} in the final.` : f.kind === "three" ? " Everyone's 1–1: a three-way final tomorrow!" : ` The final tomorrow: you vs ${f.opp.name}.`;
     }
-    Object.assign(res, { opponentName: opp.name, opponentRivalId: opp.id, eventId: id, roundLabel: `${E.icon} ${E.name} · Game ${day}` });
-    res.tri = { stage: "group", day, table: triTable(id, sr), next: day === 2 ? triFinalLabel(id, sr) : null };
+    Object.assign(res, { opponentName: opp.name, opponentRivalId: opp.id, eventId: id, roundLabel: `${E.icon} ${E.name} · Game ${n}` });
+    res.tri = { stage: "group", day: n, table: triTable(id, sr), next: n === 2 ? triFinalLabel(id, sr) : null };
     return { result: res, event };
   }
   // The final.
@@ -7625,7 +7640,8 @@ function runDay() {
     recordMyMatch(matchResult);
   }
 
-  if (matchResult) {
+  // An invitational game's own line (with the series score) says it all.
+  if (matchResult && !(matchResult.exhibition && phaseEvent)) {
     const oppText = matchResult.opponentName ? ` vs ${matchResult.opponentName}` : "";
     const label = matchResult.roundLabel || "Match";
     const summary = matchResult.exhibition
