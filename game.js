@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.5.3";
+const APP_VERSION = "5.5.4";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7764,12 +7764,15 @@ function endDay() {
 /* ---------------------------------------------------------------------- */
 // Days left in the current week, today included: in season that's up to and
 // including match day; otherwise the end of this 7-day block of the phase
-// (never past the phase's own end).
+// (never past the phase's own end, nor past an invitational game's day).
 function daysLeftInWeek() {
   const week = BAL.roundIntervalDays;
   if (state.seasonPhase === "regular" || state.seasonPhase === "playoffs") return Math.max(1, week - state.phaseDay);
   const phaseLength = state.seasonPhase === "preseason" ? BAL.preseasonDays : state.offseasonDays;
-  return Math.max(1, Math.min(week - (state.phaseDay % week), phaseLength - state.phaseDay));
+  let days = Math.min(week - (state.phaseDay % week), phaseLength - state.phaseDay);
+  const game = state.seasonPhase === "preseason" ? nextEventGame() : null;
+  if (game) days = Math.min(days, game.daysUntil);
+  return Math.max(1, days);
 }
 
 function weekSnapshot() {
