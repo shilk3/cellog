@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.5.6";
+const APP_VERSION = "5.6.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7204,6 +7204,7 @@ function openHowTo() {
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
     "End Day or End Week asks first whenever the days they'd run reach a match. Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
+    ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
   ]));
 
   if (state.gameComplete) sec("retire", "🏖️", "Retirement", ul([
@@ -7760,6 +7761,8 @@ function endDay() {
   // 📘 A match as today ends: its quiz first.
   const quiz = eduQuizDue(1);
   if (quiz) return openEduQuiz(quiz, endDay);
+  const training = eduTrainingDue(1);
+  if (training) return openEduTraining(training, endDay);
   const practice = eduPracticeDue();
   if (practice) return openEduPractice(practice, endDay);
   const before = weekSnapshot();
@@ -7822,6 +7825,8 @@ function endWeek() {
   // so taking it before the days run changes nothing).
   const quiz = eduQuizDue(planned);
   if (quiz) return openEduQuiz(quiz, endWeek);
+  const training = eduTrainingDue(planned);
+  if (training) return openEduTraining(training, endWeek);
   const practice = eduPracticeDue();
   if (practice) return openEduPractice(practice, endWeek);
   const start = weekSnapshot();
@@ -8023,6 +8028,9 @@ function renderAll() {
 // and 5% from Health — scaled so guessing (1 in 4) scores exactly what
 // those would have, and knowing them is an edge.
 const EDU = {
+  trainFns: 3, // functions in a preseason training check
+  trainSkill: 5, // its most to the invitational's skill (all right)…
+  trainCourse: 4, // …and hours to its course
   genWeight: 0.05, // the general question's share of performance (from Skill)
   genGoalWeight: 3, // completion weight of "Knowledge mastered"
   sprinkle: 0.25, // share of normal checks drawn from a played invitational's bank
@@ -8111,6 +8119,7 @@ function eduPickGeneral(m) {
 }
 // Adds the general question as a Knowledge check's last.
 function eduAddGeneral(quiz, m) {
+  if (m.train) return quiz; // training checks are the invitational's own set only
   const g = eduPickGeneral(m);
   if (g) quiz.qs.push({ k: "gen", gid: g.id, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
   return quiz;
@@ -8247,6 +8256,83 @@ function openEduPractice(m, onDone) {
     closeModal();
     if (onDone) onDone();
   });
+}
+// 📘 Training checks: at the end of each full week of an invitational's
+// preseason (not on its game days — so two in a Full game, one in a Half,
+// none in a Short), EDU.trainFns full functions from its own set. Mastery
+// counts as usual; the share right goes straight into the invitational's
+// skill (up to +EDU.trainSkill) and course (up to +EDU.trainCourse hours).
+function eduTrainDays() {
+  const out = [];
+  for (let d = BAL.roundIntervalDays; d <= BAL.preseasonDays - PY_GAMES; d += BAL.roundIntervalDays) out.push(d);
+  return out;
+}
+// Due before running `days` days if one of them ends such a week.
+function eduTrainingDue(days) {
+  if (!eduOn() || !isPreseason()) return null;
+  const ev = preseasonEvent();
+  if (!ev) return null;
+  const d = eduTrainDays().find((x) => x > state.phaseDay && x <= state.phaseDay + days);
+  if (d == null) return null;
+  const key = `${state.year}·${state.retired ? state.retired.block : 0}·train·${d}`;
+  if ((state.edu.trainDone || []).includes(key)) return null;
+  return { train: true, event: ev, key, info: { kind: "train", daysUntil: d - state.phaseDay } };
+}
+// Runs (or picks up) a training check: its functions one after another,
+// then the bonus.
+function openEduTraining(m, onDone) {
+  if (!state.edu.train || state.edu.train.key !== m.key) state.edu.train = { key: m.key, i: 0, right: 0, total: 0, fns: [] };
+  const t = state.edu.train;
+  if (t.i >= EDU.trainFns) return eduTrainingSummary(m, onDone);
+  const sub = { ...m, key: `${m.key}#${t.i}`, trainKey: m.key, trainIdx: t.i, exclude: t.fns || [] };
+  openEduQuiz(sub, () => openEduTraining(m, onDone));
+}
+// The bonus for the share right, applied once.
+function eduTrainingSummary(m, onDone) {
+  const t = state.edu.train, E = EVENTS[m.event], es = evState(m.event);
+  const acc = t.total ? t.right / t.total : 0;
+  const key = E.skill.key, before = state.stats.skills[key] || 0;
+  state.stats.skills[key] = Math.min(skillCap(key), before + EDU.trainSkill * acc);
+  const gain = state.stats.skills[key] - before;
+  let hours = EDU.trainCourse * acc;
+  const done = [];
+  while (hours > 1e-9 && evCurrent(m.event) != null) {
+    const i = evCurrent(m.event), need = evCourseHours(m.event, i);
+    const used = Math.min(hours, need - es.course[i]);
+    es.course[i] += used;
+    hours -= used;
+    if (es.course[i] >= need - 1e-9) {
+      es.course[i] = need;
+      es.mastered.push(E.course[i].name);
+      done.push(E.course[i]);
+    }
+  }
+  const courseGain = EDU.trainCourse * acc - hours;
+  state.edu.trainDone = [...(state.edu.trainDone || []), m.key].slice(-12);
+  state.edu.train = null;
+  const pct = Math.round(100 * acc);
+  const e = { html: `📘 Training check: ${t.right}/${t.total} right (${pct}%) — ${E.skill.icon} ${E.skill.name} +${fmt1(gain)}${courseGain > 0 ? `, 📚 course +${fmt1(courseGain)}h` : ""}.${done.map((c) => ` ${c.icon} Mastered ${c.name}!`).join("")}`, cls: "event-good" };
+  state.logEntries.push(e);
+  appendLog(e.html, e.cls);
+  saveState();
+  const i = evCurrent(m.event);
+  openModal(`
+    <div class="edu-quiz">
+      <div class="edu-head"><span>📘 Training check · ${E.icon} ${E.name}</span><span class="edu-qn">${t.right}/${t.total}</span></div>
+      <div class="edu-prompt">${pct}% right</div>
+      <div class="kv-row"><span>${E.skill.icon} ${E.skill.name}</span><span>+${fmt1(gain)} <span class="kv-dim">(now ${fmt(state.stats.skills[key])})</span></span></div>
+      <div class="kv-row"><span>📚 Course</span><span>${courseGain > 0 ? `+${fmt1(courseGain)}h` : "—"} <span class="kv-dim">${i == null ? "(all 3 mastered)" : `(${E.course[i].name} ${fmt(es.course[i])}/${evCourseHours(m.event, i)}h)`}</span></span></div>
+      ${done.map((c) => `<div class="callout edu-mastered">${c.icon} Mastered ${escapeHtml(c.name)}! ${escapeHtml(c.desc)} in the ${escapeHtml(E.name)}.</div>`).join("")}
+      <p class="modal-sub">A week of preparation: the share right is worth up to +${EDU.trainSkill} ${E.skill.name} and +${EDU.trainCourse}h of course.</p>
+      <button class="primary-btn" id="eduTrainGo">Carry on ▶</button>
+    </div>`, {
+    ownClose: true,
+    onDismiss: () => {
+      renderAll();
+      if (onDone) onDone();
+    },
+  });
+  $("eduTrainGo").addEventListener("click", closeModal);
 }
 // Banks you've played the invitational for (Python: revealed and played).
 function eduPlayedBanks() {
@@ -8479,13 +8565,15 @@ function eduSyntaxHtml(f, picks, qs) {
 function openEduQuiz(m, onDone) {
   let cur = state.edu.current;
   if (!cur || cur.key !== m.key) {
-    const f = eduPickFunction(eduPool(m));
+    // A training check's functions are all different.
+    const pool = eduPool(m), fresh = m.exclude ? pool.filter((g) => !m.exclude.includes(eduRecKey(g))) : pool;
+    const f = eduPickFunction(fresh.length ? fresh : pool);
     cur = state.edu.current = eduBuildQuiz(f, m);
     saveState();
   }
   const f = eduFnByKey(cur.fn);
   const who = m.info.opponentName || m.info.eventName || "";
-  const head = `<div class="edu-head"><span>📘 ${m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span class="edu-qn">Q${Math.min(cur.i + 1, cur.qs.length)}</span></div>`;
+  const head = `<div class="edu-head"><span>📘 ${m.train ? `Training check · ${m.trainIdx + 1} of ${EDU.trainFns}` : m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span class="edu-qn">Q${Math.min(cur.i + 1, cur.qs.length)}</span></div>`;
   // No total and no progress bar: how many questions there are would give
   // away how many arguments the function has.
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
@@ -8577,9 +8665,15 @@ function eduReview(m, cur, f, onDone) {
   // A practice check counts for mastery, never for a match.
   const matchQuiz = state.edu.quiz;
   const res = eduFinishQuiz(cur);
-  if (m.practice) {
-    state.edu.quiz = matchQuiz;
-    state.edu.practiceDay = state.day;
+  if (m.practice || m.train) state.edu.quiz = matchQuiz;
+  if (m.practice) state.edu.practiceDay = state.day;
+  // A training check's function: add it to the check's running score.
+  const t = m.train && state.edu.train;
+  if (t && t.key === m.trainKey && t.i === m.trainIdx) {
+    t.right += res.right;
+    t.total += res.total;
+    t.i += 1;
+    t.fns = [...(t.fns || []), cur.fn];
   }
   saveState();
   const b = performanceBreakdown();
@@ -8602,9 +8696,9 @@ function eduReview(m, cur, f, onDone) {
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${escapeHtml(f.name)} won't come up again until you've mastered the rest.</div>` : ""}
       ${genLine}
       <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
-      ${m.practice ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
-      ${m.practice || gi < 0 ? "" : `<div class="kv-row"><span>💡 General question</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
-      <button class="primary-btn" id="eduPlay">${!m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
+      ${m.practice || m.train ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
+      ${m.practice || m.train || gi < 0 ? "" : `<div class="kv-row"><span>💡 General question</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
+      <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < EDU.trainFns ? "Next function ▶" : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,
     // Closing it any way carries on to the match.
