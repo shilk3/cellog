@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.7.0";
+const APP_VERSION = "5.7.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7349,7 +7349,7 @@ function openHowTo() {
     `Your share right is <b>${Math.round(EDU.weight * 100)}% of match performance</b> — taken ${Math.round(EDU.fromSkill * 100)}% from Skill and ${Math.round(EDU.fromPhys * 100)}% from Health. Guessing (1 in 4 right) scores exactly what those would have, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
-    "End Day or End Week asks first whenever the days they'd run reach a match. Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
+    "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
     ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
   ]));
 
@@ -7964,31 +7964,34 @@ function weekSnapshot() {
 // Anything that changes what today's plan means stops End Week so the
 // player can re-plan before the next day runs. Several can land on the same
 // day (an injury and a shrinking day, say) — report them all.
-function endWeek() {
-  if (endDayBlocker()) return;
-  const planned = daysLeftInWeek();
-  // 📘 The week reaches a match: its quiz first (it's about what you know,
-  // so taking it before the days run changes nothing).
-  const quiz = eduQuizDue(planned);
-  if (quiz) return openEduQuiz(quiz, endWeek);
-  const training = eduTrainingDue(planned);
-  if (training) return openEduTraining(training, endWeek);
-  const practice = eduPracticeDue();
-  if (practice) return openEduPractice(practice, endWeek);
-  const start = weekSnapshot();
-  const startPhase = state.seasonPhase;
-  let daysRun = 0;
+// run: the week so far, when it paused on a check's day (see below).
+function endWeek(run) {
+  if (!run) {
+    if (endDayBlocker()) return;
+    // Retired: today's practice check, before anything runs.
+    const practice = eduPracticeDue();
+    if (practice) return openEduPractice(practice, () => endWeek());
+    // unassigned: hours the repeated plan left unused (a carb-loaded day's extra ones, say)
+    run = { planned: daysLeftInWeek(), start: weekSnapshot(), startPhase: state.seasonPhase, daysRun: 0, unassigned: 0 };
+  }
+  const { planned, start, startPhase } = run;
   let stopReason = null;
   let matchResult = null;
   let yearSummary = null;
   let splashes = [];
   let cards = [];
-  let unassigned = 0; // hours the repeated plan left unused (a carb-loaded day's extra ones, say)
-  while (daysRun < planned) {
+  while (run.daysRun < planned) {
+    // 📘 A Knowledge check (or a training check) belongs to its own day:
+    // the week runs up to it, pauses to ask, then carries on — so a week cut
+    // short (an injury, say) never asks for one early.
+    const quiz = eduQuizDue(1);
+    if (quiz) return openEduQuiz(quiz, () => endWeek(run));
+    const training = eduTrainingDue(1);
+    if (training) return openEduTraining(training, () => endWeek(run));
     const before = weekSnapshot();
-    unassigned += Math.max(0, todayHours() - totalAssigned());
+    run.unassigned += Math.max(0, todayHours() - totalAssigned());
     const result = runDay();
-    daysRun += 1;
+    run.daysRun += 1;
     matchResult = result.matchResult;
     yearSummary = result.yearSummary;
     if (result.splashes.length) splashes = result.splashes;
@@ -7996,6 +7999,7 @@ function endWeek() {
     stopReason = cards.length ? cards.map((c) => `${c.icon} ${c.title}`).join(" · ") : null;
     if (stopReason || matchResult || yearSummary || state.seasonPhase !== startPhase) break;
   }
+  const { daysRun, unassigned } = run;
   if (stopReason) {
     const e = { html: `⏸️ End Week stopped after ${daysRun} of ${planned} day${planned === 1 ? "" : "s"}: ${stopReason}`, cls: "event-bad" };
     state.logEntries.push(e);
