@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.8.0";
+const APP_VERSION = "5.8.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7358,7 +7358,7 @@ function openHowTo() {
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
     "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
-    ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
+    ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set${mobRevealed() ? ` (📱 Mobile: ${EDU.trainFns * EDU.phoneQs} phone questions)` : ""} (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
   ]));
 
   if (state.gameComplete) sec("retire", "🏖️", "Retirement", ul([
@@ -8282,10 +8282,12 @@ function eduGenMasteredCount(list) {
 // The week's focus skills (the top tier: its own three) up to your
 // league's level; an invitational's or a practice check draws on any skill.
 // Not yet mastered first (those got wrong before, half the time).
-// An invitational's check asks from its own set (all of it).
+// An invitational's check asks from its own set (all of it) until every
+// question there is mastered, then from the general questions.
 function eduPickGeneral(m) {
   const own = m.event ? eduEventGenSet(m.event) : [];
-  if (own.length) return eduPickQuestion(own);
+  const rec = state.edu.gen || {};
+  if (own.some((g) => !(rec[g.id] && rec[g.id].mastered))) return eduPickQuestion(own);
   const upTo = [...EDU_GEN, ...eduMergedSets().flatMap((id) => EDU_SETS[id])].filter((g) => g.tier >= state.leagueTier);
   let pool = upTo;
   if (!m.event && !m.practice) {
@@ -8319,10 +8321,11 @@ function eduAddGeneral(quiz, m) {
   return quiz;
 }
 // 📱 The Mobile Invitational's check: three questions on Excel on a phone
-// (one per function slot of a training check), then the picker question.
+// (three per function slot of a training check too — nine in all), then
+// the picker question. Once all are mastered, the longest-ago come back.
 function eduBuildPhoneQuiz(m) {
   const qs = [];
-  for (let i = 0; i < (m.train ? 1 : EDU.phoneQs); i++) {
+  for (let i = 0; i < EDU.phoneQs; i++) {
     const g = eduPickQuestion(EDU_SETS.phone.filter((x) => !qs.some((q) => q.gid === x.id) && !(m.exclude || []).includes(x.id)));
     if (g) qs.push({ k: "ph", gid: g.id, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
   }
