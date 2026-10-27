@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.7.1";
+const APP_VERSION = "5.8.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -737,6 +737,12 @@ function completionGoals(stage = completionStage()) {
       const py = eduMasteredCount(EDU_PY);
       goals.push(goal("pandas", "🐍", "Python functions mastered", EDU.pandasWeight, (EDU.pandasWeight * py) / EDU_PY.length, py, EDU_PY.length));
     }
+    // Each invitational's own question sets, once played (Completion only —
+    // not needed to finish the game).
+    eduMergedSets().forEach((id) => {
+      const list = EDU_SETS[id], done = eduGenMasteredCount(list);
+      goals.push(goal(`set_${id}`, eduSetIcon(id), `${EDU_SET_INFO[id].name} mastered`, EDU.setGoalWeight, (EDU.setGoalWeight * done) / list.length, done, list.length));
+    });
     // Each Triangle Series' bank (its esports set), once revealed.
     TRI_IDS.filter((id) => evRevealed(id)).forEach((id) => {
       const list = eduBankCore(id), done = eduMasteredCount(list);
@@ -2808,7 +2814,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   return {
     // The real draws, for a three-way final (removed before it's stored).
     raw: { yourFinal, oppFinal, yourTime, oppTime },
-    edu: eduQuiz ? { fn: eduQuiz.fn.replace(/^[a-z]+:/, ""), right: eduQuiz.right, total: eduQuiz.total } : null,
+    edu: eduQuiz ? { fn: eduQuiz.fn ? eduQuiz.fn.replace(/^[a-z]+:/, "") : "📱 phone", right: eduQuiz.right, total: eduQuiz.total } : null,
     win,
     draw, // always false now — older results may hold a draw
     decidedOnTime, // a dead heat settled by the faster finish
@@ -6959,7 +6965,7 @@ function eventRevealFeatures(id, evs) {
   const E = EVENTS[id];
   const must = evs && evs.must;
   const sliders = `${inTop() ? "Everything else is set aside for the preseason (your skills are frozen, not rusting). Two sliders instead:" : "Two sliders join your seven skills:"} ${E.skill.icon} <b>${E.skill.name}</b> (it never rusts) and 📚 the <b>course</b> — ${E.course.map((c) => `${c.icon} ${c.name}`).join(" → ")}, each a bonus in the series.`;
-  const quiz = eduOn() && EDU_BANK_INFO[id] ? [["📘", `Knowledge mode: before each game, a Knowledge check on ${EDU_BANK_INFO[id].what}. Once you've played it, they turn up in your normal checks now and then too.`]] : [];
+  const quiz = !eduOn() ? [] : id === "mob" ? [["📘", `Knowledge mode: before each game, three questions on Excel on a phone, then which function-list category a function is under. Once you've played it, both sets join your general questions (marked 📱).`]] : EDU_BANK_INFO[id] ? [["📘", `Knowledge mode: before each game, a Knowledge check on ${EDU_BANK_INFO[id].what}, its general question from the invitational's own set. Once you've played it, they turn up in your normal checks now and then too, and its general questions join yours (marked ${EVENTS[id].icon}).`]] : [];
   if (id === "py") return [
     ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel — a game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played.`],
     ["🎚️", sliders],
@@ -7307,6 +7313,7 @@ function openHowTo() {
     `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
     `<b>Finishing the game:</b> top of the ${TOP_LEAGUE_NAME} table, its playoffs, the ${PY_EVENT_NAME} and the invitational that follows it — each at least once, in any years.`,
     `<b>🧹 Clean sweep trophy:</b> win all ${PY_GAMES} games (3–0). Any year — not needed to finish the game.`,
+    ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is on Python in Excel and pandas, its general question from the invitational's own set. Once you've played it, those join your general questions (marked 🐍).`] : []),
   ]));
 
   if (mobRevealed()) sec("mob", "📱", MOB_EVENT_NAME, ul([
@@ -7314,6 +7321,7 @@ function openHowTo() {
     `He plays to your league: 📱 Mobile Excel ${[4, 3, 2, 1].map((t) => `${MOB_BY_TIER[t].mobile} in League ${t}`).join(", ")}${inTop() ? `, ${MOB_BY_TIER[0].mobile} at the top` : ""}. Mobile Excel stands in for the focus skills in the series; Health, Calm, Rest, luck and finish time count as usual.`,
     `Two sliders${inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: 📱 Mobile Excel (never rusts) and 📚 the course, its parts in order: ${MOB_COURSE.map((t, i) => `${t.icon} ${t.name} (${evCourseHours("mob", i)}h — ${t.desc})`).join(", ")}.`,
     `No rating or record at stake. Win the series for a prize — ${[4, 3, 2, 1].map((t) => `$${fmt(MOB_BY_TIER[t].prize)} in League ${t}`).join(", ")}${inTop() ? `, $${fmt(MOB_BY_TIER[0].prize)} at the top` : ""} — and a 🏆 trophy. A 3–0 is a 🧹 clean sweep: a trophy of its own.`,
+    ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is ${EDU.phoneQs} questions on Excel on a phone (in place of a function), then which function-list category a function is under (in place of the general question). Once you've played it, both sets join your general questions (marked 📱).`] : []),
   ]));
 
   // Each Triangle Series, once revealed.
@@ -7324,7 +7332,7 @@ function openHowTo() {
       `They play to your league: ${E.skill.name} ${Object.keys(TRI_BY_TIER).map(Number).filter((t) => t >= E.firstTier || id === "lam").reverse().map((t) => `${TRI_BY_TIER[t].skill + TRI_SPREAD}/${TRI_BY_TIER[t].skill - TRI_SPREAD} ${t === TOP_TIER ? "at the top" : `in League ${t}`}`).join(", ")}. ${E.skill.name} stands in for the focus skills; Health, Calm, Rest, luck and finish time count as usual.`,
       `Two sliders${E.firstTier === TOP_TIER || inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: ${E.skill.icon} ${E.skill.name} (never rusts) and 📚 the course, its parts in order: ${E.course.map((t, i) => `${t.icon} ${t.name} (${evCourseHours(id, i)}h — ${t.desc})`).join(", ")}.`,
       `No rating or record at stake. Win the final for a prize and a 🏆 trophy. Win all three games for a 🧹 <b>clean sweep</b>; win a three-way final for 🔺 <b>Last One Standing</b>.`,
-      ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is on ${EDU_BANK_INFO[id].what}. Once you've played it, they also turn up in your normal checks now and then.`] : []),
+      ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is on ${EDU_BANK_INFO[id].what}, its general question from the invitational's own set. Once you've played it, they also turn up in your normal checks now and then, and its general questions join yours (marked ${E.icon}).`] : []),
     ]));
   });
 
@@ -8183,6 +8191,8 @@ const EDU = {
   trainCourse: 4, // …and hours to its course
   genWeight: 0.05, // the general question's share of performance (from Skill)
   genGoalWeight: 3, // completion weight of "Knowledge mastered"
+  setGoalWeight: 1, // …and of each invitational's own question set
+  phoneQs: 3, // 📱 Mobile: phone questions per check (in place of a function)
   sprinkle: 0.25, // share of normal checks drawn from a played invitational's bank
   weight: 0.15,
   fromSkill: 0.1,
@@ -8195,7 +8205,6 @@ const EDU = {
 const EDU_RIVAL_ACC = { 5: 0.45, 4: 0.5, 3: 0.55, 2: 0.6, 1: 0.65, 0: 0.75 };
 const EDU_EVENT_ACC = 0.7;
 const EDU_SKILL_NAMES = { lambda: "LAMBDA Craft", single: "Single-Cell Solutions", speed: "Speed & Shortcuts" };
-const EDU_CATS = ["Financial", "Logical", "Text", "Date and time", "Lookup and reference", "Math and trigonometry", "Statistical", "Engineering", "Information", "Database", "Cube", "Web"];
 
 function eduParseArgs(spec) {
   return (spec ? spec.split("|") : []).map((label) => ({ label, rep: label === "...", opt: label === "..." || label.startsWith("["), n: label.replace(/[[\]]/g, "") }));
@@ -8234,6 +8243,35 @@ const eduRecKey = (f) => (f.bank ? `${f.bank}:${f.name}` : f.name);
 // 💡 General knowledge (edu-general.js): one question per Knowledge check,
 // mastered on its own (answer it right once).
 const EDU_GEN = (typeof EDU_GENERAL === "undefined" ? [] : EDU_GENERAL).map(([id, skill, titan, tier, topic, text, a, ...wrong]) => ({ id, skill, titan, tier, topic, text, a, wrong }));
+// The invitationals' own sets (edu-inv.js): an invitational's general
+// question comes from its set — Mobile's from the function picker, with
+// three "Excel on a phone" questions in place of a function. Once you've
+// played it, its sets join the general questions, marked with its icon.
+const EDU_SET_INFO = {
+  pq: { event: "pq", name: "Power Query knowledge" },
+  vba: { event: "vba", name: "VBA knowledge" },
+  robot: { event: "robot", name: "OA Robot knowledge" },
+  lam: { event: "lam", name: "Lambda knowledge" },
+  py: { event: "py", name: "Python knowledge" },
+  phone: { event: "mob", name: "Excel on a phone" },
+  pick: { event: "mob", name: "Function picker" },
+};
+const EDU_RAW_SETS = typeof EDU_INV === "undefined" ? {} : EDU_INV;
+const EDU_SETS = Object.fromEntries(Object.keys(EDU_SET_INFO).map((id) => [id, (EDU_RAW_SETS[id] || []).map(([gid, skill, titan, tier, topic, text, a, ...wrong]) => ({ id: gid, set: id, skill, titan, tier, topic, text, a, wrong }))]));
+const eduSetIcon = (id) => EVENTS[EDU_SET_INFO[id].event].icon;
+// An invitational you've played (Python and Mobile: a series started).
+function eduEventPlayed(id) {
+  const es = state[EVENTS[id].stateKey];
+  return !!es && !!(es.played || es.wonYears.length || (!EVENTS[id].tri && es.series));
+}
+// The sets that have joined the general questions.
+function eduMergedSets() {
+  return Object.keys(EDU_SETS).filter((id) => EDU_SETS[id].length && eduEventPlayed(EDU_SET_INFO[id].event));
+}
+// An invitational's own general set (Mobile: the function picker).
+function eduEventGenSet(ev) {
+  return EDU_SETS[ev === "mob" ? "pick" : ev] || [];
+}
 function eduGenAvailable(tier = state.peakLeagueTier) {
   return EDU_GEN.filter((g) => g.tier >= tier);
 }
@@ -8244,14 +8282,20 @@ function eduGenMasteredCount(list) {
 // The week's focus skills (the top tier: its own three) up to your
 // league's level; an invitational's or a practice check draws on any skill.
 // Not yet mastered first (those got wrong before, half the time).
+// An invitational's check asks from its own set (all of it).
 function eduPickGeneral(m) {
-  const upTo = EDU_GEN.filter((g) => g.tier >= state.leagueTier);
+  const own = m.event ? eduEventGenSet(m.event) : [];
+  if (own.length) return eduPickQuestion(own);
+  const upTo = [...EDU_GEN, ...eduMergedSets().flatMap((id) => EDU_SETS[id])].filter((g) => g.tier >= state.leagueTier);
   let pool = upTo;
   if (!m.event && !m.practice) {
     const keys = state.activeSkills || [];
     const mine = upTo.filter((g) => (inTop() ? keys.includes(g.titan) : keys.includes(g.skill)));
     if (mine.length) pool = mine;
   }
+  return eduPickQuestion(pool);
+}
+function eduPickQuestion(pool) {
   if (!pool.length) return null;
   const rec = state.edu.gen || {};
   const r = (g) => rec[g.id];
@@ -8271,8 +8315,29 @@ function eduPickGeneral(m) {
 function eduAddGeneral(quiz, m) {
   if (m.train) return quiz; // training checks are the invitational's own set only
   const g = eduPickGeneral(m);
-  if (g) quiz.qs.push({ k: "gen", gid: g.id, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
+  if (g) quiz.qs.push({ k: "gen", gid: g.id, set: g.set, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
   return quiz;
+}
+// 📱 The Mobile Invitational's check: three questions on Excel on a phone
+// (one per function slot of a training check), then the picker question.
+function eduBuildPhoneQuiz(m) {
+  const qs = [];
+  for (let i = 0; i < (m.train ? 1 : EDU.phoneQs); i++) {
+    const g = eduPickQuestion(EDU_SETS.phone.filter((x) => !qs.some((q) => q.gid === x.id) && !(m.exclude || []).includes(x.id)));
+    if (g) qs.push({ k: "ph", gid: g.id, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
+  }
+  return eduAddGeneral({ key: m.key, fn: null, event: m.event, qs, i: 0, picks: [] }, m);
+}
+// A general or phone question's record: mastered once it's answered right.
+// True if that's just happened.
+function eduGenMark(gid, right) {
+  const g = (state.edu.gen = state.edu.gen || {});
+  const r = (g[gid] = g[gid] || { seen: 0, mastered: false, last: 0 });
+  r.seen += 1;
+  r.last = state.day;
+  const newly = right && !r.mastered;
+  if (right) r.mastered = true;
+  return newly;
 }
 
 function eduOn(s) {
@@ -8328,8 +8393,7 @@ function eduQuizDue(days) {
 
 // What you can be asked before a match: the week's focus skills, up to
 // your league's level (the top tier: its own three skills, every
-// function). The Python Invitational asks its own set; the Mobile one asks
-// from your league's functions, plus which menu category each is in.
+// function). An invitational asks its own set (Mobile: eduBuildPhoneQuiz).
 function eduPool(m) {
   if (m.practice) return eduPracticePool();
   if (m.event && EDU_BANK[m.event]) return eduBankList(m.event);
@@ -8346,7 +8410,6 @@ function eduPool(m) {
   }
   const tier = state.leagueTier;
   const upTo = eduList().filter((f) => f.tier >= tier);
-  if (m.event === "mob") return upTo;
   const keys = state.activeSkills || [];
   const pool = upTo.filter((f) => (inTop() ? keys.includes(f.titan) : keys.includes(f.skill)));
   return pool.length ? pool : upTo;
@@ -8486,10 +8549,7 @@ function eduTrainingSummary(m, onDone) {
 }
 // Banks you've played the invitational for (Python: revealed and played).
 function eduPlayedBanks() {
-  return Object.keys(EDU_BANK).filter((id) => {
-    const es = state[EVENTS[id].stateKey];
-    return es && (es.played || es.wonYears.length || (!EVENTS[id].tri && es.series)) && EDU_BANK[id].length;
-  });
+  return Object.keys(EDU_BANK).filter((id) => eduEventPlayed(id) && EDU_BANK[id].length);
 }
 
 function eduShuffle(a) {
@@ -8538,9 +8598,6 @@ function eduBuildQuiz(f, m) {
   const opt = f.args.filter((a) => a.opt && !a.rep).length;
   const rep = f.args.some((a) => a.rep);
   const qs = [];
-  if (m.event === "mob" && f.cat) {
-    qs.push({ k: "cat", a: f.cat, o: eduShuffle([f.cat, ...eduPickWrong(f.cat, EDU_CATS)]) });
-  }
   qs.push({ k: "mand", a: String(mand), o: eduCountOptions(mand, 6) });
   const optRight = eduOptLabel(opt, rep);
   const nearOpt = [];
@@ -8596,50 +8653,51 @@ function eduBuildCommandQuiz(f, m) {
   return eduAddGeneral({ key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] }, m);
 }
 
-// 📚 Completionist: every function — extras and Python included — mastered.
+// 📚 Completionist: every function — extras and Python included — and
+// every question mastered.
 function eduAllMastered() {
-  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && Object.values(EDU_BANK).every((list) => eduMasteredCount(list) === list.length) && eduGenMasteredCount(EDU_GEN) === EDU_GEN.length;
+  return eduMasteredCount(EDU_LIST) === EDU_LIST.length && Object.values(EDU_BANK).every((list) => eduMasteredCount(list) === list.length) && [EDU_GEN, ...Object.values(EDU_SETS)].every((list) => eduGenMasteredCount(list) === list.length);
 }
 function eduCheckCompletionist() {
   if (!eduCompletionist() || (state.trophies && state.trophies.completionist) || !eduAllMastered()) return;
   state.trophies.completionist = state.year;
-  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions, every invitational's set and all ${EDU_GEN.length} general questions mastered — a trophy for the cabinet.`, cls: "event-good" };
+  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions, every invitational's set and every question mastered — a trophy for the cabinet.`, cls: "event-good" };
   state.logEntries.push(e);
   appendLog(e.html, e.cls);
 }
 
 // A finished quiz: its score for the match, and the function's record —
-// mastered once every question is right in one go.
+// mastered once every question is right in one go (a phone question: once
+// it's right).
 function eduFinishQuiz(cur) {
   // The general question is scored and mastered on its own.
   const gi = cur.qs.findIndex((q) => q.k === "gen");
-  let gen = null;
+  let gen = null, genNewly = false;
   if (gi >= 0) {
     const gq = cur.qs[gi];
     gen = cur.picks[gi] === gq.a;
-    const g = (state.edu.gen = state.edu.gen || {});
-    const grec = (g[gq.gid] = g[gq.gid] || { seen: 0, mastered: false, last: 0 });
-    grec.seen += 1;
-    grec.last = state.day;
-    if (gen) grec.mastered = true;
+    genNewly = eduGenMark(gq.gid, gen);
     state.edu.genAsked = (state.edu.genAsked || 0) + 1;
     state.edu.genCorrect = (state.edu.genCorrect || 0) + (gen ? 1 : 0);
   }
   const fq = cur.qs.map((q, i) => i).filter((i) => i !== gi);
   const right = fq.filter((i) => cur.picks[i] === cur.qs[i].a).length;
   const total = fq.length;
-  const rec = (state.edu.fns[cur.fn] = state.edu.fns[cur.fn] || { seen: 0, right: 0, mastered: false, last: 0 });
-  rec.seen += 1;
-  rec.last = state.day;
-  const full = right === total;
-  const newly = full && !rec.mastered;
-  if (full) rec.mastered = true;
-  if (full) rec.right += 1;
+  let newly = false;
+  if (cur.fn) {
+    const rec = (state.edu.fns[cur.fn] = state.edu.fns[cur.fn] || { seen: 0, right: 0, mastered: false, last: 0 });
+    rec.seen += 1;
+    rec.last = state.day;
+    const full = right === total;
+    newly = full && !rec.mastered;
+    if (full) rec.mastered = true;
+    if (full) rec.right += 1;
+  } else fq.forEach((i) => eduGenMark(cur.qs[i].gid, cur.picks[i] === cur.qs[i].a) && (newly = true));
   state.edu.asked = (state.edu.asked || 0) + total;
   state.edu.correct = (state.edu.correct || 0) + right;
   state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly, gen };
   state.edu.current = null;
-  if (newly) eduCheckCompletionist();
+  if (newly || genNewly) eduCheckCompletionist();
   return state.edu.quiz;
 }
 
@@ -8690,7 +8748,8 @@ function eduMatchGen() {
 
 /* ---- The quiz screen ---- */
 function eduPrompt(f, q) {
-  if (q.k === "gen") return `💡 <b>General knowledge</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
+  if (q.k === "gen") return `${q.set ? eduSetIcon(q.set) : "💡"} <b>${q.set === "pick" ? "Function picker" : "General knowledge"}</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
+  if (q.k === "ph") return `📱 <b>Excel on a phone</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
   if (q.k === "cat") return `📱 In the function picker, which category is <code>${escapeHtml(f.name)}</code> in?`;
   if (q.k === "src") return `🤖 Which OA Robot add-in has the <b>${escapeHtml(f.name)}</b> command?`;
   if (q.k === "group") return `🤖 Which group is <b>${escapeHtml(f.name)}</b> in?`;
@@ -8716,12 +8775,15 @@ function openEduQuiz(m, onDone) {
   let cur = state.edu.current;
   if (!cur || cur.key !== m.key) {
     // A training check's functions are all different.
-    const pool = eduPool(m), fresh = m.exclude ? pool.filter((g) => !m.exclude.includes(eduRecKey(g))) : pool;
-    const f = eduPickFunction(fresh.length ? fresh : pool);
-    cur = state.edu.current = eduBuildQuiz(f, m);
+    if (m.event === "mob" && EDU_SETS.phone.length) cur = eduBuildPhoneQuiz(m);
+    else {
+      const pool = eduPool(m), fresh = m.exclude ? pool.filter((g) => !m.exclude.includes(eduRecKey(g))) : pool;
+      cur = eduBuildQuiz(eduPickFunction(fresh.length ? fresh : pool), m);
+    }
+    state.edu.current = cur;
     saveState();
   }
-  const f = eduFnByKey(cur.fn);
+  const f = cur.fn ? eduFnByKey(cur.fn) : null;
   const who = m.info.opponentName || m.info.eventName || "";
   const head = `<div class="edu-head"><span>📘 ${m.train ? `Training check · ${m.trainIdx + 1} of ${EDU.trainFns}` : m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span class="edu-qn">Q${Math.min(cur.i + 1, cur.qs.length)}</span></div>`;
   // No total and no progress bar: how many questions there are would give
@@ -8806,6 +8868,7 @@ function eduCareerHtml() {
       ${extras ? `<div class="kv-row"><span>📚 Extras mastered</span><span>${eduMasteredCount(extras)} of ${extras.length}</span></div>` : ""}
       <div class="kv-row"><span>💡 General knowledge mastered</span><span>${eduGenMasteredCount(eduGenAvailable())} of ${eduGenAvailable().length}</span></div>
       ${eduPlayedBanks().map((id) => { const list = eduBankList(id); return `<div class="kv-row"><span>${EDU_BANK_INFO[id].icon} ${EDU_BANK_INFO[id].name} mastered</span><span>${eduMasteredCount(list)} of ${list.length}</span></div>`; }).join("")}
+      ${eduMergedSets().map((id) => `<div class="kv-row"><span>${eduSetIcon(id)} ${EDU_SET_INFO[id].name} mastered</span><span>${eduGenMasteredCount(EDU_SETS[id])} of ${EDU_SETS[id].length}</span></div>`).join("")}
       <div class="kv-row"><span>✅ Answers right</span><span>${e.asked ? `${Math.round((100 * e.correct) / e.asked)}% of ${e.asked}` : "none yet"}</span></div>
       <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every esports-set function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
     </div>`;
@@ -8823,7 +8886,7 @@ function eduReview(m, cur, f, onDone) {
     t.right += res.right;
     t.total += res.total;
     t.i += 1;
-    t.fns = [...(t.fns || []), cur.fn];
+    t.fns = [...(t.fns || []), ...(cur.fn ? [cur.fn] : qs.filter((q) => q.k === "ph").map((q) => q.gid))];
   }
   saveState();
   const b = performanceBreakdown();
@@ -8832,23 +8895,23 @@ function eduReview(m, cur, f, onDone) {
   const edge = (value - neutral) * EDU.weight;
   const gi = qs.findIndex((q) => q.k === "gen");
   const genEdge = res.gen == null ? 0 : (eduGenValue(res.gen, b.raw.skillComponent) - b.raw.skillComponent) * EDU.genWeight;
-  const genLine = gi < 0 ? "" : `<div class="kv-row edu-line"><span>💡 ${escapeHtml(qs[gi].t)}</span><span>${res.gen ? "✅" : `❌ <b>${escapeHtml(qs[gi].a)}</b>`}</span></div>`;
+  const genLine = gi < 0 ? "" : `<div class="kv-row edu-line"><span>${qs[gi].set ? eduSetIcon(qs[gi].set) : "💡"} ${escapeHtml(qs[gi].t)}</span><span>${res.gen ? "✅" : `❌ <b>${escapeHtml(qs[gi].a)}</b>`}</span></div>`;
   const line = (q, i) => {
     const ok = picks[i] === q.a;
-    const label = q.k === "gen" ? "💡 General" : q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
+    const label = q.k === "gen" ? "💡 General" : q.k === "ph" ? `📱 ${escapeHtml(q.t)}` : q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
     return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}</span></div>`;
   };
   openModal(`
     <div class="edu-quiz">
-      <div class="edu-head"><span>📘 ${escapeHtml(f.name)}</span><span>${res.right} / ${res.total}</span></div>
-      <div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
-      <p class="edu-desc">${escapeHtml(f.desc)}</p>
-      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${escapeHtml(f.name)} won't come up again until you've mastered the rest.</div>` : ""}
+      <div class="edu-head"><span>${f ? `📘 ${escapeHtml(f.name)}` : "📱 Excel on a phone"}</span><span>${res.right} / ${res.total}</span></div>
+      ${f ? `<div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
+      <p class="edu-desc">${escapeHtml(f.desc)}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
+      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.</div>` : ""}
       ${genLine}
-      <details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>
+      ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
       ${m.practice || m.train ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
-      ${m.practice || m.train || gi < 0 ? "" : `<div class="kv-row"><span>💡 General question</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
-      <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < EDU.trainFns ? "Next function ▶" : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
+      ${m.practice || m.train || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set === "pick" ? "📱 Function picker" : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
+      <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < EDU.trainFns ? (f ? "Next function ▶" : "Next question ▶") : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,
     // Closing it any way carries on to the match.

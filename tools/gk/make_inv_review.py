@@ -2,13 +2,13 @@
 # (inv_sets.py): one tab per set, with yellow columns to fill in (Keep?, a new
 # league, comments), plus the function-picker set for Mobile.
 # Usage (from the repo root): python3 tools/gk/make_inv_review.py out.xlsx
-import json, random, re, sys
+import sys
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 sys.path.insert(0, "tools/gk")
-from inv_sets import CAT, INFO, NEAR, PICKER, SETS
+from inv_sets import SETS, picker_rows
 
 ARIAL = "Arial"
 HEAD = PatternFill("solid", fgColor="1F4E3D")
@@ -17,8 +17,6 @@ thin = Side(style="thin", color="D9D9D9")
 SKILL = {"data": "Data Analysis", "map": "Mapping", "text": "Text Processing", "games": "Game Logic", "math": "Math & Formulas", "time": "Time & Dates", "cards": "Cards & Random"}
 LEAGUE = {5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan"}
 
-js = open("edu-functions.js").read()
-funcs = {r[0]: r for r in json.loads("[" + re.search(r"const EDU_FUNCS = \[(.*?)\];", js, re.S).group(1).strip().rstrip(",") + "]")}
 
 def sheet(wb, title, head, rows, widths, inputs):
     ws = wb.create_sheet(title)
@@ -68,12 +66,7 @@ for key, title in TABS.items():
     ws, n = sheet(wb, title, head, rows, [46, 10, 15, 34, 26, 26, 26, 24, 9, 16, 40], [9, 10, 11])
     summary.append((title, n, "I", "J", "K"))
 
-rng = random.Random(11)
-prow = []
-for name in PICKER:
-    cat = CAT[funcs[name][6]]
-    wrong = rng.sample(NEAR[cat], 3)
-    prow.append([name, f"In the function list (fx), which category is {name} under?", cat, *wrong, funcs[name][4], LEAGUE[funcs[name][3]]])
+prow = [[name, qq, a, *w, desc, LEAGUE[tier]] for name, tier, sk, ti, qq, a, w, desc in picker_rows()]
 ws, n = sheet(wb, "Function picker", ["Function", "Question", "Answer", "Wrong 1", "Wrong 2", "Wrong 3", "What it does", "League", "Keep?", "Comments"], prow, [14, 40, 20, 20, 20, 20, 40, 10, 9, 40], [9, 10])
 summary.append(("Function picker", n, "I", None, "J"))
 
@@ -117,4 +110,4 @@ for c in (2, 3, 5):
     col = get_column_letter(c)
     g.cell(row=r, column=c, value=f"=SUM({col}{r0 + 2}:{col}{r - 1})").font = Font(name=ARIAL, bold=True)
 wb.save(sys.argv[1])
-print({k: len(v) for k, v in SETS.items()}, "picker", len(PICKER))
+print({k: len(v) for k, v in SETS.items()}, "picker", len(prow))

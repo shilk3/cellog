@@ -451,3 +451,18 @@ NEAR = {
     "Information": ["Logical", "Lookup & Reference", "Text", "Statistical"],
     "Engineering": ["Math & Trig", "Statistical", "Information", "Financial"],
 }
+
+def picker_rows():
+    """The picker questions: (function, tier, skill, titan, question, answer,
+    [three wrong answers], what it does). Read from edu-functions.js (run from
+    the repo root); the wrong answers are fixed by a seeded shuffle."""
+    import json, random, re
+    js = open("edu-functions.js").read()
+    funcs = {r[0]: r for r in json.loads("[" + re.search(r"const EDU_FUNCS = \[(.*?)\];", js, re.S).group(1).strip().rstrip(",") + "]")}
+    rng = random.Random(11)
+    out = []
+    for name in PICKER:
+        f = funcs[name]
+        cat = CAT[f[6]]
+        out.append((name, f[3], f[1], f[2], f"In the function list (fx), which category is {name} under?", cat, rng.sample(NEAR[cat], 3), f[4]))
+    return out

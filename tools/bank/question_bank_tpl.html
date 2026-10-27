@@ -90,6 +90,12 @@ const TABS = [
     rows: BANK.lams.map(([n, src, a, d]) => ({ n, f: src.split(" + ")[0], cols: [], args: a, d })), head: ["LAMBDA", "From", "Mand.", "Opt.", "Arguments", "Description"] },
   { id: "gen", label: "💡 General knowledge", note: "One of these ends every Knowledge check (5% of performance, from Skill), mastered by answering it right once. Hand-written from Microsoft's Excel help, plus two questions per Windows keyboard shortcut. League = the first league it can be asked in. Tell me any that are wrong, unclear or too easy/hard.",
     rows: EDU_GENERAL.map(([id, sk, ti, tier, topic, q, a, w1, w2, w3]) => ({ n: q, f: topic, cols: [LEAGUE[tier], SKILL[sk]], d: a, src: [w1, w2, w3].join(" · ") })), head: ["Question", "Topic", "League", "Skill", "Answer", "Wrong answers"], gen: true },
+  // The invitationals' own sets: each one's general questions (Mobile: phone
+  // questions and the function picker), joining the general pool once played.
+  ...[["pq", "⚡ PQ knowledge"], ["vba", "💾 VBA knowledge"], ["robot", "🤖 Robot knowledge"], ["lam", "🧩 Lambda knowledge"], ["py", "🐍 Python knowledge"], ["phone", "📱 Phone"], ["pick", "📱 Picker"]].map(([id, label]) => ({
+    id: "set_" + id, label,
+    note: id === "phone" ? "Mobile Invitational: three of these per check, in place of a function. Join the general questions once you've played it (marked 📱)." : id === "pick" ? "Mobile Invitational: one per check, in place of the general question. Join the general questions once you've played it (marked 📱)." : "This invitational's general question comes from here. Once you've played it, they join the general questions (marked with its icon). League matters only then.",
+    rows: (EDU_INV[id] || []).map(([gid, sk, ti, tier, topic, q, a, w1, w2, w3]) => ({ n: q, f: topic, cols: [LEAGUE[tier], SKILL[sk]], d: a, src: [w1, w2, w3].join(" · ") })), head: ["Question", "Set", "League", "Skill", "Answer", "Wrong answers"], gen: true })),
   { id: "py", label: "🐍 Python", note: "Python in Excel (PY, xl) and common pandas commands, main arguments.",
     rows: EDU_PANDAS.map(([n, d, a]) => ({ n, f: n.startsWith("pd.") ? "pandas" : n.startsWith("df.") ? "DataFrame" : n.startsWith("np.") ? "numpy" : "Python in Excel", cols: [], args: a.split("|"), d })), head: ["Name", "Kind", "Mand.", "Opt.", "Arguments", "Description"] },
 ];
