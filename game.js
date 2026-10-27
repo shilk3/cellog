@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.6.0";
+const APP_VERSION = "5.7.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5911,6 +5911,7 @@ function openCareer() {
   }).join("");
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
+    <button class="ghost-btn share-btn" id="shareCareerBtn">📤 Share my career</button>
     ${trophyCabinetHtml()}
     ${retirementSectionHtml()}
     ${completionSectionHtml()}
@@ -5965,9 +5966,154 @@ function openCareer() {
     </div>`;
   openModal(html, { ownClose: true, page: { key: "career", reopen: openCareer } });
   wireRetirement();
+  $("shareCareerBtn").addEventListener("click", openShareCard);
   if ($("careerSpecs")) $("careerSpecs").addEventListener("click", () => openSpecialisations());
   $("viewLeaguesLink").addEventListener("click", () => openLeagues(state.leagueTier));
   $("viewHistoryLink").addEventListener("click", () => openHistory());
+}
+
+// ---- 📤 Share card: the career so far, as an image ----
+// Drawn on a canvas (1080×1350, a portrait post), previewed, then handed to
+// the phone's share sheet — or saved where sharing files isn't supported.
+const SHARE_W = 1080, SHARE_H = 1350;
+function shareCardCanvas() {
+  const c = document.createElement("canvas");
+  c.width = SHARE_W;
+  c.height = SHARE_H;
+  const g = c.getContext("2d");
+  const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif';
+  const col = { bg: "#0b1220", card: "#131c2e", card2: "#1a2438", border: "#263149", text: "#e7edf7", dim: "#93a1bd", accent: "#34d0a0", warn: "#ffb020" };
+  const font = (w, px) => (g.font = `${w} ${px}px ${FONT}`);
+  const text = (s, x, y, { w = 600, px = 32, color = col.text, align = "left", max } = {}) => {
+    font(w, px);
+    g.fillStyle = color;
+    g.textAlign = align;
+    g.textBaseline = "alphabetic";
+    let str = String(s);
+    if (max) while (str.length > 1 && g.measureText(str).width > max) str = str.slice(0, -2) + "…";
+    g.fillText(str, x, y);
+  };
+  const box = (x, y, w, h, r, fill, stroke) => {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+    g.fillStyle = fill;
+    g.fill();
+    if (stroke) {
+      g.strokeStyle = stroke;
+      g.lineWidth = 2;
+      g.stroke();
+    }
+  };
+  // Background with a soft accent glow.
+  g.fillStyle = col.bg;
+  g.fillRect(0, 0, SHARE_W, SHARE_H);
+  const glow = g.createRadialGradient(SHARE_W * 0.85, 0, 0, SHARE_W * 0.85, 0, 700);
+  glow.addColorStop(0, "rgba(52,208,160,0.22)");
+  glow.addColorStop(1, "rgba(52,208,160,0)");
+  g.fillStyle = glow;
+  g.fillRect(0, 0, SHARE_W, SHARE_H);
+
+  const P = 64;
+  // Header.
+  text("CELLOG", P, 110, { w: 900, px: 64, color: col.text });
+  text("the spreadsheet slog", P, 152, { w: 500, px: 28, color: col.dim });
+  text(`Year ${state.year}`, SHARE_W - P, 110, { w: 800, px: 44, color: col.accent, align: "right" });
+  text(`Day ${state.day}`, SHARE_W - P, 152, { w: 500, px: 28, color: col.dim, align: "right" });
+
+  // Who and where.
+  const emp = state.employment;
+  const role = state.retired ? "🏖️ Retired" : emp.status === "pro" ? "🏆 Pro" : emp.status === "employed" ? "💼 Employed" : "🔍 Job hunting";
+  text(state.playerName || "Player", P, 260, { w: 900, px: 76, max: SHARE_W - 2 * P });
+  text(`${state.retired ? "Invitationals only" : lg(state.leagueTier)} · ${PHASE_NAMES[state.seasonPhase] || state.seasonPhase} · ${role}`, P, 314, { w: 600, px: 34, color: col.dim, max: SHARE_W - 2 * P });
+
+  // Four headline tiles.
+  const tp = playerTablePosition();
+  const rec = seasonRecord();
+  const tiles = [
+    ["🏆 Rating", fmt(state.rank), `best ${fmt(state.peakRank)}`],
+    ["📊 Table", tp ? `#${tp.pos}` : "—", tp ? `of ${tp.size}${tp.final ? " · final" : ""}` : "no table yet"],
+    ["📋 Season", wdl(rec.wins, rec.draws, rec.losses), `Year ${state.year}`],
+    ["📈 Complete", `${completionPct()}%`, "of the game"],
+  ];
+  const tw = (SHARE_W - 2 * P - 3 * 20) / 4;
+  tiles.forEach(([label, big, small], i) => {
+    const x = P + i * (tw + 20), y = 360;
+    box(x, y, tw, 170, 24, col.card, col.border);
+    text(label, x + 24, y + 46, { w: 600, px: 26, color: col.dim, max: tw - 40 });
+    text(big, x + 24, y + 110, { w: 850, px: 52, max: tw - 40 });
+    text(small, x + 24, y + 148, { w: 500, px: 24, color: col.dim, max: tw - 40 });
+  });
+
+  // Skills.
+  const keys = playSkillKeys();
+  // Rows close up for seven skills, spread out for the top tier's three.
+  const sy = 560, row = keys.length > 4 ? 62 : 74;
+  box(P, sy, SHARE_W - 2 * P, 76 + keys.length * row, 24, col.card, col.border);
+  text(inTop() ? `${TOP_LEAGUE_NAME} skills` : "Skills", P + 32, sy + 56, { w: 800, px: 32 });
+  text(`average ${fmt(keys.reduce((a, k) => a + (state.stats.skills[k] || 0), 0) / keys.length)}`, SHARE_W - P - 32, sy + 56, { w: 500, px: 26, color: col.dim, align: "right" });
+  keys.forEach((k, i) => {
+    const m = skillMeta(k), v = state.stats.skills[k] || 0, y = sy + 112 + i * row;
+    text(`${m.icon} ${m.name}${isSpecialisation(k) ? " ⭐" : ""}`, P + 32, y, { w: 600, px: 30, max: 420 });
+    const bx = P + 470, bw = SHARE_W - 2 * P - 470 - 120;
+    box(bx, y - 24, bw, 22, 11, col.card2);
+    if (v > 0) box(bx, y - 24, Math.max(22, (bw * Math.min(100, v)) / 100), 22, 11, col.accent);
+    text(fmt(v), SHARE_W - P - 32, y, { w: 800, px: 30, align: "right" });
+  });
+
+  // Bottom tiles.
+  const by = sy + 76 + keys.length * row + 24;
+  const bottom = [
+    ["📋 All-time", wdl(state.wins, state.draws, state.losses)],
+    ["💰 Cash", `$${fmtCashShort(state.cash)}`],
+    ["🪜 Peak", state.peakLeagueTier === TOP_TIER ? "Titan" : `League ${state.peakLeagueTier}`],
+  ];
+  if (eduOn()) bottom.push(["📘 Mastered", `${eduMasteredCount(eduAvailable())}/${eduAvailable().length}`]);
+  if (state.gameComplete) bottom.push(["🌟 Finished", `Year ${state.gameComplete.year}`]);
+  const shown = bottom.slice(0, 4);
+  const bw2 = (SHARE_W - 2 * P - (shown.length - 1) * 20) / shown.length;
+  const bh = Math.min(150, SHARE_H - by - 100);
+  shown.forEach(([label, val], i) => {
+    const x = P + i * (bw2 + 20);
+    box(x, by, bw2, bh, 24, col.card, col.border);
+    text(label, x + 24, by + 50, { w: 600, px: 26, color: col.dim, max: bw2 - 40 });
+    text(val, x + 24, by + 106, { w: 800, px: 40, max: bw2 - 40 });
+  });
+
+  // Footer.
+  text("Play free at cellog.vercel.app", SHARE_W / 2, SHARE_H - 48, { w: 700, px: 30, color: col.accent, align: "center" });
+  return c;
+}
+function openShareCard() {
+  const canvas = shareCardCanvas();
+  const url = canvas.toDataURL("image/png");
+  const name = `cellog-${(state.playerName || "career").replace(/[^A-Za-z0-9]+/g, "-")}-year${state.year}.png`;
+  const caption = `My CELLOG career: Year ${state.year}, ${state.retired ? "retired" : lg(state.leagueTier)}, rating ${fmt(state.rank)}. Play at https://cellog.vercel.app`;
+  openModal(`
+    ${stickyHeadHtml("📤 Share my career")}
+    <img class="share-preview" src="${url}" alt="Your CELLOG career card" />
+    <button class="primary-btn" id="shareGo">📤 Share…</button>
+    <a class="ghost-btn share-save" id="shareSave" href="${url}" download="${name}">💾 Save image</a>
+    <p class="modal-sub">Sharing sends the picture only — your save stays on this device.</p>`, { ownClose: true, page: { key: "share", reopen: openShareCard } });
+  canvas.toBlob((blob) => {
+    const file = blob && typeof File !== "undefined" ? new File([blob], name, { type: "image/png" }) : null;
+    const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+    const go = $("shareGo");
+    if (!go) return;
+    if (!canShare) {
+      // No share sheet here (most desktops): saving is the way.
+      go.remove();
+      $("shareSave").className = "primary-btn share-save";
+      return;
+    }
+    go.addEventListener("click", () => {
+      navigator.share({ files: [file], title: "My CELLOG career", text: caption }).catch(() => {});
+    });
+  }, "image/png");
 }
 
 function leagueTableHtml(tier) {

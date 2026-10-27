@@ -31,6 +31,12 @@ own — so with the mode on it's Skill 40%, Health 20%, Calm 15%, Rest 5%,
 functions 15%, general 5%. The 489 questions are in `edu-general.js`, built
 by `tools/gk/`.
 
+**📤 Share my career** (Career & Season): draws a 1080×1350 card of the
+career so far — name, year and league, rating, table, season record,
+completion, skills and a few totals — on a canvas in the app, then hands it
+to the phone's share sheet (or saves it as a PNG where that isn't
+available). Nothing is uploaded.
+
 **🐞 Report a bug or suggestion** (☰ menu): no account needed. Each report
 becomes an issue in the private `shilk3/cellog-feedback` repo, filed by
 `api/feedback.js` (a Vercel function using the `FEEDBACK_GITHUB_TOKEN`

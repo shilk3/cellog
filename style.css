@@ -964,6 +964,10 @@ details.match-more[open] { padding-bottom: 8px; }
 .feedback-check input { width: 18px; height: 18px; accent-color: var(--accent); }
 /* 📘 Knowledge mode's three settings */
 .edu-mode-choice { margin: 4px 0 12px; display: grid; gap: 6px; }
+/* 📤 Share card */
+.share-btn { margin: 4px 0 8px; }
+.share-preview { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); margin: 4px 0 10px; }
+.share-save { display: block; text-align: center; text-decoration: none; margin-top: 8px; }
 .edu-mode-opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 14px; color: var(--text); }
 .edu-mode-opt input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); flex: none; }
 .edu-mode-opt > span { display: grid; gap: 2px; }
