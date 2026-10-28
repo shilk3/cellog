@@ -34,6 +34,6 @@ data = {
     "extra": sets["extra"],
 }
 tpl = open("tools/bank/question_bank_tpl.html").read()
-out = tpl.replace("__EXCEL__\n", js + open("edu-general.js").read() + open("edu-inv.js").read()).replace("__BANK__\n", "const BANK = " + json.dumps(data, ensure_ascii=False) + ";\n")
+out = tpl.replace("__EXCEL__\n", js + open("edu-general.js").read() + open("edu-inv.js").read() + open("edu-pqgroups.js").read()).replace("__BANK__\n", "const BANK = " + json.dumps(data, ensure_ascii=False) + ";\n")
 open(sys.argv[1], "w").write(out)
 print({k: len(v) for k, v in data.items() if k != "extra"})

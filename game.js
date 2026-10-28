@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.8.1";
+const APP_VERSION = "5.9.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1797,7 +1797,17 @@ function migrateSave(parsed) {
   const a = fresh.allocation;
   a.exercise = clamp(a.exercise || 0, 0, BAL.gymMaxHours);
   a.work = clamp(a.work || 0, 0, workMaxHours(fresh.employment.status, fresh));
+  eduGroupCarryOver(fresh);
   return fresh;
+}
+// ⚡ Power Query is asked in groups now: a group whose functions were all
+// mastered one at a time counts as mastered.
+function eduGroupCarryOver(s) {
+  if (typeof EDU_PQ_GROUPS === "undefined" || !s.edu || !s.edu.fns) return;
+  const fns = s.edu.fns, done = (k) => fns[k] && fns[k].mastered;
+  EDU_PQ_GROUPS.forEach(([name, , , , , members]) => {
+    if (!done(`pq:${name}`) && members.every(([fn]) => done(`pq:${fn}`))) fns[`pq:${name}`] = { seen: 1, right: 1, mastered: true, last: 0 };
+  });
 }
 
 // The game played last: the remembered slot, else a Full save from before
@@ -7358,7 +7368,7 @@ function openHowTo() {
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
     "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
-    ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set${mobRevealed() ? ` (📱 Mobile: ${EDU.trainFns * EDU.phoneQs} phone questions)` : ""} (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
+    ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set${evRevealed("pq") ? ` (⚡ Power Query: ${EDU.trainGroups} groups)` : ""}${mobRevealed() ? ` (📱 Mobile: ${EDU.trainFns * EDU.phoneQs} phone questions)` : ""} (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
   ]));
 
   if (state.gameComplete) sec("retire", "🏖️", "Retirement", ul([
@@ -8187,6 +8197,7 @@ function renderAll() {
 // those would have, and knowing them is an edge.
 const EDU = {
   trainFns: 3, // functions in a preseason training check
+  trainGroups: 2, // …or Power Query groups (each is several questions)
   trainSkill: 5, // its most to the invitational's skill (all right)…
   trainCourse: 4, // …and hours to its course
   genWeight: 0.05, // the general question's share of performance (from Skill)
@@ -8219,14 +8230,18 @@ const EDU_PY = (typeof EDU_PANDAS === "undefined" ? [] : EDU_PANDAS).map(([name,
 const EDU_RAW_BANKS = typeof EDU_BANKS === "undefined" ? {} : EDU_BANKS;
 const EDU_BANK = {
   py: EDU_PY,
-  pq: (EDU_RAW_BANKS.pq || []).map(([name, level, cat, desc, args, extra]) => ({ name, bank: "pq", skill: "pq", tier: 0, pri: level, cat, desc, extra: !!extra, args: eduParseArgs(args) })),
+  // ⚡ Power Query in groups of look-alikes (edu-pqgroups.js): a group is
+  // asked and mastered as one, like a function.
+  pq: typeof EDU_PQ_GROUPS !== "undefined"
+    ? EDU_PQ_GROUPS.map(([name, desc, takes, extra, level, members]) => ({ name, bank: "pq", skill: "pq", tier: 0, pri: level, grp: true, desc, takes, extra: !!extra, args: [], members: members.map(([fn, t]) => ({ name: fn, t })) }))
+    : (EDU_RAW_BANKS.pq || []).map(([name, level, cat, desc, args, extra]) => ({ name, bank: "pq", skill: "pq", tier: 0, pri: level, cat, desc, extra: !!extra, args: eduParseArgs(args) })),
   vba: (EDU_RAW_BANKS.vba || []).map(([name, level, cat, desc, args, extra]) => ({ name, bank: "vba", skill: "vba", tier: 0, pri: level, cat, desc, extra: !!extra, args: eduParseArgs(args) })),
   robot: (EDU_RAW_BANKS.robot || []).map(([name, hard, group, src, desc, extra]) => ({ name, bank: "robot", skill: "robot", tier: 0, pri: hard ? 1 : 2, group, src, desc, extra: !!extra, args: [], cmd: true })),
   lam: (EDU_RAW_BANKS.lam || []).map(([name, desc, args, extra]) => ({ name, bank: "lam", skill: "lam", tier: 0, desc, extra: !!extra, args: eduParseArgs(args) })),
 };
 const EDU_BANK_INFO = {
   py: { name: "Python functions", icon: "🐍", what: "Python in Excel and pandas", weight: 1 },
-  pq: { name: "Power Query functions", icon: "⚡", what: "a Power Query (M) function", weight: 2 },
+  pq: { name: "Power Query groups", icon: "⚡", what: "a group of look-alike Power Query (M) functions — what they do, what arguments they take, then which one is which", weight: 2 },
   vba: { name: "VBA functions", icon: "💾", what: "a VBA function", weight: 1 },
   robot: { name: "OA Robot commands", icon: "🤖", what: "an OA Robot command", weight: 1 },
   lam: { name: "Lambda library", icon: "🧩", what: "a LAMBDA from the OA Robot libraries", weight: 1 },
@@ -8478,6 +8493,10 @@ function openEduPractice(m, onDone) {
 // none in a Short), EDU.trainFns full functions from its own set. Mastery
 // counts as usual; the share right goes straight into the invitational's
 // skill (up to +EDU.trainSkill) and course (up to +EDU.trainCourse hours).
+// How many functions (or Power Query groups) a training check asks.
+function eduTrainCount(ev) {
+  return ev === "pq" && EDU_BANK.pq.length && EDU_BANK.pq[0].grp ? EDU.trainGroups : EDU.trainFns;
+}
 function eduTrainDays() {
   const out = [];
   for (let d = BAL.roundIntervalDays; d <= BAL.preseasonDays - PY_GAMES; d += BAL.roundIntervalDays) out.push(d);
@@ -8499,7 +8518,7 @@ function eduTrainingDue(days) {
 function openEduTraining(m, onDone) {
   if (!state.edu.train || state.edu.train.key !== m.key) state.edu.train = { key: m.key, i: 0, right: 0, total: 0, fns: [] };
   const t = state.edu.train;
-  if (t.i >= EDU.trainFns) return eduTrainingSummary(m, onDone);
+  if (t.i >= eduTrainCount(m.event)) return eduTrainingSummary(m, onDone);
   const sub = { ...m, key: `${m.key}#${t.i}`, trainKey: m.key, trainIdx: t.i, exclude: t.fns || [] };
   openEduQuiz(sub, () => openEduTraining(m, onDone));
 }
@@ -8592,6 +8611,7 @@ function eduOptLabel(n, rep) {
 // function's other arguments and look-alikes at League 1 and the top.
 function eduBuildQuiz(f, m) {
   if (f.cmd) return eduBuildCommandQuiz(f, m);
+  if (f.grp) return eduBuildGroupQuiz(f, m);
   const tier = f.bank ? 1 : state.leagueTier;
   const hard = tier <= 1, mid = tier <= 3;
   const source = f.bank ? eduBankList(f.bank) : eduList();
@@ -8638,6 +8658,24 @@ function eduPickWrongOrdered(right, candidates) {
     out.push(c);
   }
   return out;
+}
+// ⚡ A Power Query group's questions: what they do and what arguments they
+// take (wrong answers: other groups', the same area's first), then "Which
+// one …?" for each function, in any order (wrong answers: the others in the
+// group, then look-alikes from the same namespace).
+function eduBuildGroupQuiz(f, m) {
+  const all = EDU_BANK.pq, area = (g) => g.name.split(":")[0], ns = (n) => n.split(".")[0];
+  const near = (get) => [...eduShuffle(all.filter((g) => g !== f && area(g) === area(f)).map(get)), ...eduShuffle(all.filter((g) => g !== f && area(g) !== area(f)).map(get))];
+  const qs = [
+    { k: "gp", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrongOrdered(f.desc, near((g) => g.desc))]) },
+    { k: "ga", a: f.takes, o: eduShuffle([f.takes, ...eduPickWrongOrdered(f.takes, near((g) => g.takes))]) },
+  ];
+  const others = all.filter((g) => g !== f).flatMap((g) => g.members.map((x) => x.name));
+  eduShuffle(f.members.slice()).forEach((x) => {
+    const cands = [...eduShuffle(f.members.filter((y) => y !== x).map((y) => y.name)), ...eduShuffle(others.filter((n) => ns(n) === ns(x.name))), ...eduShuffle(others.slice())];
+    qs.push({ k: "gw", fn: x.name, t: x.t, a: x.name, o: eduShuffle([x.name, ...eduPickWrongOrdered(x.name, cands)]) });
+  });
+  return eduAddGeneral({ key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] }, m);
 }
 function eduFnByKey(key) {
   const m = key.match(/^([a-z]+):(.*)$/);
@@ -8696,6 +8734,17 @@ function eduFinishQuiz(cur) {
     if (full) rec.mastered = true;
     if (full) rec.right += 1;
   } else fq.forEach((i) => eduGenMark(cur.qs[i].gid, cur.picks[i] === cur.qs[i].a) && (newly = true));
+  // A group's functions keep their own records too (not shown).
+  cur.qs.forEach((q, i) => {
+    if (q.k !== "gw") return;
+    const r = (state.edu.fns[`pq:${q.fn}`] = state.edu.fns[`pq:${q.fn}`] || { seen: 0, right: 0, mastered: false, last: 0 });
+    r.seen += 1;
+    r.last = state.day;
+    if (cur.picks[i] === q.a) {
+      r.right += 1;
+      r.mastered = true;
+    }
+  });
   state.edu.asked = (state.edu.asked || 0) + total;
   state.edu.correct = (state.edu.correct || 0) + right;
   state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly, gen };
@@ -8753,6 +8802,8 @@ function eduMatchGen() {
 function eduPrompt(f, q) {
   if (q.k === "gen") return `${q.set ? eduSetIcon(q.set) : "💡"} <b>${q.set === "pick" ? "Function picker" : "General knowledge"}</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
   if (q.k === "ph") return `📱 <b>Excel on a phone</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
+  if (q.k === "gp" || q.k === "ga") return `⚡ ${q.k === "gp" ? "What do these do?" : "What arguments do these take?"}<div class="edu-members">${f.members.map((x) => `<code>${escapeHtml(x.name)}</code>`).join(" ")}</div>`;
+  if (q.k === "gw") return `⚡ ${escapeHtml(q.t)}`;
   if (q.k === "cat") return `📱 In the function picker, which category is <code>${escapeHtml(f.name)}</code> in?`;
   if (q.k === "src") return `🤖 Which OA Robot add-in has the <b>${escapeHtml(f.name)}</b> command?`;
   if (q.k === "group") return `🤖 Which group is <b>${escapeHtml(f.name)}</b> in?`;
@@ -8766,6 +8817,11 @@ function eduPrompt(f, q) {
   return `What's the <b>${ord}</b> argument?<div class="edu-syntax"><code>${escapeHtml(f.name)}(${shown.map(escapeHtml).join(", ")}${shown.length ? ", " : ""}<span class="edu-blank">?</span>)</code></div>`;
 }
 function eduSyntaxHtml(f, picks, qs) {
+  if (f.grp) {
+    const ok = {};
+    qs.forEach((q, i) => q.k === "gw" && (ok[q.fn] = picks[i] === q.a));
+    return `<div class="edu-members">${f.members.map((x) => `<code class="${ok[x.name] === false ? "edu-wrong" : "edu-right"}">${escapeHtml(x.name)}</code>`).join(" ")}</div>`;
+  }
   if (f.cmd) return `<code>🤖 ${escapeHtml(f.name)}</code> <span class="kv-dim">${escapeHtml(f.src)}${f.group ? ` · ${escapeHtml(f.group)}` : ""}</span>`;
   const marks = {};
   qs.forEach((q, i) => q.k === "arg" && (marks[q.i] = picks[i] === q.a));
@@ -8776,6 +8832,8 @@ function eduSyntaxHtml(f, picks, qs) {
 // same question back (an answer given stays given).
 function openEduQuiz(m, onDone) {
   let cur = state.edu.current;
+  // One started on a single Power Query function (before groups): start again.
+  if (cur && cur.key === m.key && cur.fn && !eduFnByKey(cur.fn)) cur = null;
   if (!cur || cur.key !== m.key) {
     // A training check's functions are all different.
     if (m.event === "mob" && EDU_SETS.phone.length) cur = eduBuildPhoneQuiz(m);
@@ -8788,7 +8846,7 @@ function openEduQuiz(m, onDone) {
   }
   const f = cur.fn ? eduFnByKey(cur.fn) : null;
   const who = m.info.opponentName || m.info.eventName || "";
-  const head = `<div class="edu-head"><span>📘 ${m.train ? `Training check · ${m.trainIdx + 1} of ${EDU.trainFns}` : m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span class="edu-qn">Q${Math.min(cur.i + 1, cur.qs.length)}</span></div>`;
+  const head = `<div class="edu-head"><span>📘 ${m.train ? `Training check · ${m.trainIdx + 1} of ${eduTrainCount(m.event)}` : m.practice ? "Practice check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span><span class="edu-qn">Q${Math.min(cur.i + 1, cur.qs.length)}</span></div>`;
   // No total and no progress bar: how many questions there are would give
   // away how many arguments the function has.
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
@@ -8797,7 +8855,7 @@ function openEduQuiz(m, onDone) {
     <div class="edu-quiz">
       ${head}
       <div class="edu-prompt">${eduPrompt(f, q)}</div>
-      <div class="edu-options">${q.o.map((o, i) => `<button class="edu-opt${q.k === "arg" ? " edu-mono" : ""}" data-edu-opt="${i}">${escapeHtml(o)}</button>`).join("")}</div>
+      <div class="edu-options">${q.o.map((o, i) => `<button class="edu-opt${q.k === "arg" || q.k === "gw" ? " edu-mono" : ""}" data-edu-opt="${i}">${escapeHtml(o)}</button>`).join("")}</div>
       <div class="edu-feedback" id="eduFeedback"></div>
       <button class="primary-btn" id="eduNext" hidden>Next ▶</button>
     </div>`, { ownClose: true, onDismiss: () => openEduQuiz(m, onDone) });
@@ -8901,20 +8959,20 @@ function eduReview(m, cur, f, onDone) {
   const genLine = gi < 0 ? "" : `<div class="kv-row edu-line"><span>${qs[gi].set ? eduSetIcon(qs[gi].set) : "💡"} ${escapeHtml(qs[gi].t)}</span><span>${res.gen ? "✅" : `❌ <b>${escapeHtml(qs[gi].a)}</b>`}</span></div>`;
   const line = (q, i) => {
     const ok = picks[i] === q.a;
-    const label = q.k === "gen" ? "💡 General" : q.k === "ph" ? `📱 ${escapeHtml(q.t)}` : q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
+    const label = q.k === "gen" ? "💡 General" : q.k === "ph" ? `📱 ${escapeHtml(q.t)}` : q.k === "gw" ? escapeHtml(q.t) : q.k === "gp" ? "Do" : q.k === "ga" ? "Take" : q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
     return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}</span></div>`;
   };
   openModal(`
     <div class="edu-quiz">
-      <div class="edu-head"><span>${f ? `📘 ${escapeHtml(f.name)}` : "📱 Excel on a phone"}</span><span>${res.right} / ${res.total}</span></div>
+      <div class="edu-head"><span>${f ? `${f.grp ? "⚡" : "📘"} ${escapeHtml(f.name)}` : "📱 Excel on a phone"}</span><span>${res.right} / ${res.total}</span></div>
       ${f ? `<div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
-      <p class="edu-desc">${escapeHtml(f.desc)}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
+      <p class="edu-desc">${escapeHtml(f.desc)}${f.grp ? `. <span class="kv-dim">Takes: ${escapeHtml(f.takes)}</span>` : ""}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.</div>` : ""}
       ${genLine}
       ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
       ${m.practice || m.train ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
       ${m.practice || m.train || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set === "pick" ? "📱 Function picker" : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
-      <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < EDU.trainFns ? (f ? "Next function ▶" : "Next question ▶") : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
+      <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < eduTrainCount(m.event) ? (f ? (f.grp ? "Next group ▶" : "Next function ▶") : "Next question ▶") : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,
     // Closing it any way carries on to the match.

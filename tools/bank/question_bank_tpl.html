@@ -90,6 +90,8 @@ const TABS = [
     rows: BANK.lams.map(([n, src, a, d]) => ({ n, f: src.split(" + ")[0], cols: [], args: a, d })), head: ["LAMBDA", "From", "Mand.", "Opt.", "Arguments", "Description"] },
   { id: "gen", label: "💡 General knowledge", note: "One of these ends every Knowledge check (5% of performance, from Skill), mastered by answering it right once. Hand-written from Microsoft's Excel help, plus two questions per Windows keyboard shortcut. League = the first league it can be asked in. Tell me any that are wrong, unclear or too easy/hard.",
     rows: EDU_GENERAL.map(([id, sk, ti, tier, topic, q, a, w1, w2, w3]) => ({ n: q, f: topic, cols: [LEAGUE[tier], SKILL[sk]], d: a, src: [w1, w2, w3].join(" · ") })), head: ["Question", "Topic", "League", "Skill", "Answer", "Wrong answers"], gen: true },
+  { id: "pqg", label: "⚡ PQ groups", note: "How Power Query is asked: a check on a group asks what they do, what arguments they take, then 'Which one …?' for each function. A group is mastered when all are right in one go; groups are what Completion counts. The 17 'internal use only' functions are left out.",
+    rows: EDU_PQ_GROUPS.map(([n, does, takes, x, lv, ms]) => ({ n, f: x ? "Completionist" : "Esports", cols: [String(ms.length), takes], d: does, src: ms.map((m) => m[0]).join(", "), x: !!x })), head: ["Group", "Set", "Functions", "Takes", "Does", "Functions in it"], gen: true },
   // The invitationals' own sets: each one's general questions (Mobile: phone
   // questions and the function picker), joining the general pool once played.
   ...[["pq", "⚡ PQ knowledge"], ["vba", "💾 VBA knowledge"], ["robot", "🤖 Robot knowledge"], ["lam", "🧩 Lambda knowledge"], ["py", "🐍 Python knowledge"], ["phone", "📱 Phone"], ["pick", "📱 Picker"]].map(([id, label]) => ({
@@ -100,7 +102,7 @@ const TABS = [
     rows: EDU_PANDAS.map(([n, d, a]) => ({ n, f: n.startsWith("pd.") ? "pandas" : n.startsWith("df.") ? "DataFrame" : n.startsWith("np.") ? "numpy" : "Python in Excel", cols: [], args: a.split("|"), d })), head: ["Name", "Kind", "Mand.", "Opt.", "Arguments", "Description"] },
 ];
 const $ = (id) => document.getElementById(id);
-TABS.forEach((t) => { const x = new Set(BANK.extra[t.id] || []); t.rows.forEach((r) => (r.x = x.has(r.n))); });
+TABS.forEach((t) => { const x = new Set(BANK.extra[t.id] || []); t.rows.forEach((r) => (r.x = r.x || x.has(r.n))); });
 let cur = TABS[0];
 function setTab(t) {
   cur = t;
