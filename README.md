@@ -276,7 +276,7 @@ for rehab, which holds Health); the other 14h are all for skills, with 8h
 sleep's usual training boost (×2.33 once Rest is full), every support role at the best level your league allows and a coach on every skill at the
 best level you've unlocked. Work stops (unpaid leave; a pro's sponsor counts
 it as Pro Duties and keeps paying; a job search waits) and hired staff are
-paused, picked up again by auto-rehire after camp. It's offered when your
+paused (no hiring there), picked up again by auto-rehire after camp. It's offered when your
 season ends; if you can't pay yet, the top bar keeps the offer — its price
 falls each day.
 

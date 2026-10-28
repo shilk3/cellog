@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.9.0";
+const APP_VERSION = "5.9.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1057,7 +1057,7 @@ function coachWageMult() {
 // (today included) and rounded up to the dollar.
 function staffCost(key, level) {
   const wage = staffWage(key, level);
-  return Math.ceil((wage * daysLeftInWeek()) / 7);
+  return Math.ceil((wage * daysLeftInCalendarWeek()) / 7);
 }
 // The best level your best league so far allows (at least 1).
 function leagueStaffLevel(key) {
@@ -1076,6 +1076,8 @@ function staffUpgradeCost(key, level) {
   return Math.max(0, staffCost(key, level) - (now ? staffCost(key, now) : 0));
 }
 function hireStaff(key, level) {
+  // At camp, camp's own staff cover everything: no hiring until it's over.
+  if (inCamp()) return false;
   if (level <= hiredLevel(key) || level < 1 || level > upgradeLevel(key)) return false;
   const cost = staffUpgradeCost(key, level);
   if (state.cash < cost) return false;
@@ -1798,6 +1800,11 @@ function migrateSave(parsed) {
   a.exercise = clamp(a.exercise || 0, 0, BAL.gymMaxHours);
   a.work = clamp(a.work || 0, 0, workMaxHours(fresh.employment.status, fresh));
   eduGroupCarryOver(fresh);
+  // An injury from before injury.reduced was kept already had the hired
+  // Recovery Program taken off when it was rolled: record that, so it's
+  // never taken off twice.
+  const inj = fresh.injury, rec = fresh.staff && fresh.staff.hired && fresh.staff.hired.recovery;
+  if (inj && inj.active && inj.reduced == null) inj.reduced = rec ? UPGRADES.recovery.levels[rec - 1].injuryDaysReduce : 0;
   return fresh;
 }
 // ⚡ Power Query is asked in groups now: a group whose functions were all
@@ -2187,7 +2194,8 @@ function resolveDay() {
   const nutritionBefore = s.nutrition;
   const carbEarned = inCamp() ? 0 : carbHoursFrom(a.nutrition, nutritionBefore);
   s.nutrition = result.nutrition;
-  const nutritionH = a.nutrition || 0;
+  // At camp, camp's hours (not your plan's).
+  const nutritionH = (inCamp() ? campAllocation(a) : a).nutrition || 0;
   if (nutritionH >= BAL.skillDecayThresholdHours) {
     events.push({ type: result.nutrition - nutritionBefore > 0.5 ? "good" : "neutral", text: `🥗 Food (${nutritionH}h): Nutrition ${fmtSigned(result.nutrition - nutritionBefore)}` });
   } else {
@@ -3621,6 +3629,12 @@ function retiredBlockSplash() {
     how: [], next, notes: [], choice: evs && evs.options.length > 1 ? evs.options.slice() : null,
   };
 }
+// What retiring pays a day: your work rate — a pro's carries their pro
+// rate over (up to a day job's top), as it does when retiring.
+function retiredPayRate() {
+  const emp = state.employment;
+  return emp.status === "pro" ? Math.max(emp.workPay, Math.min(emp.proPay || 0, workPayCap())) : emp.workPay;
+}
 // Career: retire, or come back (each from the next year).
 function retirementSectionHtml() {
   if (!state.gameComplete) return "";
@@ -3643,7 +3657,7 @@ function openRetireInfo() {
     <p class="modal-sub">You stop playing ${TOP_LEAGUE_NAME} seasons — <b>but not the invitationals</b>. From Year ${state.year + 1}:</p>
     <ul class="howto-list">
       <li>🎟️ A year is <b>${RETIRED_BLOCKS} invitationals</b>, one every ${BAL.preseasonDays} days. Before each, you pick which (each at most once a year) — or none.</li>
-      <li>🏖️ No Work or Pro Duties: you're paid your <b>work rate</b> ($${fmt(Math.max(state.employment.workPay, Math.min(state.employment.proPay || 0, workPayCap())))}/day) every day. No sponsorship.</li>
+      <li>🏖️ No Work or Pro Duties: you're paid your <b>work rate</b> ($${fmt(retiredPayRate())}/day) every day. No sponsorship.</li>
       ${eduOn() ? `<li>📘 A <b>practice Knowledge check</b> each day (skip it if you like) — from Excel and every invitational you've played, to master the lot.</li>` : ""}
       <li>🏛️ Change your mind any year: return to the ${TOP_LEAGUE_NAME} from Career, from the next year.</li>
     </ul>
@@ -3762,7 +3776,7 @@ function isTrainingCamp(s = state) {
 // the best level your league allows and every coach you've unlocked. Training gets the
 // usual boost from its 8h of sleep (×2.33 with Rest full). An injury swaps
 // the Gym session for rehab, which holds Health. Work is on hold: unpaid leave (a pro's sponsor counts it as Pro Duties and keeps
-// paying); a job search waits. Staff you hire are paused, no wages.
+// paying); a job search waits. No hiring staff until it's over (camp has its own).
 const CAMP = {
   dayCost: 60,
   activityHours: 10,
@@ -3809,7 +3823,7 @@ function campFeaturePoints() {
     ["🏕️", `<b>All-inclusive training camp</b> to the Final: <b>${d} days</b> for <b>$${fmt(price)}</b>, paid up front ($${CAMP.dayCost} a day — it covers living costs while you're there).`],
     ["🗓️", `Camp life takes ${CAMP.activityHours}h a day — meals, sleep, downtime and a coached fitness session, all run for you (as if you'd planned 🌙 ${CAMP.allocation.sleep}h, 🎮 ${CAMP.allocation.relax}h, 🥗 ${CAMP.allocation.nutrition}h, 🏃 ${CAMP.allocation.exercise}h, no injuries). The other <b>${24 - CAMP.activityHours}h are all for skills</b>.`],
     ["⚡", `Every support role at the best level your league allows, a coach on every skill at the best level you've unlocked (unlock more in 🧑‍🏫 Staff any time), and the training boost of 8h sleep: <b>${campTrainingText()}</b> once Rest is full.`],
-    ["💼", `${work} Staff you hire are paused, no wages.`],
+    ["💼", `${work} No hiring staff while you're there — camp's own cover everything.`],
   ];
 }
 // Its buttons: go (if you can pay), or the off-season at home.
@@ -5293,7 +5307,7 @@ function showMatchModal(result, extraHtml = "", { onContinue = null, continueLab
 // (staffWeekEnded); otherwise each new week you choose again, usually
 // around that week's focus skills.
 function weekEndPhrase() {
-  const d = daysLeftInWeek();
+  const d = daysLeftInCalendarWeek();
   const inSeasonWeek = state.seasonPhase === "regular" || state.seasonPhase === "playoffs";
   const end = inSeasonWeek ? "after the next match" : "at the end of the week";
   return `${d} day${d === 1 ? "" : "s"} left — contracts end ${end}`;
@@ -5305,10 +5319,10 @@ function staffCardHtml(key, { focus = false, statNote = "" } = {}) {
   const hired = hiredLevel(key);
   const max = u.levels.length;
   const isCoach = key.startsWith("coach_");
-  const days = daysLeftInWeek();
+  const days = daysLeftInCalendarWeek();
   // Not hired: a chip per unlocked level. Hired: the level they're on,
   // plus a chip to move them up to any higher level you've unlocked.
-  const levelChips = Array.from({ length: owned - hired }, (_, i) => hired + i + 1)
+  const levelChips = inCamp() ? `<span class="staff-hired">🏕️ At camp — its staff cover this; hire again after camp</span>` : Array.from({ length: owned - hired }, (_, i) => hired + i + 1)
     .reverse()
     .map((lvl) => {
       const cost = staffUpgradeCost(key, lvl);
@@ -7352,7 +7366,7 @@ function openHowTo() {
       `<b>Preseason:</b> ${B.preseasonDays} days of training. <b>Regular season:</b> ${B.seasonRounds} rounds, one match a week, all scheduled in advance.`,
       `Top <b>${B.playoffSize}</b> of ${B.leagueSize} reach the knockout playoffs (${playoffFormatText()}).`,
       `Miss the playoffs: a ${B.trainingCampDays}-day <b>off-season</b>; knocked out: off-season for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
-      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at the best level your league allows and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused. Choose it when your season ends, or later from the top bar — the price drops each day. Either way, every skill slider goes back to 0h when the season ends, so the off-season starts with a fresh plan.`,
+      `<b>🏕️ Training camp:</b> spend the off-season at an all-inclusive camp instead of at home — <b>$${CAMP.dayCost} a day</b> for the days left, paid up front (it covers living costs). Camp life takes ${CAMP.activityHours}h a day and runs Sleep, Relax, Food and Gym for you (as if you'd planned an hour over each one's minimum; no injuries — if you're already injured, rehab replaces the Gym session and holds Health); the other ${24 - CAMP.activityHours}h are all for skills, with 8h sleep's usual training boost (${campTrainingText()} once Rest is full), every support role at the best level your league allows and a coach on every skill at the best level you've unlocked. Work stops: unpaid leave (pros keep their pay — it counts as Pro Duties); a job search waits; hired staff are paused, and there's no hiring until it's over. Choose it when your season ends, or later from the top bar — the price drops each day. Either way, every skill slider goes back to 0h when the season ends, so the off-season starts with a fresh plan.`,
       `${B.leagueCount} leagues — you start in League ${B.leagueCount}. <b>${B.relegationCount} go up</b> from each: the playoff champion plus the next ${B.promotionTablePlaces} highest in the table. Bottom ${B.relegationCount} go down.`,
       "Every rival plays real simulated matches — all tables are live. Tap a name to see their season.",
       `<b>Rating</b> (🏆) is a record of your results: it sets prize money and breaks table ties, but isn't part of a match. <b>Table position</b>: most wins first; players level are split by their games against each other, then by rating.`,
@@ -7759,7 +7773,7 @@ function endDayBlocker() {
 // End Week; saving, re-rendering and modals are left to the caller.
 function runDay() {
   // Staff contracts run to the end of the week (match day in season).
-  const weekEndsToday = daysLeftInWeek() === 1;
+  const weekEndsToday = daysLeftInCalendarWeek() === 1;
   const phaseBefore = state.seasonPhase;
   const tierBefore = state.leagueTier;
   const leaveBefore = onLeave();
@@ -7948,14 +7962,17 @@ function endDay() {
 // Days left in the current week, today included: in season that's up to and
 // including match day; otherwise the end of this 7-day block of the phase
 // (never past the phase's own end, nor past an invitational game's day).
-function daysLeftInWeek() {
+// Days to the end of the week (what weekly contracts and items go by).
+function daysLeftInCalendarWeek() {
   const week = BAL.roundIntervalDays;
   if (state.seasonPhase === "regular" || state.seasonPhase === "playoffs") return Math.max(1, week - state.phaseDay);
   const phaseLength = state.seasonPhase === "preseason" ? BAL.preseasonDays : state.offseasonDays;
-  let days = Math.min(week - (state.phaseDay % week), phaseLength - state.phaseDay);
+  return Math.max(1, Math.min(week - (state.phaseDay % week), phaseLength - state.phaseDay));
+}
+// …and how far End Week runs: also stops at an invitational's next game.
+function daysLeftInWeek() {
   const game = state.seasonPhase === "preseason" ? nextEventGame() : null;
-  if (game) days = Math.min(days, game.daysUntil);
-  return Math.max(1, days);
+  return Math.max(1, Math.min(daysLeftInCalendarWeek(), game ? game.daysUntil : Infinity));
 }
 
 function weekSnapshot() {
@@ -8158,7 +8175,6 @@ function wireInputs() {
 /* Init                                                                   */
 /* ---------------------------------------------------------------------- */
 function renderAll() {
-  applyRecoveryToInjury(); // a save from before mid-injury hiring counted
   renderTopbar();
   renderStats();
   renderPlanner();
@@ -8934,6 +8950,20 @@ function eduCareerHtml() {
       <p class="modal-sub">Mastered = every question right in one go. ${avail.length} is every esports-set function up to ${lg(state.peakLeagueTier)}; more join as you climb.</p>
     </div>`;
 }
+// The performance a check's worth is measured against: an invitational's
+// game plays on its own skill, as the match will.
+function eduBreakdownFor(m) {
+  if (!m.event || !EVENTS[m.event]) return performanceBreakdown();
+  const saved = state.activeSkills;
+  state.activeSkills = [EVENTS[m.event].skill.key];
+  exhibitionEvent = m.event;
+  try {
+    return performanceBreakdown();
+  } finally {
+    exhibitionEvent = null;
+    state.activeSkills = saved;
+  }
+}
 function eduReview(m, cur, f, onDone) {
   const qs = cur.qs, picks = cur.picks;
   // A practice check counts for mastery, never for a match.
@@ -8950,7 +8980,7 @@ function eduReview(m, cur, f, onDone) {
     t.fns = [...(t.fns || []), ...(cur.fn ? [cur.fn] : qs.filter((q) => q.k === "ph").map((q) => q.gid))];
   }
   saveState();
-  const b = performanceBreakdown();
+  const b = eduBreakdownFor(m);
   const neutral = eduNeutral(b.raw.skillComponent, b.raw.phys);
   const value = eduValue(res.acc, neutral);
   const edge = (value - neutral) * EDU.weight;
@@ -9047,7 +9077,7 @@ async function feedbackSend(report) {
   try {
     const res = await fetch(FEEDBACK_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(report), signal: ctrl && ctrl.signal });
     const data = await res.json().catch(() => ({}));
-    if (res.ok) return { result: "sent", number: data.number };
+    if (res.ok) return { result: "sent", number: data.number, key: data.key };
     if (res.status === 400) return { result: "rejected", error: data.error || "That report couldn't be sent." };
     return { result: "failed", error: data.error };
   } catch (e) {
@@ -9056,9 +9086,11 @@ async function feedbackSend(report) {
     if (timer) clearTimeout(timer);
   }
 }
-function feedbackRemember(report, number) {
+// A report's reference: lets the log spot a resend of one it already has.
+const feedbackRid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+function feedbackRemember(report, number, key) {
   const reports = feedbackLoad(FEEDBACK_KEYS.reports, []);
-  reports.unshift({ n: number || null, type: report.type, title: report.text.split("\n")[0].slice(0, 80), at: report.at, status: "open", note: "" });
+  reports.unshift({ n: number || null, key: key || null, type: report.type, title: report.text.split("\n")[0].slice(0, 80), at: report.at, status: "open", note: "" });
   feedbackStore(FEEDBACK_KEYS.reports, reports.slice(0, 50));
 }
 // Into the outbox — without the save if there isn't room for it.
@@ -9069,19 +9101,27 @@ function feedbackQueue(report) {
 let feedbackFlushing = false;
 async function flushFeedbackOutbox() {
   if (feedbackFlushing) return;
-  const box = feedbackLoad(FEEDBACK_KEYS.outbox, []);
+  let box = feedbackLoad(FEEDBACK_KEYS.outbox, []);
   if (!box.length || (navigator.onLine === false)) return;
   feedbackFlushing = true;
-  const left = [];
+  // Reports queued before references existed get one now, kept with them.
+  if (box.some((r) => !r.rid)) {
+    box = box.map((r) => (r.rid ? r : { ...r, rid: feedbackRid() }));
+    feedbackStore(FEEDBACK_KEYS.outbox, box);
+  }
+  const done = new Set();
   let sent = 0;
   for (const report of box) {
-    const r = left.length ? { result: "failed" } : await feedbackSend(report);
+    const r = await feedbackSend(report);
     if (r.result === "sent") {
-      feedbackRemember(report, r.number);
+      feedbackRemember(report, r.number, r.key);
       sent++;
-    } else if (r.result === "failed") left.push(report);
+    }
+    if (r.result === "failed") break; // still offline: the rest wait too
+    done.add(report.rid);
   }
-  feedbackStore(FEEDBACK_KEYS.outbox, left);
+  // Re-read it: a report queued while these were sending stays queued.
+  feedbackStore(FEEDBACK_KEYS.outbox, feedbackLoad(FEEDBACK_KEYS.outbox, []).filter((r) => !done.has(r.rid)));
   feedbackFlushing = false;
   if (sent) appendLog(`📬 ${sent === 1 ? "Your waiting report was" : `${sent} waiting reports were`} sent — thanks! Follow ${sent === 1 ? "it" : "them"} in ☰ → 🐞 Report a bug or suggestion.`, "event-good");
 }
@@ -9089,7 +9129,7 @@ async function flushFeedbackOutbox() {
 // if the log can't be reached).
 async function refreshFeedbackStatus() {
   const reports = feedbackLoad(FEEDBACK_KEYS.reports, []);
-  const ids = reports.filter((r) => r.n).map((r) => r.n);
+  const ids = reports.filter((r) => r.n).map((r) => (r.key ? `${r.n}:${r.key}` : r.n));
   if (!ids.length) return false;
   try {
     const res = await fetch(`${FEEDBACK_API}?ids=${ids.join(",")}`);
@@ -9098,7 +9138,8 @@ async function refreshFeedbackStatus() {
     const byN = Object.fromEntries(fresh.map((x) => [x.n, x]));
     reports.forEach((r) => {
       const f = byN[r.n];
-      if (f && f.status !== "unknown") Object.assign(r, { status: f.status, note: f.note || "" });
+      // (A note only comes back with the report's key: keep any had before.)
+      if (f && f.status !== "unknown") Object.assign(r, { status: f.status }, "note" in f ? { note: f.note || "" } : {});
     });
     feedbackStore(FEEDBACK_KEYS.reports, reports);
     return true;
@@ -9164,7 +9205,7 @@ function openFeedback(type = "bug") {
     feedbackStore(FEEDBACK_KEYS.email, mail);
     $("fbSend").disabled = true;
     status.textContent = "Sending…";
-    const report = { type, text, email: mail, website: $("fbWebsite").value, context: feedbackContext(), log: feedbackLog(), at: Date.now() };
+    const report = { type, text, email: mail, website: $("fbWebsite").value, context: feedbackContext(), log: feedbackLog(), at: Date.now(), rid: feedbackRid() };
     if ($("fbSave").checked) report.save = await encodeSaveCode();
     const r = navigator.onLine === false ? { result: "failed" } : await feedbackSend(report);
     if (r.result === "rejected") {
@@ -9173,7 +9214,7 @@ function openFeedback(type = "bug") {
       status.textContent = r.error;
       return;
     }
-    if (r.result === "sent") feedbackRemember(report, r.number);
+    if (r.result === "sent") feedbackRemember(report, r.number, r.key);
     else feedbackQueue(report);
     $("fbText").value = "";
     status.textContent = r.result === "sent" ? `✅ Sent — thank you! It's report #${r.number}; follow it below.` : "📤 Saved on this device — it'll send by itself next time you're online.";
