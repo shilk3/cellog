@@ -221,8 +221,9 @@ it rises and falls with results (on rating-vs-rating Elo maths, a 300 gap =
 performance comes from your stats — all 7 skills averaged (55%), Health
 (25%), Calm (15%) and Rest (5%); a rival's from their 7 skills, with Health,
 Calm and Rest at 80. Rivals' skills are anchored to their league: a
-mid-table rival's ⭐ skills sit 10 under the league cap, ±0.06 per rating
-point from the league's middle. Whoever averages higher in the week's focus
+mid-table rival's ⭐ skills sit 10 under the league cap, ±0.04 per rating
+point from the league's middle (so even a league's best sit a few points
+under its cap). Whoever averages higher in the week's focus
 skills gets 10 match-day rating per point ahead (🎯 Focus-skill edge) —
 shown on the result screen and the next-match preview. Luck is random for
 both sides every match, drawn so the odds follow an Elo-style curve on the

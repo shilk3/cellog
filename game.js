@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.10.0";
+const APP_VERSION = "5.10.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -145,7 +145,7 @@ const BAL = {
   rivalXpByTier: { 1: 65, 2: 45, 3: 25, 4: 10, 5: 0 },
   rivalXpSpread: 0.03,
   rivalBelowCap: 10, // a mid-league rival's ⭐ skills this far under the league cap
-  rivalSkillSpread: 0.06, // + this per rating point above the league's mid rating
+  rivalSkillSpread: 0.04, // + this per rating point above the league's mid rating (so a league's best sit a few under its cap)
   // How many focus skills an in-season week has: chance of 1, 2 or 3.
   focusSkillOdds: { 1: 0.3, 2: 0.5, 3: 0.2 },
   // Rating (Elo) scale: the rating gap that makes one side a 10-to-1
