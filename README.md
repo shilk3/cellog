@@ -347,6 +347,12 @@ This is a installable web app (PWA) — no App Store or Xcode needed.
    tap **Copy save code** (or Share / Save to Files), then paste it into
    **Import** on the other side. The code is your whole career, gzipped and
    base64'd (~20 KB).
+5. The Home Screen app uses a solid black status bar (`black`, not
+   `black-translucent`), so iOS doesn't draw its dark fade over the top of
+   the page by the Dynamic Island. iOS only reads that setting when the app
+   is added, so an icon added before v5.11.2 keeps the fade until it's
+   re-added: export the save first (removing the icon deletes its data),
+   add it again from Safari, import the save, then delete the old icon.
 
 ### Running it locally
 
