@@ -94,7 +94,7 @@ const TABS = [
     rows: EDU_PQ_GROUPS.map(([n, does, takes, x, lv, ms]) => ({ n, f: x ? "Completionist" : "Esports", cols: [String(ms.length), takes], d: does, src: ms.map((m) => m[0]).join(", "), x: !!x })), head: ["Group", "Set", "Functions", "Takes", "Does", "Functions in it"], gen: true },
   // The invitationals' own sets: each one's general questions (Mobile: phone
   // questions and the function picker), joining the general pool once played.
-  ...[["pq", "⚡ PQ knowledge"], ["vba", "💾 VBA knowledge"], ["robot", "🤖 Robot knowledge"], ["lam", "🧩 Lambda knowledge"], ["py", "🐍 Python knowledge"], ["phone", "📱 Phone"], ["pick", "📱 Picker"]].map(([id, label]) => ({
+  ...[["pq", "⚡ PQ knowledge"], ["vba", "💾 VBA knowledge"], ["robot", "🤖 Robot knowledge"], ["lam", "🧩 Lambda knowledge"], ["py", "🐍 Python knowledge"], ["phone", "📱 Excel on mobile"], ["pick", "📱 Picker"]].map(([id, label]) => ({
     id: "set_" + id, label,
     note: id === "phone" ? "Mobile Invitational: three of these per check, in place of a function. Join the general questions once you've played it (marked 📱)." : id === "pick" ? "Mobile Invitational: one per check, in place of the general question. Join the general questions once you've played it (marked 📱)." : "This invitational's general question comes from here. Once you've played it, they join the general questions (marked with its icon). League matters only then.",
     rows: (EDU_INV[id] || []).map(([gid, sk, ti, tier, topic, q, a, w1, w2, w3]) => ({ n: q, f: topic, cols: [LEAGUE[tier], SKILL[sk]], d: a, src: [w1, w2, w3].join(" · ") })), head: ["Question", "Set", "League", "Skill", "Answer", "Wrong answers"], gen: true })),

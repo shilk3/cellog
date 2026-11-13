@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.12.0";
+const APP_VERSION = "5.12.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7030,7 +7030,7 @@ function eventRevealFeatures(id, evs) {
   const E = EVENTS[id];
   const must = evs && evs.must;
   const sliders = `${inTop() ? "Everything else is set aside for the preseason (your skills are frozen, not rusting). Two sliders instead:" : "Two sliders join your seven skills:"} ${E.skill.icon} <b>${E.skill.name}</b> (it never rusts) and 📚 the <b>course</b> — ${E.course.map((c) => `${c.icon} ${c.name}`).join(" → ")}, each a bonus in the series.`;
-  const quiz = !eduOn() ? [] : id === "mob" ? [["📘", `Knowledge mode: before each game, three questions on Excel on a phone, then which function-list category a function is under. Once you've played it, both sets join your general questions (marked 📱).`]] : EDU_BANK_INFO[id] ? [["📘", `Knowledge mode: before each game, a Knowledge check on ${EDU_BANK_INFO[id].what}, its general question from the invitational's own set. Once you've played it, they turn up in your normal checks now and then too, and its general questions join yours (marked ${EVENTS[id].icon}).`]] : [];
+  const quiz = !eduOn() ? [] : id === "mob" ? [["📘", `Knowledge mode: before each game, three questions on Excel on mobile, then which function-list category a function is under. Once you've played it, both sets join your general questions (marked 📱).`]] : EDU_BANK_INFO[id] ? [["📘", `Knowledge mode: before each game, a Knowledge check on ${EDU_BANK_INFO[id].what}, its general question from the invitational's own set. Once you've played it, they turn up in your normal checks now and then too, and its general questions join yours (marked ${EVENTS[id].icon}).`]] : [];
   if (id === "py") return [
     ["🆚", `<b>Best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b>, the one player up here who wins with Python in Excel — a game on each of the last ${PY_GAMES} preseason days, all ${PY_GAMES} always played.`],
     ["🎚️", sliders],
@@ -7386,7 +7386,7 @@ function openHowTo() {
     `He plays to your league: 📱 Mobile Excel ${[4, 3, 2, 1].map((t) => `${MOB_BY_TIER[t].mobile} in League ${t}`).join(", ")}${inTop() ? `, ${MOB_BY_TIER[0].mobile} at the top` : ""}. Mobile Excel stands in for the focus skills in the series; Health, Calm, Rest, luck and finish time count as usual.`,
     `Two sliders${inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: 📱 Mobile Excel (never rusts) and 📚 the course, its parts in order: ${MOB_COURSE.map((t, i) => `${t.icon} ${t.name} (${evCourseHours("mob", i)}h — ${t.desc})`).join(", ")}.`,
     `No rating or record at stake. Win the series for a prize — ${[4, 3, 2, 1].map((t) => `$${fmt(MOB_BY_TIER[t].prize)} in League ${t}`).join(", ")}${inTop() ? `, $${fmt(MOB_BY_TIER[0].prize)} at the top` : ""} — and a 🏆 trophy. A 3–0 is a 🧹 clean sweep: a trophy of its own.`,
-    ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is ${EDU.phoneQs} questions on Excel on a phone (in place of a function), then which function-list category a function is under (in place of the general question). Once you've played it, both sets join your general questions (marked 📱).`] : []),
+    ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is ${EDU.phoneQs} questions on Excel on mobile (in place of a function), then which function-list category a function is under (in place of the general question). Once you've played it, both sets join your general questions (marked 📱).`] : []),
   ]));
 
   // Each Triangle Series, once revealed.
@@ -8316,7 +8316,7 @@ const eduRecKey = (f) => (f.bank ? `${f.bank}:${f.name}` : f.name);
 const EDU_GEN = (typeof EDU_GENERAL === "undefined" ? [] : EDU_GENERAL).map(([id, skill, titan, tier, topic, text, a, ...wrong]) => ({ id, skill, titan, tier, topic, text, a, wrong }));
 // The invitationals' own sets (edu-inv.js): an invitational's general
 // question comes from its set — Mobile's from the function picker, with
-// three "Excel on a phone" questions in place of a function. Once you've
+// three "Excel on mobile" questions in place of a function. Once you've
 // played it, its sets join the general questions, marked with its icon.
 const EDU_SET_INFO = {
   pq: { event: "pq", name: "Power Query knowledge" },
@@ -8324,7 +8324,7 @@ const EDU_SET_INFO = {
   robot: { event: "robot", name: "OA Robot knowledge" },
   lam: { event: "lam", name: "Lambda knowledge" },
   py: { event: "py", name: "Python knowledge" },
-  phone: { event: "mob", name: "Excel on a phone" },
+  phone: { event: "mob", name: "Excel on mobile" },
   pick: { event: "mob", name: "Function picker" },
 };
 const EDU_RAW_SETS = typeof EDU_INV === "undefined" ? {} : EDU_INV;
@@ -8391,7 +8391,7 @@ function eduAddGeneral(quiz, m) {
   if (g) quiz.qs.push({ k: "gen", gid: g.id, set: g.set, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
   return quiz;
 }
-// 📱 The Mobile Invitational's check: three questions on Excel on a phone
+// 📱 The Mobile Invitational's check: three questions on Excel on mobile
 // (three per function slot of a training check too — nine in all), then
 // the picker question. Once all are mastered, the longest-ago come back.
 function eduBuildPhoneQuiz(m) {
@@ -8866,8 +8866,8 @@ function eduMatchGen() {
 
 /* ---- The quiz screen ---- */
 function eduPrompt(f, q) {
-  if (q.k === "gen") return `${q.set ? eduSetIcon(q.set) : "💡"} <b>${q.set === "pick" ? "Function picker" : "General knowledge"}</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
-  if (q.k === "ph") return `📱 <b>Excel on a phone</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
+  if (q.k === "gen") return `${q.set ? eduSetIcon(q.set) : "💡"} <b>${q.set ? EDU_SET_INFO[q.set].name : "General knowledge"}</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
+  if (q.k === "ph") return `📱 <b>Excel on mobile</b><div class="edu-gen">${escapeHtml(q.t)}</div>`;
   if (q.k === "gp" || q.k === "ga") return `⚡ ${q.k === "gp" ? "What do these do?" : "What arguments do these take?"}<div class="edu-members">${f.members.map((x) => `<code>${escapeHtml(x.name)}</code>`).join(" ")}</div>`;
   if (q.k === "gw") return `⚡ ${escapeHtml(q.t)}`;
   if (q.k === "cat") return `📱 In the function picker, which category is <code>${escapeHtml(f.name)}</code> in?`;
@@ -9078,14 +9078,14 @@ function eduReview(m, cur, f, onDone) {
   };
   openModal(`
     <div class="edu-quiz">
-      <div class="edu-head"><span>${f ? `${f.grp ? "⚡" : "📘"} ${escapeHtml(f.name)}` : "📱 Excel on a phone"}</span><span>${res.right} / ${res.total}</span></div>
+      <div class="edu-head"><span>${f ? `${f.grp ? "⚡" : "📘"} ${escapeHtml(f.name)}` : "📱 Excel on mobile"}</span><span>${res.right} / ${res.total}</span></div>
       ${f ? `<div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
       <p class="edu-desc">${escapeHtml(f.desc)}${f.grp ? `. <span class="kv-dim">Takes: ${escapeHtml(f.takes)}</span>` : ""}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.</div>` : ""}
       ${genLine}
       ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
       ${!counts ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
-      ${!counts || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set === "pick" ? "📱 Function picker" : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
+      ${!counts || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set ? `${eduSetIcon(qs[gi].set)} ${EDU_SET_INFO[qs[gi].set].name}` : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
       <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < eduTrainCount(m.event) ? (f ? (f.grp ? "Next group ▶" : "Next function ▶") : "Next question ▶") : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,

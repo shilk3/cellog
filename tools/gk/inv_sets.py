@@ -1,7 +1,7 @@
 # The invitationals' own question sets (for review before they go in the
 # game). Each invitational's Knowledge check asks from its own general set;
 # after its first appearance that set joins the main general pool (marked,
-# and tracked separately). Mobile asks three "Excel on a phone" questions plus
+# and tracked separately). Mobile asks three "Excel on mobile" questions plus
 # one function-picker question (which category is a function under?).
 # Each question: (league tier 5 easiest … 0 the top, skill, question, answer,
 # [three wrong answers], source). Titan skill and the default skill are set
@@ -13,7 +13,7 @@ INFO = {
     "robot": {"name": "OA Robot", "skill": "games", "titan": "speed"},
     "lam": {"name": "Lambda", "skill": "math", "titan": "lambda"},
     "py": {"name": "Python", "skill": "data", "titan": "speed"},
-    "phone": {"name": "Excel on a phone", "skill": "map", "titan": "speed"},
+    "phone": {"name": "Excel on mobile", "skill": "map", "titan": "speed"},
 }
 _cur = None
 def start(key, src):
@@ -304,7 +304,7 @@ q(0, "How does a Python comment start?", "#", ["//", "'", "--"], "text")
 q(0, "What does len(df) give?", "The number of rows", ["The number of columns", "The number of cells", "The longest text"])
 q(0, "What does df[\"Name\"].str.upper() do?", "Puts every Name in capitals", ["Sorts the names", "Removes blank names", "Finds the longest name"], "text")
 
-# ============================ Excel on a phone =============================
+# ============================ Excel on mobile =============================
 # Microsoft's Excel for iPhone and Android touch guides, the mobile ribbon,
 # freeze panes, Data from Picture, Cards View, AutoSum and licensing help
 # pages. Rows marked "Good practice" are advice rather than a documented step.
@@ -377,7 +377,7 @@ q(3, "After picking AutoSum → Sum on Android, what confirms the formula?", "Ta
 W = "Microsoft: What's new in Excel on mobile platforms"
 q(3, "Which mobile feature finds a command when you describe what you want?", "Tell Me", ["Ask Excel", "Smart Lookup", "Quick Steps"], "games", src=W)
 q(2, "On mobile, Formula AutoComplete suggests functions that match…", "Any part of the name, not just the start", ["Only the first letter", "Only functions you've used", "Only the most popular 20"], "math", src=W)
-q(2, "Can Excel on a phone open OpenDocument (.ods) spreadsheets?", "Yes, to view them", ["No, never", "Only after converting on a PC", "Only on Android tablets"], "games", src=W)
+q(2, "Can Excel on mobile open OpenDocument (.ods) spreadsheets?", "Yes, to view them", ["No, never", "Only after converting on a PC", "Only on Android tablets"], "games", src=W)
 q(2, "What's the Draw tab for on mobile?", "Writing and drawing on the sheet with a finger or pen", ["Drawing borders only", "Making charts by hand", "Sketching shapes into formulas"], "games", src=W)
 q(3, "Can you add comments in the phone app?", "Yes — view, add and delete them", ["Only read them", "Only on tablets", "No, comments are desktop-only"], "text", src=W)
 q(3, "Where does AutoSave keep your changes on mobile?", "In the cloud copy (OneDrive or SharePoint)", ["In a hidden sheet", "In the phone's photos", "In an email draft"], "games", src=W)

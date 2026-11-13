@@ -1,6 +1,6 @@
 # Builds edu-inv.js, the invitationals' own question sets for 📘 Knowledge
 # mode, from inv_sets.py: a general set per invitational, and Mobile's
-# "Excel on a phone" and function-picker sets. Rows as in edu-general.js:
+# "Excel on mobile" and function-picker sets. Rows as in edu-general.js:
 # [id, skill, Titan skill, league tier, topic, question, answer, wrong1–3].
 # Ids hash the set and question, so editing a question starts it afresh.
 # Usage (from the repo root): python3 tools/gk/build_inv.py edu-inv.js

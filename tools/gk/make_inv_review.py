@@ -60,7 +60,7 @@ g = wb.active
 g.title = "How to review"
 head = ["Question", "League", "Skill", "Answer", "Wrong 1", "Wrong 2", "Wrong 3", "Source", "Keep?", "Change league to", "Comments (or a better answer)"]
 summary = []
-TABS = {"pq": "Power Query", "vba": "VBA", "robot": "OA Robot", "lam": "Lambda", "py": "Python", "phone": "Excel on a phone"}
+TABS = {"pq": "Power Query", "vba": "VBA", "robot": "OA Robot", "lam": "Lambda", "py": "Python", "phone": "Excel on mobile"}
 for key, title in TABS.items():
     rows = [[qq, LEAGUE[t], SKILL[sk], a, *w, src] for t, sk, qq, a, w, src in SETS[key]]
     ws, n = sheet(wb, title, head, rows, [46, 10, 15, 34, 26, 26, 26, 24, 9, 16, 40], [9, 10, 11])
@@ -81,7 +81,7 @@ put(1, 1, "CELLOG invitational question sets — review", bold=True, size=14)
 lines = [
     "Each invitational's Knowledge check will ask its last (general) question from its own set below, instead of the main pool.",
     "After an invitational's first appearance, its set joins the main general pool (marked with its icon, tracked separately in Career).",
-    "Mobile: three 'Excel on a phone' questions per check in place of functions, then one Function picker question in place of the general one.",
+    "Mobile: three 'Excel on mobile' questions per check in place of functions, then one Function picker question in place of the general one.",
     "Only fill in the yellow columns.",
     "Keep?  —  leave blank (or Yes) to keep it; No to drop it.",
     "Change league to  —  only if it's in the wrong league (League 5 = easiest; Titan = hardest). It matters once a set joins the main pool.",
