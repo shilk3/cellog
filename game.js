@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.9.1";
+const APP_VERSION = "5.10.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1653,7 +1653,7 @@ function freshState() {
     // 📘 Knowledge mode: on/off and its set ("esports" / "completionist"),
     // each function's record (seen, mastered), the Knowledge check in
     // progress and the last one finished (for its match). On for new games.
-    edu: { on: true, set: "esports", fns: {}, gen: {}, current: null, quiz: null, asked: 0, correct: 0, genAsked: 0, genCorrect: 0 },
+    edu: { on: true, set: "esports", share: 0.2, fns: {}, gen: {}, current: null, quiz: null, asked: 0, correct: 0, genAsked: 0, genCorrect: 0 },
     staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
@@ -2458,11 +2458,12 @@ function performanceBreakdown(keys = state.activeSkills) {
   };
   // 📘 Education mode: this match's quiz (a guess until it's taken).
   const quizAcc = W.quiz ? eduMatchAcc() : null;
-  const quiz = W.quiz ? eduValue(quizAcc, eduNeutral(skillComponent, s.phys)) : null;
+  const neutral = W.quiz ? eduNeutral(skillComponent, s.phys, Math.min(100, s.composure), s.rest) : null;
+  const quiz = W.quiz ? eduValue(quizAcc, neutral) : null;
   if (W.quiz) weighted.quiz = quiz * W.quiz;
   // …and its general question (right, wrong, or not taken: a guess).
   const genRight = W.gen ? eduMatchGen() : null;
-  const gen = W.gen ? eduGenValue(genRight, skillComponent) : null;
+  const gen = W.gen ? eduGenValue(genRight, neutral) : null;
   if (W.gen) weighted.gen = gen * W.gen;
   // Raw inputs, snapshotted for the match result table.
   const raw = {
@@ -2544,8 +2545,9 @@ function rivalPerformance(r) {
   const condition = ev ? rivalEventProfile(r).condition : BAL.rivalCondition;
   const W = perfWeights();
   // 📘 Education mode: their quiz, at their league's rate of right answers.
-  const quiz = W.quiz ? W.quiz * eduValue(eduRivalAcc(r), eduNeutral(avg, condition)) : 0;
-  const gen = W.gen ? W.gen * eduGenExpected(eduRivalAcc(r), avg) : 0;
+  const neutral = eduNeutral(avg, condition);
+  const quiz = W.quiz ? W.quiz * eduValue(eduRivalAcc(r), neutral) : 0;
+  const gen = W.gen ? W.gen * eduGenExpected(eduRivalAcc(r), neutral) : 0;
   return clamp(W.skill * avg + (W.phys + W.composure + W.rest) * condition + quiz + gen + movesPerf(rivalTopMoves(r)), 0, 100);
 }
 // The week's focus keys for a rival-vs-rival match: the top tier's three
@@ -5719,14 +5721,14 @@ function openNameModal(isFirstTime) {
       <button class="primary-btn" id="nameSaveBtn">Save</button>
     </div>`;
   openModal(html);
+  eduModeChoiceWire();
   const input = $("playerNameInput");
   input.focus();
   const save = () => {
     const val = input.value.trim().slice(0, 20);
     if (!val) return;
     state.playerName = val;
-    const mode = document.querySelector('input[name="eduMode"]:checked');
-    if (mode) eduSetMode(mode.value);
+    eduModeChoiceSave();
     saveState();
     closeModal();
     if (!state.specialisations) openSpecialisations({ required: true, onDone: () => !state.tutorialSeen && openTutorial(0) });
@@ -7374,11 +7376,11 @@ function openHowTo() {
     ])}`);
 
   sec("edu", "📘", "Knowledge mode", ul([
-    `On for new games, with three settings — change it any time in ☰ → 🎮 Games. It's <b>${eduModeLabel()}</b> for this game.`,
-    `<b>📘 Esports</b> (the default) asks about the ${EDU_CORE.length} functions that matter in Excel esports. <b>📚 Completionist</b> adds Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. <b>Off</b> skips the questions.`,
+    `On for new games — change it any time in ☰ → 🎮 Games. It's <b>${eduModeLabel()}</b> for this game.`,
+    `It asks about the ${EDU_CORE.length} functions that matter in Excel esports. Switch on <b>📚 Completionist</b> to add Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. Switch the questions off for pure management.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
-    `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's worth <b>${Math.round(EDU.genWeight * 100)}% of match performance</b>, taken from Skill, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
-    `Your share right is <b>${Math.round(EDU.weight * 100)}% of match performance</b> — taken ${Math.round(EDU.fromSkill * 100)}% from Skill and ${Math.round(EDU.fromPhys * 100)}% from Health. Guessing (1 in 4 right) scores exactly what those would have, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues.`,
+    `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
+    `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Guessing (1 in 4 right) scores exactly what it replaces, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues. At 0% it's practice only: questions are asked and mastered, but don't count in matches.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
     "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
@@ -8216,14 +8218,13 @@ const EDU = {
   trainGroups: 2, // …or Power Query groups (each is several questions)
   trainSkill: 5, // its most to the invitational's skill (all right)…
   trainCourse: 4, // …and hours to its course
-  genWeight: 0.05, // the general question's share of performance (from Skill)
+  defaultShare: 0.2, // Knowledge's share of match performance, to start with…
+  maxShare: 0.8, // …and at most (the Games slider)
+  quizPart: 0.75, // of which the function questions (the rest: the general one)
   genGoalWeight: 3, // completion weight of "Knowledge mastered"
   setGoalWeight: 1, // …and of each invitational's own question set
   phoneQs: 3, // 📱 Mobile: phone questions per check (in place of a function)
   sprinkle: 0.25, // share of normal checks drawn from a played invitational's bank
-  weight: 0.15,
-  fromSkill: 0.1,
-  fromPhys: 0.05,
   guess: 0.25, // four options a question
   masteryWeight: 7, // completion weight of "Formulas mastered"
   pandasWeight: 2, // …and of the Python Invitational's set
@@ -8384,11 +8385,7 @@ function eduCompletionist(s) {
   return eduOn(s) && s.edu.set === "completionist";
 }
 function eduModeLabel() {
-  return !eduOn() ? "off" : eduCompletionist() ? "📚 Completionist" : "Esports";
-}
-function eduSetMode(mode) {
-  state.edu.on = mode !== "off";
-  if (mode !== "off") state.edu.set = mode;
+  return !eduOn() ? "off" : `${eduCompletionist() ? "📚 Completionist" : "Esports"} · ${Math.round(eduShare() * 100)}%`;
 }
 // Every function the setting asks about.
 function eduList() {
@@ -8776,8 +8773,11 @@ function eduValue(acc, neutral) {
   if (acc == null) return neutral;
   return acc >= EDU.guess ? neutral + (100 - neutral) * ((acc - EDU.guess) / (1 - EDU.guess)) : neutral * (acc / EDU.guess);
 }
-function eduNeutral(skill, phys) {
-  return (EDU.fromSkill * skill + EDU.fromPhys * phys) / EDU.weight;
+// What the Knowledge share replaced is worth: performance on the other
+// four alone (Calm and Rest default to Health, as for rivals).
+function eduNeutral(skill, phys, composure = phys, rest = phys) {
+  const W = PERF_WEIGHTS;
+  return (W.skill * skill + W.phys * phys + W.composure * composure + W.rest * rest) / (W.skill + W.phys + W.composure + W.rest);
 }
 // This match's quiz, if you've taken it (otherwise it counts as a guess).
 function eduMatchAcc() {
@@ -8793,14 +8793,25 @@ function eduRivalAcc(r) {
   const base = EDU_RIVAL_ACC[tier] != null ? EDU_RIVAL_ACC[tier] : EDU_RIVAL_ACC[5];
   return clamp(base + (r.rating - leagueRatingMid(r.top ? TOP_TIER : r.league)) * 0.0003, 0.2, 0.95);
 }
-// Performance weights in play: Knowledge mode moves 15% to the check's
-// function questions and 5% more (from Skill) to its general question.
+// 📘 Knowledge's share of match performance (0–80%, the Games slider; 20%
+// to start): 3/4 the function questions, 1/4 the general one, taken from
+// Skill, Health, Calm and Rest in proportion. 0% = practice only — asked
+// and mastered, no effect on matches.
+function eduShare(s) {
+  s = s || liveState();
+  const v = s && s.edu ? s.edu.share : null;
+  return v == null ? EDU.defaultShare : clamp(v, 0, EDU.maxShare);
+}
+// Performance weights in play.
 function perfWeights() {
-  const r2 = (x) => Math.round(x * 100) / 100;
-  return eduOn() ? { skill: r2(PERF_WEIGHTS.skill - EDU.fromSkill - EDU.genWeight), phys: r2(PERF_WEIGHTS.phys - EDU.fromPhys), composure: PERF_WEIGHTS.composure, rest: PERF_WEIGHTS.rest, quiz: EDU.weight, gen: EDU.genWeight } : PERF_WEIGHTS;
+  const T = eduOn() ? eduShare() : 0;
+  if (!T) return PERF_WEIGHTS;
+  const r3 = (x) => Math.round(x * 1000) / 1000;
+  const W = Object.fromEntries(Object.entries(PERF_WEIGHTS).map(([k, w]) => [k, r3(w * (1 - T))]));
+  return { ...W, quiz: r3(T * EDU.quizPart), gen: r3(T * (1 - EDU.quizPart)) };
 }
 // The general question: right is worth 100; wrong is set so that guessing
-// (1 in 4) is worth exactly the Skill it replaces — `neutral`.
+// (1 in 4) is worth exactly what it replaces — `neutral`.
 function eduGenValue(right, neutral) {
   if (right == null) return neutral;
   return right ? 100 : Math.max(0, (neutral - 100 * EDU.guess) / (1 - EDU.guess));
@@ -8904,29 +8915,55 @@ function openEduQuiz(m, onDone) {
     openEduQuiz(m, onDone);
   });
 }
-// The three settings, as radio buttons (the name screen and Games).
+// The settings (the name screen and Games): questions on or off, the
+// 📚 Completionist set, and Knowledge's share of match performance.
 function eduModeChoiceHtml({ intro = false } = {}) {
-  const cur = !eduOn() ? "off" : eduCompletionist() ? "completionist" : "esports";
-  const opt = (v, label, blurb) => `<label class="edu-mode-opt"><input type="radio" name="eduMode" value="${v}" ${cur === v ? "checked" : ""} /><span><b>${label}</b><span class="kv-dim">${blurb}</span></span></label>`;
-  return `<div class="edu-mode-choice" role="radiogroup" aria-label="Knowledge mode">
+  const on = eduOn(), pct = Math.round(eduShare() * 100);
+  const sw = (id, checked, label) => `<label class="staff-auto edu-switch"><input type="checkbox" id="${id}" ${checked ? "checked" : ""} /><span class="staff-auto-switch"></span><span>${label}</span></label>`;
+  return `<div class="edu-mode-choice">
       ${intro ? `<div class="callout-label">📘 Knowledge mode — a quick Excel question set before every match</div>` : ""}
-      ${opt("esports", "📘 Esports", `the ${EDU_CORE.length} functions that matter in Excel esports (recommended)`)}
-      ${opt("completionist", "📚 Completionist", `all ${EDU_LIST.length} of Excel's functions — the esports set plus every rarer one`)}
-      ${opt("off", "Off", "no questions — pure management")}
-      ${intro ? `<p class="modal-sub">You can change this any time in ☰ → 🎮 Games.</p>` : ""}
+      ${sw("eduOnSw", on, "📘 Questions before every match")}
+      <div class="edu-mode-more" id="eduMore" ${on ? "" : "hidden"}>
+        ${sw("eduCompSw", eduCompletionist(), `📚 Completionist <span class="kv-dim">— all ${EDU_LIST.length} of Excel's functions, not just the ${EDU_CORE.length} for esports</span>`)}
+        <div class="edu-share">
+          <div class="kv-row"><span>⚖️ Share of match performance</span><b id="eduShareVal">${pct}%</b></div>
+          <input type="range" id="eduShare" min="0" max="${Math.round(EDU.maxShare * 100)}" step="5" value="${pct}" aria-label="Knowledge's share of match performance" />
+          <div class="kv-dim" id="eduShareNote">${eduShareNote(pct)}</div>
+        </div>
+      </div>
+      ${intro ? `<p class="modal-sub">You can change these any time in ☰ → 🎮 Games.</p>` : ""}
     </div>`;
+}
+function eduShareNote(pct) {
+  if (!pct) return "Practice only: questions are asked and mastered, but don't count in matches.";
+  return `Taken from Skill, Health, Calm and Rest. Guessing scores what it replaces; rivals answer too, better in higher leagues.${pct === Math.round(EDU.defaultShare * 100) ? " (The default.)" : ""}`;
+}
+function eduModeChoiceWire() {
+  const on = $("eduOnSw"), more = $("eduMore"), r = $("eduShare");
+  if (!on) return;
+  on.addEventListener("change", () => (more.hidden = !on.checked));
+  r.addEventListener("input", () => {
+    $("eduShareVal").textContent = `${r.value}%`;
+    $("eduShareNote").textContent = eduShareNote(Number(r.value));
+  });
+}
+function eduModeChoiceSave() {
+  if (!$("eduOnSw")) return;
+  state.edu.on = $("eduOnSw").checked;
+  state.edu.set = $("eduCompSw").checked ? "completionist" : "esports";
+  state.edu.share = clamp(Number($("eduShare").value) / 100, 0, EDU.maxShare);
 }
 // Changing the setting (per game, any time).
 function openEduModeInfo() {
   openModal(`
     ${stickyHeadHtml("📘 Knowledge mode")}
-    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does — then one 💡 <b>general question</b> (shortcuts, PivotTables, formats…). The function questions are <b>15% of match performance</b> (10% from Skill, 5% from Health) and the general one <b>5%</b> (from Skill) — guessing scores what those would have, so knowing them is an edge. Questions follow the week's focus skills and get harder as you climb.</p>
+    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does — then one 💡 <b>general question</b> (shortcuts, PivotTables, formats…). The slider sets how much they count in the match: 3/4 of it the function questions, 1/4 the general one. Guessing scores what they replace, so knowing them is an edge. Questions follow the week's focus skills and get harder as you climb.</p>
     ${eduModeChoiceHtml()}
     <p class="modal-sub">What you've mastered is kept whatever you switch to. Completionist extras don't count towards Completion — mastering everything earns a 📚 trophy instead.</p>
     <button class="primary-btn" id="eduSwitch">Save</button>`, { ownClose: true });
+  eduModeChoiceWire();
   $("eduSwitch").addEventListener("click", () => {
-    const mode = document.querySelector('input[name="eduMode"]:checked');
-    if (mode) eduSetMode(mode.value);
+    eduModeChoiceSave();
     saveState();
     closeModal();
     renderAll();
@@ -8981,11 +9018,14 @@ function eduReview(m, cur, f, onDone) {
   }
   saveState();
   const b = eduBreakdownFor(m);
-  const neutral = eduNeutral(b.raw.skillComponent, b.raw.phys);
+  const W = b.weights;
+  const neutral = eduNeutral(b.raw.skillComponent, b.raw.phys, b.raw.composure, b.raw.rest);
   const value = eduValue(res.acc, neutral);
-  const edge = (value - neutral) * EDU.weight;
+  const edge = (value - neutral) * (W.quiz || 0);
   const gi = qs.findIndex((q) => q.k === "gen");
-  const genEdge = res.gen == null ? 0 : (eduGenValue(res.gen, b.raw.skillComponent) - b.raw.skillComponent) * EDU.genWeight;
+  const genEdge = res.gen == null ? 0 : (eduGenValue(res.gen, neutral) - neutral) * (W.gen || 0);
+  // At a 0% share the check counts for nothing in the match: no lines for it.
+  const counts = !m.practice && !m.train && W.quiz;
   const genLine = gi < 0 ? "" : `<div class="kv-row edu-line"><span>${qs[gi].set ? eduSetIcon(qs[gi].set) : "💡"} ${escapeHtml(qs[gi].t)}</span><span>${res.gen ? "✅" : `❌ <b>${escapeHtml(qs[gi].a)}</b>`}</span></div>`;
   const line = (q, i) => {
     const ok = picks[i] === q.a;
@@ -9000,8 +9040,8 @@ function eduReview(m, cur, f, onDone) {
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.</div>` : ""}
       ${genLine}
       ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
-      ${m.practice || m.train ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
-      ${m.practice || m.train || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set === "pick" ? "📱 Function picker" : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
+      ${!counts ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
+      ${!counts || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set === "pick" ? "📱 Function picker" : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
       <button class="primary-btn" id="eduPlay">${m.train ? (m.trainIdx + 1 < eduTrainCount(m.event) ? (f ? (f.grp ? "Next group ▶" : "Next function ▶") : "Next question ▶") : "See what it's worth ▶") : !m.practice && m.info.daysUntil <= 1 ? "Play the match ▶" : "Carry on ▶"}</button>
     </div>`, {
     ownClose: true,

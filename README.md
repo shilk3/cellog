@@ -9,15 +9,18 @@ also on GitHub Pages at [shilk3.github.io/cellog](https://shilk3.github.io/cello
 (the repository was renamed from `excel-run-sim`; the old Pages address no
 longer works). The cellog.website domain has been retired.
 
-**📘 Knowledge mode** (on for new games, with three settings chosen when
-you name a new player or later in ☰ → 🎮 Games: 📘 Esports, the default —
-the 283 functions that matter in Excel esports; 📚 Completionist — all 471,
-whose extras earn a trophy of their own rather than counting towards
-Completion; or Off): before every match a Knowledge check asks about one
+**📘 Knowledge mode** (on for new games; set when you name a new player or
+later in ☰ → 🎮 Games: a switch for the questions, a 📚 Completionist switch
+— all 471 functions instead of the 283 that matter in Excel esports, whose
+extras earn a trophy of their own rather than counting towards Completion —
+and a slider for its share of match performance): before every match a Knowledge check asks about one
 real Excel function — how many mandatory and optional arguments it has, each
-argument in order, then what it does (four choices each). The share right is
-15% of match performance, taken 10% from Skill and 5% from Health; guessing
-(1 in 4) scores exactly what those would have. Functions follow the week's
+argument in order, then what it does (four choices each). Its share of match
+performance is a slider from 0% to 80% (20% to start), taken from Skill,
+Health, Calm and Rest in proportion — three quarters for the function
+questions, one for the general question; guessing (1 in 4) scores exactly
+what it replaces, and 0% is practice only (asked and mastered, no effect on
+matches). Functions follow the week's
 focus skills and your league (SUM, XLOOKUP and FILTER in League 5, rarer
 ones higher up — weighted towards the lower leagues so they never run dry), with wrong answers that get closer to the right one as you climb. Every
 question right in one go masters a function: it isn't asked again until the
@@ -26,9 +29,9 @@ Excel's bar compatibility and add-in ones), each marked esports or extra,
 are in `edu-functions.js`, built from Microsoft's function reference by the
 scripts in `tools/edu/`. Every check ends with one 💡 general question
 (Windows keyboard shortcuts, PivotTables, tables, charts, formats,
-references, errors…), worth another 5% taken from Skill and mastered on its
-own — so with the mode on it's Skill 40%, Health 20%, Calm 15%, Rest 5%,
-functions 15%, general 5%. The 489 questions are in `edu-general.js`, built
+references, errors…), worth a quarter of that share and mastered on its
+own — so at 20% it's Skill 44%, Health 20%, Calm 12%, Rest 4%, functions
+15%, general 5%. The 489 questions are in `edu-general.js`, built
 by `tools/gk/`.
 
 **📤 Share my career** (Career & Season): draws a 1080×1350 card of the

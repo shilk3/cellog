@@ -968,10 +968,15 @@ details.match-more[open] { padding-bottom: 8px; }
 .share-btn { margin: 4px 0 8px; }
 .share-preview { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); margin: 4px 0 10px; }
 .share-save { display: block; text-align: center; text-decoration: none; margin-top: 8px; }
-.edu-mode-opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 14px; color: var(--text); }
-.edu-mode-opt input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); flex: none; }
-.edu-mode-opt > span { display: grid; gap: 2px; }
-.edu-mode-opt:has(input:checked) { border-color: var(--accent); }
+/* Knowledge settings: two switches (the Staff auto-rehire style) and the share slider. */
+.edu-switch { margin-top: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-weight: 600; font-size: 14px; align-items: flex-start; }
+.edu-switch .staff-auto-switch { margin-top: 1px; }
+.edu-switch .kv-dim { font-weight: 400; }
+.edu-mode-more { display: grid; gap: 6px; }
+.edu-mode-more[hidden] { display: none; }
+.edu-share { padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 6px; font-size: 14px; }
+.edu-share input[type="range"] { width: 100%; }
+.edu-share .kv-dim { font-size: 12px; }
 .feedback-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .feedback-privacy { margin-top: 10px; }
 .feedback-report { padding: 9px 0; border-top: 1px solid var(--border); }
