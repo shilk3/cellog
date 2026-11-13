@@ -47,7 +47,9 @@ html, body {
   padding: calc(8px + var(--safe-top)) 16px 8px;
   position: sticky;
   top: 0;
-  background: linear-gradient(180deg, var(--bg) 80%, transparent);
+  /* Solid, not faded: the page scrolling under it never shows through. */
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   z-index: 10;
 }
 .topbar-top { display: flex; justify-content: space-between; align-items: center; }
