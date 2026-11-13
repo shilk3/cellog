@@ -68,7 +68,7 @@ Relax, and Food. Everything is connected:
   (trainable) each round — 1 in 30% of weeks, 2 in 50%, 3 in 20% —
   revealed at the start of that round's week —
   every match that week tests exactly those skills. The other 4-6 sit
-  locked and slowly rust. Preseason and the off-season (at home or at
+  locked and slowly rust (about half a point a week). Preseason and the off-season (at home or at
   training camp) have no matches, so all 7 are open.
 - **Gym** raises Physical Health — but low Physical Health caps how much
   your skill training actually helps.

@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.10.1";
+const APP_VERSION = "5.10.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -32,6 +32,8 @@ const BAL = {
   idealSleep: 7, // also the Rest decay threshold: sleep below this drains Rest
   relaxComposureThreshold: 3, // Calm's decay threshold, in relaxation hours
   skillDecayThresholdHours: 1, // an active skill/Exercise below this hour count rusts
+  skillRustMax: 0.075, // rust a day: value × skillRustRate, at most this (about ½ a point a week)
+  skillRustRate: 0.0015,
   skillGainBase: 0.24,
   exerciseGainBase: 0.6,
   nutritionGainBase: 5, // per hour allocated, before diminishing returns near the cap
@@ -2012,7 +2014,7 @@ function computeDayResult(allocation, stats, injuryActive, burnoutActive) {
     } else {
       // Rust never takes a skill below its XP (one already at or under its
       // XP doesn't rust at all).
-      const rust = Math.min(0.15, s.skills[key] * 0.003);
+      const rust = Math.min(BAL.skillRustMax, s.skills[key] * BAL.skillRustRate);
       const floor = Math.min(s.skills[key], (s.xp && s.xp[key]) || 0);
       skills[key] = Math.max(0, floor, s.skills[key] - rust);
     }
@@ -7292,7 +7294,7 @@ function openHowTo() {
   ]));
 
   sec("rust", "📉", "Skill rust", ul([
-    `A skill trained under ${B.skillDecayThresholdHours}h a day — or locked because it's not in focus — slowly rusts (about 1 point a week).`,
+    `A skill trained under ${B.skillDecayThresholdHours}h a day — or locked because it's not in focus — slowly rusts (about half a point a week).`,
     "A hired <b>Coach</b> stops their skill rusting at all, trained or not. Coached rows show blue-grey instead of red under 1h, and <b>held</b>.",
     "Above its ceiling a skill is never cut down: 1h a day holds it.",
     "<b>🎓 Experience is a floor:</b> a skill never rusts below its XP.",
