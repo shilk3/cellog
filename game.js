@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.10.2";
+const APP_VERSION = "5.10.3";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7382,7 +7382,7 @@ function openHowTo() {
     `It asks about the ${EDU_CORE.length} functions that matter in Excel esports. Switch on <b>📚 Completionist</b> to add Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. Switch the questions off for pure management.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
     `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
-    `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Guessing (1 in 4 right) scores exactly what it replaces, so it never hurts to try, and every right answer above that is an edge. Rivals answer too, better in higher leagues. At 0% it's practice only: questions are asked and mastered, but don't count in matches.`,
+    `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Rivals answer too — about ${Math.round(EDU_RIVAL_ACC[5] * 100)}% right in League 5, up to ${Math.round(EDU_RIVAL_ACC[TOP_TIER] * 100)}% at the top — so turning it up pays when you get more right than your league's rivals, and costs you when you get fewer. At 0% it's practice only: questions are still asked and mastered, but your answers don't affect matches.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
     "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
@@ -8928,17 +8928,22 @@ function eduModeChoiceHtml({ intro = false } = {}) {
       <div class="edu-mode-more" id="eduMore" ${on ? "" : "hidden"}>
         ${sw("eduCompSw", eduCompletionist(), `📚 Completionist <span class="kv-dim">— all ${EDU_LIST.length} of Excel's functions, not just the ${EDU_CORE.length} for esports</span>`)}
         <div class="edu-share">
-          <div class="kv-row"><span>⚖️ Share of match performance</span><b id="eduShareVal">${pct}%</b></div>
-          <input type="range" id="eduShare" min="0" max="${Math.round(EDU.maxShare * 100)}" step="5" value="${pct}" aria-label="Knowledge's share of match performance" />
+          <div class="kv-row"><span>⚖️ How much your answers count in matches</span><b id="eduShareVal">${pct}%</b></div>
+          <input type="range" id="eduShare" min="0" max="${Math.round(EDU.maxShare * 100)}" step="5" value="${pct}" aria-label="How much your answers count in matches" />
+          <div class="edu-share-ends kv-dim"><span>0% 🎓 Practice</span><span>${Math.round(EDU.maxShare * 100)}% 🧠 Excel expert</span></div>
           <div class="kv-dim" id="eduShareNote">${eduShareNote(pct)}</div>
         </div>
       </div>
       ${intro ? `<p class="modal-sub">You can change these any time in ☰ → 🎮 Games.</p>` : ""}
     </div>`;
 }
+// What the slider's value means, with the league's bar to beat (rivals
+// answer too: get more right than they do and a higher share helps you).
 function eduShareNote(pct) {
-  if (!pct) return "Practice only: questions are asked and mastered, but don't count in matches.";
-  return `Taken from Skill, Health, Calm and Rest. Guessing scores what it replaces; rivals answer too, better in higher leagues.${pct === Math.round(EDU.defaultShare * 100) ? " (The default.)" : ""}`;
+  if (!pct) return "🎓 Practice: questions are still asked and mastered, but your answers don't affect your matches.";
+  const tier = state.leagueTier, bar = Math.round(EDU_RIVAL_ACC[tier] * 100);
+  const who = pct >= 60 ? " Best if you know Excel well." : pct === Math.round(EDU.defaultShare * 100) ? " (The default.)" : "";
+  return `Your answers decide ${pct}% of each match (Skill, Health, Calm and Rest the other ${100 - pct}%). ${lg(tier)}'s rivals get about ${bar}% right: beat that and turning this up helps you; fall short and it costs you.${who}`;
 }
 function eduModeChoiceWire() {
   const on = $("eduOnSw"), more = $("eduMore"), r = $("eduShare");
@@ -8959,7 +8964,7 @@ function eduModeChoiceSave() {
 function openEduModeInfo() {
   openModal(`
     ${stickyHeadHtml("📘 Knowledge mode")}
-    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does — then one 💡 <b>general question</b> (shortcuts, PivotTables, formats…). The slider sets how much they count in the match: 3/4 of it the function questions, 1/4 the general one. Guessing scores what they replace, so knowing them is an edge. Questions follow the week's focus skills and get harder as you climb.</p>
+    <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does — then one 💡 <b>general question</b> (shortcuts, PivotTables, formats…). The slider sets how much your answers count in the match (3/4 the function questions, 1/4 the general one) — from 0%, practice only, to 80% for Excel experts. Questions follow the week's focus skills and get harder as you climb.</p>
     ${eduModeChoiceHtml()}
     <p class="modal-sub">What you've mastered is kept whatever you switch to. Completionist extras don't count towards Completion — mastering everything earns a 📚 trophy instead.</p>
     <button class="primary-btn" id="eduSwitch">Save</button>`, { ownClose: true });

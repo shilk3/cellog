@@ -18,9 +18,10 @@ real Excel function — how many mandatory and optional arguments it has, each
 argument in order, then what it does (four choices each). Its share of match
 performance is a slider from 0% to 80% (20% to start), taken from Skill,
 Health, Calm and Rest in proportion — three quarters for the function
-questions, one for the general question; guessing (1 in 4) scores exactly
-what it replaces, and 0% is practice only (asked and mastered, no effect on
-matches). Functions follow the week's
+questions, one for the general question. Rivals answer too (about 45% right
+in League 5, up to 75% at the top), so turning it up pays when you get more
+right than your league's rivals; 0% is practice only (asked and mastered, no
+effect on matches) and 80% is for Excel experts. Functions follow the week's
 focus skills and your league (SUM, XLOOKUP and FILTER in League 5, rarer
 ones higher up — weighted towards the lower leagues so they never run dry), with wrong answers that get closer to the right one as you climb. Every
 question right in one go masters a function: it isn't asked again until the

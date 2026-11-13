@@ -977,6 +977,7 @@ details.match-more[open] { padding-bottom: 8px; }
 .edu-share { padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 6px; font-size: 14px; }
 .edu-share input[type="range"] { width: 100%; }
 .edu-share .kv-dim { font-size: 12px; }
+.edu-share-ends { display: flex; justify-content: space-between; gap: 8px; margin-top: -4px; }
 .feedback-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .feedback-privacy { margin-top: 10px; }
 .feedback-report { padding: 9px 0; border-top: 1px solid var(--border); }
