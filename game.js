@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.11.2";
+const APP_VERSION = "5.12.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5663,7 +5663,7 @@ function openGames({ first = false } = {}) {
     ? `<p class="modal-sub">How long should a season be? Every length has the same 5 leagues, and a year ends on the day of the Final. You can start the others later from ☰ → ⚙️ Settings → 🎮 Games — each length keeps its own save.</p>`
     : `<p class="modal-sub">One game of each length, each with its own save. Switching saves this one first.</p>`;
   const html = `
-    ${first ? `<div class="brand-tagline">CELLOG — <i>the spreadsheet slog</i></div><h2>Choose your game</h2>` : stickyHeadHtml("🎮 Games")}
+    ${first ? `${brandHeroHtml()}<h2>Choose your game</h2>` : stickyHeadHtml("🎮 Games")}
     ${intro}
     ${GAME_LENGTH_KEYS.map((len) => gameCardHtml(len, { first })).join("")}
     ${first ? "" : `<div class="menu-row" id="gamesXfer"><span>💾 Export / Import a game</span><span class="arrow">›</span></div>`}`;
@@ -5745,8 +5745,13 @@ function openSpecialisations({ required = false, onDone = null } = {}, picked = 
   });
 }
 
+// The app icon and tagline, for the screens a new player starts on.
+function brandHeroHtml() {
+  return `<div class="brand-hero"><img class="brand-icon" src="icons/icon-192.png" alt="" width="64" height="64" /><div><div class="brand-hero-name">CELLOG</div><div class="brand-tagline"><i>the spreadsheet slog</i></div></div></div>`;
+}
 function openNameModal(isFirstTime) {
   const html = `
+    ${isFirstTime ? brandHeroHtml() : ""}
     <h2>${isFirstTime ? "Name Your Player" : "Rename Player"}</h2>
     <div class="modal-section">
       <p>${isFirstTime ? "What should we call your Excel esports pro?" : "Enter a new name:"}</p>

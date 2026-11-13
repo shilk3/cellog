@@ -354,6 +354,11 @@ This is a installable web app (PWA) — no App Store or Xcode needed.
    re-added: export the save first (removing the icon deletes its data),
    add it again from Safari, import the save, then delete the old icon.
 
+**App icon**: a selected spreadsheet cell with a silver trophy locked behind
+bars in the game's colours (cell + slog). The source is `tools/icon/icon.svg`;
+`node tools/icon/render.js` renders the four PNGs in `icons/` (180, 192, 512
+and a maskable 512 with the artwork inside the safe circle).
+
 ### Running it locally
 
 It's a static site with no build step or dependencies:

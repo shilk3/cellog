@@ -955,6 +955,10 @@ details.match-more[open] { padding-bottom: 8px; }
 
 /* The name's pun, said once where there's room (picker, How to Play). */
 .brand-tagline { color: var(--text-dim); font-size: 13px; letter-spacing: 0.3px; margin: 2px 0 6px; }
+.brand-hero { display: flex; align-items: center; gap: 12px; margin: 2px 0 8px; }
+.brand-hero .brand-tagline { margin: 0; }
+.brand-icon { width: 64px; height: 64px; border-radius: 15px; flex: none; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
+.brand-hero-name { font-weight: 800; font-size: 20px; letter-spacing: 0.4px; }
 
 /* Training camp: the plan's first row while you're there */
 .camp-card { line-height: 1.45; }
