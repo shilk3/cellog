@@ -10,7 +10,7 @@ also on GitHub Pages at [shilk3.github.io/cellog](https://shilk3.github.io/cello
 longer works). The cellog.website domain has been retired.
 
 **📘 Knowledge mode** (on for new games; set when you name a new player or
-later in ☰ → 🎮 Games: a switch for the questions, a 📚 Completionist switch
+later in ☰ → ⚙️ Settings → 📘 Knowledge mode: a switch for the questions, a 📚 Completionist switch
 — all 471 functions instead of the 283 that matter in Excel esports, whose
 extras earn a trophy of their own rather than counting towards Completion —
 and a slider for its share of match performance): before every match a Knowledge check asks about one
@@ -41,7 +41,7 @@ completion, skills and a few totals — on a canvas in the app, then hands it
 to the phone's share sheet (or saves it as a PNG where that isn't
 available). Nothing is uploaded.
 
-**🐞 Report a bug or suggestion** (☰ menu): no account needed. Each report
+**🐞 Report a bug or suggestion** (☰ → ❓ Help): no account needed. Each report
 becomes an issue in the private `shilk3/cellog-feedback` repo, filed by
 `api/feedback.js` (a Vercel function using the `FEEDBACK_GITHUB_TOKEN`
 environment variable: a fine-grained token with Issues read/write on that
@@ -52,7 +52,7 @@ reports (labels: bug, suggestion, in progress, fixed, won't do); a comment
 starting with 📣 shows there as a note to the player. Reports written offline
 wait on the device and send themselves later.
 
-**Guides** (☰ menu, also offline): 🗺️ [Mechanics Map](https://cellog.vercel.app/guide/map.html)
+**Guides** (☰ → ❓ Help, also offline): 🗺️ [Mechanics Map](https://cellog.vercel.app/guide/map.html)
 — every mechanic as a box with arrows for what it pushes on (tap one to
 trace it) — and 📊 [Mechanics Infographic](https://cellog.vercel.app/guide/infographic.html),
 every rule and number. They're copies of two claude.ai artifacts, built by
@@ -243,8 +243,8 @@ and form (the last 5 results). Seasons from before v4.76 keep their draws
 (W–D–L).
 
 **Game length**: chosen when a game starts, and each length keeps its own
-save — so up to three games on one device (☰ → 🎮 Games to switch, start or
-restart one). ☰ → 💾 Export / Import Save has a tab per length, so each game
+save — so up to three games on one device (☰ → ⚙️ Settings → 🎮 Games to switch, start or
+restart one). ☰ → ⚙️ Settings → 💾 Export / Import Save has a tab per length, so each game
 is exported or imported on its own: a code only goes into its own length's
 slot, and importing a game you're not playing leaves you in the one you are. All three have the same 5 leagues, and a year ends on the day
 of the Final.
@@ -343,7 +343,7 @@ This is a installable web app (PWA) — no App Store or Xcode needed.
    progress on-device (`localStorage`), with basic offline support via a
    service worker.
 4. Safari and the Home Screen app keep **separate saves**. To move a career
-   between them (or to another device), open ☰ → **💾 Export / Import Save**,
+   between them (or to another device), open ☰ → ⚙️ Settings → **💾 Export / Import Save**,
    tap **Copy save code** (or Share / Save to Files), then paste it into
    **Import** on the other side. The code is your whole career, gzipped and
    base64'd (~20 KB).

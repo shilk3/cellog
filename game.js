@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.10.3";
+const APP_VERSION = "5.11.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5508,42 +5508,74 @@ function openShop(opts) {
   );
 }
 
+// The menu: the game's own screens up top, then ⚙️ Settings and ❓ Help,
+// each a short list of its own (with a way back).
+function menuRow(id, label, note = "") {
+  return `<div class="menu-row" id="${id}"><span>${label}${note ? ` <span class="menu-note">${note}</span>` : ""}</span><span class="arrow">›</span></div>`;
+}
+function menuBackRow() {
+  return `<div class="menu-row menu-back" id="menuBack"><span>‹ Menu</span></div>`;
+}
 function openMenu() {
+  const g = gameLengthInfo(state.gameLength);
+  const reports = feedbackLoad(FEEDBACK_KEYS.reports, []).length;
   const html = `
     <h2>Menu</h2>
-    <div class="menu-row" id="menuShop"><span>🧑‍🏫 Staff &amp; Items</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuCareer"><span>📈 Career &amp; Season</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuLeagues"><span>🏅 Leagues</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuHistory"><span>📜 Match History</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuRename"><span>✏️ Rename Player</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuHow"><span>❓ How to Play</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuTutorial"><span>📖 Quick Tutorial</span><span class="arrow">›</span></div>
-    <a class="menu-row guide-link" href="guide/map.html"><span>🗺️ Mechanics Map <span class="menu-note">how everything connects</span></span><span class="arrow">›</span></a>
-    <a class="menu-row guide-link" href="guide/infographic.html"><span>📊 Mechanics Infographic <span class="menu-note">every number</span></span><span class="arrow">›</span></a>
-    <div class="menu-row" id="menuGames"><span>🎮 Games <span class="menu-note">${gameLengthInfo(state.gameLength).icon} ${gameLengthInfo(state.gameLength).name} game</span></span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuSaveTransfer"><span>💾 Export / Import Save</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuInstall"><span>📲 Add to Home Screen</span><span class="arrow">›</span></div>
-    <div class="menu-row" id="menuFeedback"><span>🐞 Report a bug or suggestion${feedbackLoad(FEEDBACK_KEYS.reports, []).length ? ` <span class="menu-note">📬 my reports</span>` : ""}</span><span class="arrow">›</span></div>
-    <button class="ghost-btn" id="menuReset">Restart this ${gameLengthInfo(state.gameLength).name} game</button>
+    ${menuRow("menuShop", "🧑‍🏫 Staff &amp; Items")}
+    ${menuRow("menuCareer", "📈 Career &amp; Season")}
+    ${menuRow("menuLeagues", "🏅 Leagues")}
+    ${menuRow("menuHistory", "📜 Match History")}
+    ${menuRow("menuSettings", "⚙️ Settings", `${g.icon} ${g.name} game · ${eduModeLabel()}`)}
+    ${menuRow("menuHelp", "❓ Help", reports ? "📬 my reports" : "how to play, guides, bugs")}
     <div class="version-tag">CELLOG v${APP_VERSION}</div>
   `;
   openModal(html);
-  $("menuGames").addEventListener("click", () => openGames());
   $("menuShop").addEventListener("click", openShop);
   $("menuCareer").addEventListener("click", openCareer);
   $("menuLeagues").addEventListener("click", () => openLeagues(state.leagueTier));
   $("menuHistory").addEventListener("click", () => openHistory());
+  $("menuSettings").addEventListener("click", openSettings);
+  $("menuHelp").addEventListener("click", openHelp);
+}
+function openSettings() {
+  const g = gameLengthInfo(state.gameLength);
+  openModal(`
+    ${menuBackRow()}
+    <h2>⚙️ Settings</h2>
+    ${menuRow("menuGames", "🎮 Games", `${g.icon} ${g.name} game`)}
+    ${menuRow("menuEdu", "📘 Knowledge mode", eduModeLabel())}
+    ${menuRow("menuRename", "✏️ Rename Player")}
+    ${menuRow("menuSaveTransfer", "💾 Export / Import Save")}
+    ${menuRow("menuInstall", "📲 Add to Home Screen")}
+    <button class="ghost-btn" id="menuReset">Restart this ${g.name} game</button>
+  `);
+  $("menuBack").addEventListener("click", openMenu);
+  $("menuGames").addEventListener("click", () => openGames());
+  $("menuEdu").addEventListener("click", () => openEduModeInfo({ back: openSettings }));
   $("menuRename").addEventListener("click", () => openNameModal(false));
+  $("menuSaveTransfer").addEventListener("click", () => openSaveTransfer(state.gameLength));
+  $("menuInstall").addEventListener("click", openInstall);
+  $("menuReset").addEventListener("click", () => {
+    if (confirm(`Restart your ${g.name} game? This wipes its progress (your other games are kept).`)) startNewGame(state.gameLength);
+  });
+}
+function openHelp() {
+  const reports = feedbackLoad(FEEDBACK_KEYS.reports, []).length;
+  openModal(`
+    ${menuBackRow()}
+    <h2>❓ Help</h2>
+    ${menuRow("menuHow", "📕 How to Play")}
+    ${menuRow("menuTutorial", "📖 Quick Tutorial")}
+    <a class="menu-row guide-link" href="guide/map.html"><span>🗺️ Mechanics Map <span class="menu-note">how everything connects</span></span><span class="arrow">›</span></a>
+    <a class="menu-row guide-link" href="guide/infographic.html"><span>📊 Mechanics Infographic <span class="menu-note">every number</span></span><span class="arrow">›</span></a>
+    ${menuRow("menuFeedback", "🐞 Report a bug or suggestion", reports ? "📬 my reports" : "")}
+  `);
+  $("menuBack").addEventListener("click", openMenu);
   $("menuHow").addEventListener("click", openHowTo);
   $("menuTutorial").addEventListener("click", () => openTutorial(0));
-  $("menuInstall").addEventListener("click", openInstall);
   $("menuFeedback").addEventListener("click", () => openFeedback());
   // The guides are separate pages: save on the way out (nothing's lost anyway).
   document.querySelectorAll(".guide-link").forEach((a) => a.addEventListener("click", () => saveState()));
-  $("menuSaveTransfer").addEventListener("click", () => openSaveTransfer(state.gameLength));
-  $("menuReset").addEventListener("click", () => {
-    if (confirm(`Restart your ${gameLengthInfo(state.gameLength).name} game? This wipes its progress (your other games are kept).`)) startNewGame(state.gameLength);
-  });
 }
 
 /* ---------------------------------------------------------------------- */
@@ -5628,7 +5660,7 @@ function gameCardHtml(len, { first = false } = {}) {
 // their first game (no ✕ to back out of it).
 function openGames({ first = false } = {}) {
   const intro = first
-    ? `<p class="modal-sub">How long should a season be? Every length has the same 5 leagues, and a year ends on the day of the Final. You can start the others later from ☰ → 🎮 Games — each length keeps its own save.</p>`
+    ? `<p class="modal-sub">How long should a season be? Every length has the same 5 leagues, and a year ends on the day of the Final. You can start the others later from ☰ → ⚙️ Settings → 🎮 Games — each length keeps its own save.</p>`
     : `<p class="modal-sub">One game of each length, each with its own save. Switching saves this one first.</p>`;
   const html = `
     ${first ? `<div class="brand-tagline">CELLOG — <i>the spreadsheet slog</i></div><h2>Choose your game</h2>` : stickyHeadHtml("🎮 Games")}
@@ -7366,7 +7398,7 @@ function openHowTo() {
 
   sec("season", "📅", "Season & leagues", `
     ${ul([
-      `<b>Game length:</b> this is a <b>${gameLengthInfo(state.gameLength).name}</b> game — ${gameLengthSummary(state.gameLength)}. Each length (Short, Half, Full) has its own save: ☰ → 🎮 Games.`,
+      `<b>Game length:</b> this is a <b>${gameLengthInfo(state.gameLength).name}</b> game — ${gameLengthSummary(state.gameLength)}. Each length (Short, Half, Full) has its own save: ☰ → ⚙️ Settings → 🎮 Games.`,
       `<b>Preseason:</b> ${B.preseasonDays} days of training. <b>Regular season:</b> ${B.seasonRounds} rounds, one match a week, all scheduled in advance.`,
       `Top <b>${B.playoffSize}</b> of ${B.leagueSize} reach the knockout playoffs (${playoffFormatText()}).`,
       `Miss the playoffs: a ${B.trainingCampDays}-day <b>off-season</b>; knocked out: off-season for the rest of the playoff window. Either way it runs to the day of the Final — the year's last day. Reach the Final and the new year starts straight after it.`,
@@ -7378,7 +7410,7 @@ function openHowTo() {
     ])}`);
 
   sec("edu", "📘", "Knowledge mode", ul([
-    `On for new games — change it any time in ☰ → 🎮 Games. It's <b>${eduModeLabel()}</b> for this game.`,
+    `On for new games — change it any time in ☰ → ⚙️ Settings → 📘 Knowledge mode. It's <b>${eduModeLabel()}</b> for this game.`,
     `It asks about the ${EDU_CORE.length} functions that matter in Excel esports. Switch on <b>📚 Completionist</b> to add Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. Switch the questions off for pure management.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
     `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
@@ -7735,7 +7767,7 @@ function openSaveTransfer(tab = saveTransferTab || state.gameLength) {
         return;
       }
       openSaveTransfer(tab);
-      importStatus(`✓ ${g.name} game imported. Play it from ☰ → 🎮 Games.`, true);
+      importStatus(`✓ ${g.name} game imported. Play it from ☰ → ⚙️ Settings → 🎮 Games.`, true);
       return;
     }
     state = loaded;
@@ -8934,7 +8966,7 @@ function eduModeChoiceHtml({ intro = false } = {}) {
           <div class="kv-dim" id="eduShareNote">${eduShareNote(pct)}</div>
         </div>
       </div>
-      ${intro ? `<p class="modal-sub">You can change these any time in ☰ → 🎮 Games.</p>` : ""}
+      ${intro ? `<p class="modal-sub">You can change these any time in ☰ → ⚙️ Settings → 📘 Knowledge mode.</p>` : ""}
     </div>`;
 }
 // What the slider's value means, with the league's bar to beat (rivals
@@ -8961,7 +8993,7 @@ function eduModeChoiceSave() {
   state.edu.share = clamp(Number($("eduShare").value) / 100, 0, EDU.maxShare);
 }
 // Changing the setting (per game, any time).
-function openEduModeInfo() {
+function openEduModeInfo({ back = openGames } = {}) {
   openModal(`
     ${stickyHeadHtml("📘 Knowledge mode")}
     <p class="modal-sub">Before every match there's a <b>Knowledge check</b> on one real Excel function: how many mandatory and optional arguments it has, each argument in order, and what it does — then one 💡 <b>general question</b> (shortcuts, PivotTables, formats…). The slider sets how much your answers count in the match (3/4 the function questions, 1/4 the general one) — from 0%, practice only, to 80% for Excel experts. Questions follow the week's focus skills and get harder as you climb.</p>
@@ -8974,7 +9006,7 @@ function openEduModeInfo() {
     saveState();
     closeModal();
     renderAll();
-    openGames();
+    back();
   });
 }
 // Career: how you're doing, while it's on.
@@ -9170,7 +9202,7 @@ async function flushFeedbackOutbox() {
   // Re-read it: a report queued while these were sending stays queued.
   feedbackStore(FEEDBACK_KEYS.outbox, feedbackLoad(FEEDBACK_KEYS.outbox, []).filter((r) => !done.has(r.rid)));
   feedbackFlushing = false;
-  if (sent) appendLog(`📬 ${sent === 1 ? "Your waiting report was" : `${sent} waiting reports were`} sent — thanks! Follow ${sent === 1 ? "it" : "them"} in ☰ → 🐞 Report a bug or suggestion.`, "event-good");
+  if (sent) appendLog(`📬 ${sent === 1 ? "Your waiting report was" : `${sent} waiting reports were`} sent — thanks! Follow ${sent === 1 ? "it" : "them"} in ☰ → ❓ Help → 🐞 Report a bug or suggestion.`, "event-good");
 }
 // Fresh status for the reports this device sent (quietly keeps the old one
 // if the log can't be reached).
