@@ -1021,3 +1021,9 @@ details.match-more[open] { padding-bottom: 8px; }
 .edu-desc { margin: 0; color: var(--text); font-size: 14px; }
 .edu-mastered { font-size: 14px; }
 .edu-line span:last-child { text-align: right; overflow-wrap: anywhere; }
+
+/* Knowledge check lead-in, and the running total under a Mastered! note */
+.edu-leadin-what { font-size: 16px; line-height: 1.45; margin: 12px 0 6px; }
+.edu-progress { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--accent); }
+/* Career: All / Still to do */
+.career-view { margin: 10px 0 2px; }

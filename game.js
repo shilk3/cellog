@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.13.2";
+const APP_VERSION = "5.14.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5885,11 +5885,29 @@ function currentStatsHtml() {
     .join("");
 }
 
+// Career's view: everything, or only what's still to do (this device
+// remembers which).
+const CAREER_VIEW_KEY = "cellog_career_view";
+function careerTodo() {
+  try {
+    return localStorage.getItem(CAREER_VIEW_KEY) === "todo";
+  } catch (e) {
+    return false;
+  }
+}
+function careerViewHtml() {
+  const todo = careerTodo();
+  return `<div class="league-tabs career-view"><button class="league-tab ${todo ? "" : "active"}" data-cview="all">All</button><button class="league-tab ${todo ? "active" : ""}" data-cview="todo">Still to do</button></div>`;
+}
 // Every goal in view, how far along each is, and the total.
 function completionSectionHtml() {
   updateCompletion();
   const pct = completionPct();
-  const rows = completionGoals()
+  const todo = careerTodo();
+  const goals = completionGoals();
+  const left = goals.filter((g) => g.got < g.w - 1e-9).length;
+  const rows = goals
+    .filter((g) => !todo || g.got < g.w - 1e-9)
     .map((g) => {
       const doneAll = g.got >= g.w - 1e-9;
       const part = g.of > 1 ? `${g.done}/${g.of}` : doneAll ? "" : "not yet";
@@ -5898,9 +5916,10 @@ function completionSectionHtml() {
     })
     .join("");
   return `<div class="modal-section">
-      <h3>📈 Completion · ${pct}%</h3>
+      <h3>📈 Completion · ${pct}%${todo ? ` — ${left} still to do` : ""}</h3>
       ${completionBarHtml(pct)}
-      ${rows}
+      ${todo ? `<p class="modal-sub">Showing only what's still to do: ${goals.length - left} done goal${goals.length - left === 1 ? " is" : "s are"} hidden. Tap All to see everything.</p>` : ""}
+      ${rows || `<p class="modal-sub">Nothing left — every goal is done.</p>`}
     </div>`;
 }
 
@@ -5914,22 +5933,37 @@ function trophyCabinetHtml() {
   const years = (ys) => (ys.length ? ys.map((y) => `Y${y}`).join(", ") : "not yet");
   const py = pyUnlocked() && state.python && state.python.revealed;
   const top = state.peakLeagueTier === TOP_TIER;
+  // Each row: its label, what it shows, and whether it's been won.
+  const rows = [];
+  const add = (label, ys) => rows.push({ label, value: years(ys || []), won: (ys || []).length > 0 });
+  if (state.gameComplete) rows.push({ label: "🌟 Game complete", value: `<span class="mastered-tag">Year ${state.gameComplete.year}</span>`, won: true });
+  if (py) {
+    add(`🐍 ${PY_EVENT_NAME}`, state.python.wonYears);
+    add("🧹 Clean sweeps (3–0)", t.sweeps);
+  }
+  if (mobRevealed()) {
+    add(`📱 ${MOB_EVENT_NAME}`, m.wonYears);
+    add("🧹 Mobile clean sweeps (3–0)", m.sweeps);
+  }
+  tri.forEach((id) => {
+    const E = EVENTS[id], es = evState(id);
+    add(`${E.icon} ${E.name}`, es.wonYears);
+    add(`🧹 ${E.skill.name} clean sweeps`, es.sweeps);
+    add(`🔺 ${E.skill.name}: Last One Standing`, es.lastStanding);
+  });
+  if (top) add("🛡️ Unbeaten seasons", t.unbeaten);
+  if (t.completionist) rows.push({ label: "📚 Completionist — every function mastered", value: `<span class="mastered-tag">Year ${t.completionist}</span>`, won: true });
+  // Still to do: only the ones not won yet (none left: no section).
+  const todo = careerTodo();
+  const shown = todo ? rows.filter((r) => !r.won) : rows;
+  if (!shown.length) return "";
   return `<div class="modal-section">
-      <h3>🏆 Trophy cabinet</h3>
-      ${state.gameComplete ? `<div class="kv-row"><span>🌟 Game complete</span><span class="mastered-tag">Year ${state.gameComplete.year}</span></div>` : ""}
-      ${py ? `<div class="kv-row"><span>🐍 ${PY_EVENT_NAME}</span><span>${years(state.python.wonYears)}</span></div>
-      <div class="kv-row"><span>🧹 Clean sweeps (3–0)</span><span>${years(t.sweeps)}</span></div>` : ""}
-      ${mobRevealed() ? `<div class="kv-row"><span>📱 ${MOB_EVENT_NAME}</span><span>${years(m.wonYears)}</span></div>
-      <div class="kv-row"><span>🧹 Mobile clean sweeps (3–0)</span><span>${years(m.sweeps)}</span></div>` : ""}
-      ${tri.map((id) => { const E = EVENTS[id], es = evState(id); return `<div class="kv-row"><span>${E.icon} ${E.name}</span><span>${years(es.wonYears)}</span></div>
-      <div class="kv-row"><span>🧹 ${E.skill.name} clean sweeps</span><span>${years(es.sweeps)}</span></div>
-      <div class="kv-row"><span>🔺 ${E.skill.name}: Last One Standing</span><span>${years(es.lastStanding || [])}</span></div>`; }).join("")}
-      ${top ? `<div class="kv-row"><span>🛡️ Unbeaten seasons</span><span>${years(t.unbeaten)}</span></div>` : ""}
-      ${t.completionist ? `<div class="kv-row"><span>📚 Completionist — every function mastered</span><span class="mastered-tag">Year ${t.completionist}</span></div>` : ""}
+      <h3>🏆 ${todo ? "Trophies still to win" : "Trophy cabinet"}</h3>
+      ${shown.map((r) => `<div class="kv-row"><span>${r.label}</span><span>${r.value}</span></div>`).join("")}
     </div>`;
 }
 
-function openCareer() {
+function openCareer({ keepScroll = false } = {}) {
   const info = getNextMatchInfo();
   let nextSection;
   if (info.kind === "fixture" || info.kind === "playoff") {
@@ -6021,6 +6055,7 @@ function openCareer() {
   const html = `
     ${stickyHeadHtml("Career &amp; Season")}
     <button class="ghost-btn share-btn" id="shareCareerBtn">📤 Share my career</button>
+    ${careerViewHtml()}
     ${trophyCabinetHtml()}
     ${retirementSectionHtml()}
     ${completionSectionHtml()}
@@ -6073,9 +6108,19 @@ function openCareer() {
       <h3>Current Stats</h3>
       ${currentStatsHtml()}
     </div>`;
-  openModal(html, { ownClose: true, page: { key: "career", reopen: openCareer } });
+  openModal(html, { ownClose: true, keepScroll, page: { key: "career", reopen: openCareer } });
   wireRetirement();
   $("shareCareerBtn").addEventListener("click", openShareCard);
+  document.querySelectorAll("[data-cview]").forEach((b) =>
+    b.addEventListener("click", () => {
+      try {
+        localStorage.setItem(CAREER_VIEW_KEY, b.dataset.cview);
+      } catch (e) {
+        // not remembered — still switches for now
+      }
+      openCareer({ keepScroll: true });
+    })
+  );
   if ($("careerSpecs")) $("careerSpecs").addEventListener("click", () => openSpecialisations());
   $("viewLeaguesLink").addEventListener("click", () => openLeagues(state.leagueTier));
   $("viewHistoryLink").addEventListener("click", () => openHistory());
@@ -7460,7 +7505,7 @@ function openHowTo() {
     `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Rivals answer too — about ${Math.round(EDU_RIVAL_ACC[5] * 100)}% right in League 5, up to ${Math.round(EDU_RIVAL_ACC[TOP_TIER] * 100)}% at the top — so turning it up pays when you get more right than your league's rivals, and costs you when you get fewer. At 0% it's practice only: questions are still asked and mastered, but your answers don't affect matches.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
-    "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
+    "The check comes on match day itself: End Day asks before playing it, and End Week runs the days up to it, then pauses to ask (a week cut short — by an injury, say — never asks early). It opens with a lead-in — what's coming and what it's worth — and starts when you tap <b>Start</b>, so a quick second tap can't answer the first question. Once started, a Knowledge check has to be finished — there's no ✕, and an answer given stays given (even if you close the app).",
     ...(EVENT_IDS.some((id) => evRevealed(id)) ? [`<b>📘 Training checks:</b> in an invitational's preseason, each full week before its games ends with ${EDU.trainFns} functions from the invitational's own set${evRevealed("pq") ? ` (⚡ Power Query: ${EDU.trainGroups} groups)` : ""}${mobRevealed() ? ` (📱 Mobile: ${EDU.trainFns * EDU.phoneQs} phone questions)` : ""} (two checks in a Full game, one in a Half, none in a Short). No match — the share you get right goes straight into the invitational's skill (up to +${EDU.trainSkill}) and its course (up to +${EDU.trainCourse}h), and mastery counts as usual.`] : []),
   ]));
 
@@ -8954,6 +8999,11 @@ function openEduQuiz(m, onDone) {
   // No total and no progress bar: how many questions there are would give
   // away how many arguments the function has.
   if (cur.i >= cur.qs.length) return eduReview(m, cur, f, onDone);
+  // A lead-in you tap to start, so a quick second tap (End Week, say) can't
+  // land on the first question's answers. Not for a practice check (it has
+  // its own) or a training check's later parts.
+  if (!cur.started && cur.i === 0 && !cur.picks.length && !m.practice && !(m.train && m.trainIdx > 0)) return eduLeadIn(m, cur, f, who, onDone);
+  const guardUntil = cur.startedAt && Date.now() - cur.startedAt < 600 ? cur.startedAt + 600 : 0;
   const q = cur.qs[cur.i];
   openModal(`
     <div class="edu-quiz">
@@ -8980,7 +9030,7 @@ function openEduQuiz(m, onDone) {
   if (cur.picks.length > cur.i) showAnswer(cur.picks[cur.i]);
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
-      if (cur.picks.length > cur.i) return;
+      if (cur.picks.length > cur.i || Date.now() < guardUntil) return;
       const pick = q.o[Number(b.dataset.eduOpt)];
       cur.picks.push(pick);
       showAnswer(pick);
@@ -8989,6 +9039,29 @@ function openEduQuiz(m, onDone) {
   );
   $("eduNext").addEventListener("click", () => {
     cur.i += 1;
+    openEduQuiz(m, onDone);
+  });
+}
+// What a check is about and what it's worth, before its first question.
+function eduLeadIn(m, cur, f, who, onDone) {
+  const gq = cur.qs.find((q) => q.k === "gen");
+  const what = !f ? `${cur.qs.filter((q) => q.k === "ph").length} questions on 📱 Excel on mobile` : f.grp ? "⚡ a group of look-alike Power Query functions — what they do, their arguments, then which one is which" : f.bank ? `${EDU_BANK_INFO[f.bank].icon} ${EDU_BANK_INFO[f.bank].what}` : "one Excel function — its arguments and what it does";
+  const then = !gq ? "" : gq.set ? `, then one ${eduSetIcon(gq.set)} ${EDU_SET_INFO[gq.set].name} question` : ", then one 💡 general question";
+  const pct = Math.round((eduOn() ? eduShare() : 0) * 100);
+  const worth = m.train
+    ? `Your share right goes into ${EVENTS[m.event].skill.icon} ${EVENTS[m.event].skill.name} and its course.${eduTrainCount(m.event) > 1 ? ` This is part 1 of ${eduTrainCount(m.event)}.` : ""}`
+    : pct ? `Your answers count for <b>${pct}%</b> of this match.` : "🎓 Practice: your answers don't affect the match.";
+  openModal(`
+    <div class="edu-quiz edu-leadin">
+      <div class="edu-head"><span>📘 ${m.train ? "Training check" : `Knowledge check${who ? ` · vs ${escapeHtml(who)}` : ""}`}</span></div>
+      <p class="edu-leadin-what">Questions on ${what}${then}.</p>
+      <p class="modal-sub">${worth} Once started, it has to be finished.</p>
+      <button class="primary-btn" id="eduStart">Start ▶</button>
+    </div>`, { ownClose: true, onDismiss: () => openEduQuiz(m, onDone) });
+  $("eduStart").addEventListener("click", () => {
+    cur.started = true;
+    cur.startedAt = Date.now();
+    saveState();
     openEduQuiz(m, onDone);
   });
 }
@@ -9075,6 +9148,25 @@ function eduBreakdownFor(m) {
   if (!m.event || !EVENTS[m.event]) return performanceBreakdown();
   return withExhibition(m.event, performanceBreakdown);
 }
+// "29 of 224 formulas mastered" — the same count as Career, for whatever
+// a check just mastered.
+function eduFnProgress(f) {
+  if (!f) {
+    const list = EDU_SETS.phone;
+    return `${eduGenMasteredCount(list)} of ${list.length} ${EDU_SET_INFO.phone.name} mastered`;
+  }
+  if (f.bank) {
+    const list = eduBankList(f.bank);
+    return `${eduMasteredCount(list)} of ${list.length} ${EDU_BANK_INFO[f.bank].name} mastered`;
+  }
+  const list = f.extra ? eduExtrasAvailable() : eduAvailable();
+  return list.includes(f) ? `${eduMasteredCount(list)} of ${list.length} ${f.extra ? "extras" : "formulas"} mastered` : "";
+}
+function eduGenProgress(q) {
+  const list = q.set ? EDU_SETS[q.set] : eduGenAvailable();
+  return `${eduGenMasteredCount(list)} of ${list.length} ${q.set ? EDU_SET_INFO[q.set].name : "general knowledge"} mastered`;
+}
+const eduProgressHtml = (text) => (text ? `<div class="edu-progress">${text}</div>` : "");
 function eduReview(m, cur, f, onDone) {
   const qs = cur.qs, picks = cur.picks;
   // A practice check counts for mastery, never for a match.
@@ -9111,9 +9203,9 @@ function eduReview(m, cur, f, onDone) {
       <div class="edu-head"><span>${f ? `${f.grp ? "⚡" : "📘"} ${escapeHtml(f.name)}` : "📱 Excel on mobile"}</span><span>${res.right} / ${res.total}</span></div>
       ${f ? `<div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
       <p class="edu-desc">${escapeHtml(f.desc)}${f.grp ? `. <span class="kv-dim">Takes: ${escapeHtml(f.takes)}</span>` : ""}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
-      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.</div>` : ""}
+      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.${eduProgressHtml(eduFnProgress(f))}</div>` : ""}
       ${genLine}
-      ${gi >= 0 && res.genNewly ? `<div class="callout edu-mastered">🏅 Mastered! This question won't come up again until you've mastered the rest.</div>` : ""}
+      ${gi >= 0 && res.genNewly ? `<div class="callout edu-mastered">🏅 Mastered! This question won't come up again until you've mastered the rest.${eduProgressHtml(eduGenProgress(qs[gi]))}</div>` : ""}
       ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
       ${!counts ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
       ${!counts || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set ? `${eduSetIcon(qs[gi].set)} ${EDU_SET_INFO[qs[gi].set].name}` : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}

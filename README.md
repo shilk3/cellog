@@ -25,7 +25,11 @@ effect on matches) and 80% is for Excel experts. Functions follow the week's
 focus skills and your league (SUM, XLOOKUP and FILTER in League 5, rarer
 ones higher up — weighted towards the lower leagues so they never run dry), with wrong answers that get closer to the right one as you climb. Every
 question right in one go masters a function: it isn't asked again until the
-rest are, and Career and Completion count them. The 471 functions (all of
+rest are, and Career and Completion count them (the review's 🏅 note shows
+the running total, e.g. "29 of 224 formulas mastered"). A check opens with a
+lead-in you tap to start, so a quick second tap can't answer its first
+question. Career has an **All / Still to do** switch that hides finished
+Completion goals and trophies already won. The 471 functions (all of
 Excel's bar compatibility and add-in ones), each marked esports or extra,
 are in `edu-functions.js`, built from Microsoft's function reference by the
 scripts in `tools/edu/`. Every check ends with one 💡 general question
