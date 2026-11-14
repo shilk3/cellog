@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.12.1";
+const APP_VERSION = "5.12.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -2541,16 +2541,42 @@ function rivalFocusAverage(r, keys = state.activeSkills) {
 // top its three) plus a steady rivalCondition for Health / Calm / Rest, on
 // your weights.
 function rivalPerformance(r) {
+  const p = rivalPerfParts(r);
+  return clamp(p.W.skill * p.avg + (p.W.phys + p.W.composure + p.W.rest) * p.condition + p.quiz + p.gen + movesPerf(rivalTopMoves(r)), 0, 100);
+}
+// Its parts: skill average, condition, and (📘 Knowledge mode) their quiz
+// and general question, at their league's rate of right answers.
+function rivalPerfParts(r) {
   const ev = rivalEvent(r);
   const keys = ev ? [EVENTS[ev].skill.key] : r.top ? TOP_SKILL_KEYS : SKILL_KEYS;
   const avg = keys.reduce((a, k) => a + rivalSkill(r, k), 0) / keys.length;
   const condition = ev ? rivalEventProfile(r).condition : BAL.rivalCondition;
   const W = perfWeights();
-  // 📘 Education mode: their quiz, at their league's rate of right answers.
+  const acc = eduRivalAcc(r);
   const neutral = eduNeutral(avg, condition);
-  const quiz = W.quiz ? W.quiz * eduValue(eduRivalAcc(r), neutral) : 0;
-  const gen = W.gen ? W.gen * eduGenExpected(eduRivalAcc(r), neutral) : 0;
-  return clamp(W.skill * avg + (W.phys + W.composure + W.rest) * condition + quiz + gen + movesPerf(rivalTopMoves(r)), 0, 100);
+  const quiz = W.quiz ? W.quiz * eduValue(acc, neutral) : 0;
+  const gen = W.gen ? W.gen * eduGenExpected(acc, neutral) : 0;
+  return { W, avg, condition, acc, quiz, gen };
+}
+// Head to Head's Knowledge lines: each side's knowledge score and the rest
+// (skill and condition), both out of 100, and the share each has.
+function knowledgeSplit(breakdown, rival, edu) {
+  const W = breakdown.weights;
+  if (!W.quiz || !rival) return null;
+  const kw = W.quiz + W.gen, sw = W.skill + W.phys + W.composure + W.rest;
+  const b = breakdown.weighted, p = rivalPerfParts(rival);
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const genRight = breakdown.raw.genRight;
+  return {
+    share: Math.round(kw * 100),
+    you: r1((b.quiz + b.gen) / kw),
+    youRest: r1((b.skill + b.phys + b.composure + b.rest) / sw),
+    youRight: edu ? edu.right + (genRight ? 1 : 0) : null,
+    youTotal: edu ? edu.total + (genRight != null ? 1 : 0) : null,
+    opp: r1((p.quiz + p.gen) / kw),
+    oppRest: r1((p.W.skill * p.avg + (p.W.phys + p.W.composure + p.W.rest) * p.condition) / sw),
+    oppAcc: Math.round(p.acc * 100),
+  };
 }
 // The week's focus keys for a rival-vs-rival match: the top tier's three
 // for its players; the seven for everyone else (the week's own focus,
@@ -2837,6 +2863,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
     // The real draws, for a three-way final (removed before it's stored).
     raw: { yourFinal, oppFinal, yourTime, oppTime },
     edu: eduQuiz ? { fn: eduQuiz.fn ? eduQuiz.fn.replace(/^[a-z]+:/, "") : "📱 phone", right: eduQuiz.right, total: eduQuiz.total } : null,
+    knowledge: knowledgeSplit(breakdown, mu.rival, eduQuiz),
     win,
     draw, // always false now — older results may hold a draw
     decidedOnTime, // a dead heat settled by the faster finish
@@ -5117,6 +5144,15 @@ function ratingCashExplainerHtml(result) {
     <div class="match-sub perf-note">Your cash "Before" already includes today's pay and living costs, so the change is just this match's prize.</div>`;
 }
 
+// Under Performance: how much of it was your answers (📘 Knowledge mode).
+function knowledgeRows(result, row) {
+  const k = result.knowledge;
+  if (!k) return "";
+  const right = k.youRight != null ? `${k.youRight} of ${k.youTotal}` : "a guess";
+  return row(`📘 Knowledge · ${k.share}%`, fmt1(k.you), fmt1(k.opp), "perf-sub") +
+    row("✅ Answers right", right, `~${k.oppAcc}%`, "perf-sub") +
+    row(`🧠 Skill &amp; condition · ${100 - k.share}%`, fmt1(k.youRest), fmt1(k.oppRest), "perf-sub");
+}
 // Head to Head's focus-skill row, laid out like Performance: each side's
 // focus-skill average → the edge it earns (only the side ahead gets one).
 function focusEdgeRow(result, row) {
@@ -5146,6 +5182,7 @@ function headToHeadHtml(result) {
         ${result.h2hTable ? row(result.h2hTable.label, `#${result.h2hTable.you}`, `#${result.h2hTable.opp}`, "h2h-context") : ""}
         ${row("🏆 Rating", y.rating, o.rating, skills ? "h2h-context" : "")}
         ${row("📈 Performance", `${y.perfScore.toFixed(1)} → ${perfPts(y.perfAdj)}`, `${typeof o.perfScore === "number" ? o.perfScore.toFixed(1) : o.perfScore} → ${perfPts(o.perfAdj)}`)}
+        ${knowledgeRows(result, row)}
         ${y.edge != null ? focusEdgeRow(result, row) : ""}
         ${row("🎲 Luck on the day", signedNum(y.luck), signedNum(o.luck))}
       </tbody>
