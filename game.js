@@ -3,11 +3,16 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.12.2";
+const APP_VERSION = "5.13.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
 const ACTIVE_GAME_KEY = "cellgrind_active_game"; // which slot was played last
+// What this page last read or wrote in its slot — so a save made while the
+// app is hidden can tell whether it has anything new, and whether another
+// tab has saved since (then that one's newer game is left alone). Up here:
+// the save is loaded before the rest of the file has run.
+let lastWritten = { key: null, str: null };
 function slotKey(len) {
   return len === "full" ? SAVE_KEY : `cellgrind_save_${len}`;
 }
@@ -22,13 +27,14 @@ const SAVE_VERSION = 7;
 // new career's defaults, keeping everything the save already has.
 const SAVE_DEFAULT_PATHS = [
   "stats", "stats.skills", "stats.xp", "allocation", "allocation.skills", "employment", "staff", "items", "items.crash",
-  "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades", "completion", "edu",
+  "equipment", "matchHistory", "injury", "burnout", "yearCashFlow", "upgrades", "completion", "edu", "trophies",
 ];
 
 /* ---------------------------------------------------------------------- */
 /* Balance constants — tune game feel here                                */
 /* ---------------------------------------------------------------------- */
 const BAL = {
+  fullResultSeasons: 2, // Match History keeps full results for this many seasons (this one and last)
   idealSleep: 7, // also the Rest decay threshold: sleep below this drains Rest
   relaxComposureThreshold: 3, // Calm's decay threshold, in relaxation hours
   skillDecayThresholdHours: 1, // an active skill/Exercise below this hour count rusts
@@ -99,7 +105,7 @@ const BAL = {
   // of just a short generic break, so missing the cut isn't strictly worse
   // for preparing next season than qualifying and getting knocked out fast.
   // It runs to the day of the Final: one week per playoff round.
-  trainingCampDays: 28, // (length)
+  trainingCampDays: 28, // (length; set from the playoff rounds by applyGameLength)
   statCapBase: 70, // Physical Health ceiling with zero relevant upgrades
   statCapPerLevel: 10, // + this much per Physio level (max 3 levels -> +30 -> 100)
   // Skill ceilings stack two independent gates: the hired coach's level
@@ -451,6 +457,18 @@ function eventIdsBelowTop() {
   return TRI_IDS.filter((id) => EVENTS[id].firstTier > TOP_TIER);
 }
 let exhibitionEvent = null; // set while an exhibition game is being played
+// Runs fn as invitational id's game: its one skill in focus, then back.
+function withExhibition(id, fn) {
+  const saved = state.activeSkills;
+  state.activeSkills = [EVENTS[id].skill.key];
+  exhibitionEvent = id;
+  try {
+    return fn();
+  } finally {
+    exhibitionEvent = null;
+    state.activeSkills = saved;
+  }
+}
 function inTop(s) {
   // Safe while a new career's state is still being built.
   try {
@@ -493,11 +511,6 @@ function preseasonEvent() {
 // The invitational whose sliders are in the plan now (its preseason only).
 function courseEvent() {
   return isPreseason() ? preseasonEvent() : null;
-}
-// Its preseason, now — swapped in for everything else (at the top) or
-// alongside your seven (below it).
-function eventPreseason(id) {
-  return courseEvent() === id;
 }
 function swapEvent() {
   return (inTop() && courseEvent()) || null;
@@ -555,9 +568,6 @@ function pyCourseHours(i) {
 }
 function pyMastered() {
   return evMastered("py");
-}
-function pyRival() {
-  return evRival("py");
 }
 // The Mobile Invitational has been offered to you (its first preseason).
 function mobRevealed() {
@@ -641,7 +651,10 @@ function chooseEvent(choice) {
 // migrated, before it's the live state).
 function initEvent(id, s = state) {
   const E = EVENTS[id];
-  if (!s[E.stateKey]) s[E.stateKey] = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], sweeps: [], revealed: false, ...(E.tri ? { lastStanding: [] } : {}) };
+  // A record from an older save gets any fields it's missing.
+  const tpl = { course: [0, 0, 0], mastered: [], series: null, wonYears: [], sweeps: [], revealed: false, ...(E.tri ? { lastStanding: [] } : {}) };
+  if (!s[E.stateKey]) s[E.stateKey] = tpl;
+  else Object.keys(tpl).forEach((k) => s[E.stateKey][k] === undefined && (s[E.stateKey][k] = tpl[k]));
   if (s.stats.skills[E.skill.key] == null) s.stats.skills[E.skill.key] = 0;
   if (s.stats.xp[E.skill.key] == null) s.stats.xp[E.skill.key] = 0;
   if (E.tri) {
@@ -1102,9 +1115,7 @@ function applyRecoveryToInjury() {
   inj.daysLeft = Math.max(1, inj.daysLeft - extra);
   inj.reduced = eff.injuryDaysReduce;
   if (inj.daysLeft < before) {
-    const e = { html: `🧊 Recovery Program: injury shortened by ${before - inj.daysLeft} ${before - inj.daysLeft === 1 ? "day" : "days"} — Gym back in ${inj.daysLeft} ${inj.daysLeft === 1 ? "day" : "days"}.`, cls: "event-good" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(`🧊 Recovery Program: injury shortened by ${before - inj.daysLeft} ${before - inj.daysLeft === 1 ? "day" : "days"} — Gym back in ${inj.daysLeft} ${inj.daysLeft === 1 ? "day" : "days"}.`, "event-good");
   }
 }
 const SUPPORT_KEYS = ["physio", "nutritionist", "manager", "sleepApp", "meditation", "recovery"];
@@ -1152,9 +1163,7 @@ function buyEquipment(key) {
   state.cash -= e.price;
   state.yearCashFlow.expenses += e.price;
   state.equipment.owned[key] = true;
-  const log = { html: `${e.icon} Bought ${e.name} (−$${fmt(e.price)}): ${e.desc} until Year ${state.year} ends.`, cls: "event-good" };
-  state.logEntries.push(log);
-  appendLog(log.html, log.cls);
+  logEvent(`${e.icon} Bought ${e.name} (−$${fmt(e.price)}): ${e.desc} until Year ${state.year} ends.`, "event-good");
   return true;
 }
 function itemUsed(key) {
@@ -1177,9 +1186,7 @@ function useEnergyItem(key) {
   }
   const gains = [item.rest ? `Rest +${fmt(restGain)}` : "", item.composure ? `Calm +${fmt(compGain)}` : ""].filter(Boolean).join(", ");
   const crashText = item.crash ? ` — crash tomorrow` : "";
-  const e = { html: `${item.icon} ${item.name} (−$${item.price}): ${gains}${crashText}`, cls: "event-good" };
-  state.logEntries.push(e);
-  appendLog(e.html, e.cls);
+  logEvent(`${item.icon} ${item.name} (−$${item.price}): ${gains}${crashText}`, "event-good");
   return true;
 }
 function isAutoRehire(key) {
@@ -1193,9 +1200,7 @@ function staffWeekEnded(ended) {
   if (inCamp()) {
     const keep = Object.fromEntries(Object.entries(ended).filter(([key]) => isAutoRehire(key)));
     state.staff.paused = { ...(state.staff.paused || {}), ...keep };
-    const e = { html: `📋 Staff contracts have ended. 🏕️ At camp they're paused — no wages${Object.keys(keep).length ? "; auto-rehire picks them up again after camp" : ""}.`, cls: "event-season" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(`📋 Staff contracts have ended. 🏕️ At camp they're paused — no wages${Object.keys(keep).length ? "; auto-rehire picks them up again after camp" : ""}.`, "event-season");
     return;
   }
   const rehired = [];
@@ -1221,13 +1226,9 @@ function staffWeekEnded(ended) {
   const parts = ["📋 Staff contracts have ended."];
   if (rehired.length) parts.push(`🔁 Auto-rehired ${rehired.join(", ")}.`);
   if (others) parts.push(`Hire ${rehired.length ? "the rest" : "for the new week"} in 🧑‍🏫 Staff.`);
-  const e = { html: parts.join(" "), cls: "event-season" };
-  state.logEntries.push(e);
-  appendLog(e.html, e.cls);
+  logEvent(parts.join(" "), "event-season");
   for (const m of missed) {
-    const bad = { html: `🔁 Couldn't afford to rehire ${m.name} ($${fmt(m.cost)}) — not hired this week, and auto-rehire is now off.`, cls: "event-bad" };
-    state.logEntries.push(bad);
-    appendLog(bad.html, bad.cls);
+    logEvent(`🔁 Couldn't afford to rehire ${m.name} ($${fmt(m.cost)}) — not hired this week, and auto-rehire is now off.`, "event-bad");
   }
 }
 function unlockStaffLevel(key) {
@@ -1739,6 +1740,39 @@ applyGameLength("full");
 let state = loadState();
 
 // Turns parsed save JSON into a full state. Throws if it isn't a usable save.
+// A save can come from anywhere (a pasted code, a report's attachment), and
+// some of its strings are shown as HTML: keep only the tags the game itself
+// stores, with no attributes but class, and keep names to plain text.
+// (Plain functions, not consts: a save is loaded before the rest of this
+// file has run.)
+function safeHtml(html) {
+  if (typeof html !== "string" || !html.includes("<")) return html;
+  const SAFE_TAGS = ["B", "I", "EM", "STRONG", "SPAN", "BR", "CODE", "SMALL", "U", "SUB", "SUP"];
+  const t = document.createElement("template");
+  t.innerHTML = html;
+  const clean = (node) => {
+    [...node.childNodes].forEach((n) => {
+      if (n.nodeType === 1) {
+        clean(n);
+        if (!SAFE_TAGS.includes(n.tagName)) n.replaceWith(...n.childNodes);
+        else [...n.attributes].forEach((a) => a.name !== "class" && n.removeAttribute(a.name));
+      } else if (n.nodeType !== 3) n.remove();
+    });
+  };
+  clean(t.content);
+  return t.innerHTML;
+}
+function plainName(s) {
+  return typeof s === "string" ? s.replace(/[<>&"'`]/g, "") : s;
+}
+function sanitizeSave(s) {
+  (s.logEntries || []).forEach((e) => e && (e.html = safeHtml(e.html), (e.cls = typeof e.cls === "string" ? e.cls.replace(/[^\w -]/g, "") : "")));
+  (s.rivals || []).forEach((r) => r && (r.name = plainName(r.name)));
+  const deep = (v) => (typeof v === "string" ? safeHtml(v) : Array.isArray(v) ? v.map(deep) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deep(x)])) : v);
+  if (s.pendingSplash) s.pendingSplash = deep(s.pendingSplash);
+  const h = s.matchHistory;
+  if (h && Array.isArray(h.mine)) h.mine = h.mine.map((m) => (m && typeof m === "object" ? deep(m) : m));
+}
 function migrateSave(parsed) {
   const usable =
     parsed && typeof parsed === "object" &&
@@ -1788,6 +1822,7 @@ function migrateSave(parsed) {
     fresh[EVENTS[id].stateKey].revealed = true;
   });
   if (fresh.events.choice) initEvent(fresh.events.choice, fresh);
+  EVENT_IDS.forEach((id) => fresh[EVENTS[id].stateKey] && initEvent(id, fresh));
   // Staff unlocks for the best league so far were announced already.
   if (fresh.staffUnlockNoted == null) fresh.staffUnlockNoted = fresh.peakLeagueTier;
   // Completion goals already met before it was tracked.
@@ -1802,6 +1837,8 @@ function migrateSave(parsed) {
   a.exercise = clamp(a.exercise || 0, 0, BAL.gymMaxHours);
   a.work = clamp(a.work || 0, 0, workMaxHours(fresh.employment.status, fresh));
   eduGroupCarryOver(fresh);
+  if (fresh.matchHistory && Array.isArray(fresh.matchHistory.mine)) compactOldMatches(fresh.matchHistory, fresh.year);
+  sanitizeSave(fresh);
   // An injury from before injury.reduced was kept already had the hired
   // Recovery Program taken off when it was rolled: record that, so it's
   // never taken off twice.
@@ -1844,6 +1881,7 @@ function loadState() {
     raw = localStorage.getItem(slotKey(len));
     if (!raw) return freshState();
     const loaded = migrateSave(JSON.parse(raw));
+    lastWritten = { key: slotKey(len), str: raw };
     lastLoadedFromSave = true;
     return loaded;
   } catch (e) {
@@ -1867,8 +1905,10 @@ function saveState() {
   if (!STORAGE_OK) return false;
   if (state.logEntries.length > LOG_KEEP) state.logEntries = state.logEntries.slice(-LOG_KEEP);
   try {
-    localStorage.setItem(slotKey(state.gameLength), JSON.stringify(state));
+    const key = slotKey(state.gameLength), str = JSON.stringify(state);
+    localStorage.setItem(key, str);
     localStorage.setItem(ACTIVE_GAME_KEY, state.gameLength);
+    lastWritten = { key, str };
     return true;
   } catch (e) {
     return false;
@@ -2947,8 +2987,9 @@ function eloChange(ratingA, ratingB, aScore, K = BAL.ratingK) {
 }
 
 // ---- Match history ----
-// mine: every match you play, as the full result object (so its result
-//   screen can be reopened later). Kept for the whole career.
+// mine: every match you play. This season's and last season's keep the full
+//   result object (so the result screen can be reopened); older ones shrink
+//   to a one-line row (compactMatch) so the save doesn't grow for ever.
 // league: compact results for every match in all 5 leagues —
 //   league[year][tier][roundKey] = [[winnerId, loserId, winnerRating,
 //   loserRating(, 1 if a draw)], …], roundKey "1".."39" or a playoff stage;
@@ -2999,7 +3040,20 @@ function wdl(w, d, l) {
 function recordMyMatch(result) {
   const copy = JSON.parse(JSON.stringify(result));
   copy.year = state.year;
-  ensureHistory().mine.push(copy);
+  const h = ensureHistory();
+  h.mine.push(copy);
+  compactOldMatches(h);
+}
+// What Match History's list and the season record need of an old match.
+function compactMatch(m) {
+  const COMPACT_MATCH_KEYS = ["year", "win", "draw", "exhibition", "tier", "roundLabel", "opponentName", "opponentRivalId", "opponentRating", "rankBefore", "ratingAfter"];
+  const out = { legacy: true };
+  COMPACT_MATCH_KEYS.forEach((k) => m[k] !== undefined && (out[k] = m[k]));
+  return out;
+}
+function compactOldMatches(h = ensureHistory(), year = state.year) {
+  const keepFrom = year - BAL.fullResultSeasons + 1;
+  h.mine = h.mine.map((m) => (!m.legacy && m.year < keepFrom ? compactMatch(m) : m));
 }
 
 // Resolves one rival-vs-rival match and updates both rivals' persistent
@@ -3331,16 +3385,7 @@ function nextEventGame() {
   const n = sr.you + sr.opp + 1;
   if (n > PY_GAMES) return null;
   const rival = prepEventRival(id);
-  const saved = state.activeSkills;
-  state.activeSkills = [EVENTS[id].skill.key];
-  exhibitionEvent = id;
-  let winPct;
-  try {
-    winPct = oddsPct(winProbabilityAgainst({ rivalId: rival.id, name: rival.name }));
-  } finally {
-    exhibitionEvent = null;
-    state.activeSkills = saved;
-  }
+  const winPct = withExhibition(id, () => oddsPct(winProbabilityAgainst({ rivalId: rival.id, name: rival.name })));
   // Game n is played as the day ends on preseason day (preseasonDays − PY_GAMES + n).
   return { id, n, rival, winPct, series: sr, daysUntil: BAL.preseasonDays - PY_GAMES + n - state.phaseDay };
 }
@@ -3358,16 +3403,7 @@ function playEventGame(id) {
   if (sr.you + sr.opp >= PY_GAMES) return null;
   const decidedBefore = sr.you >= need || sr.opp >= need;
   const rival = prepEventRival(id);
-  const saved = state.activeSkills;
-  state.activeSkills = [E.skill.key];
-  exhibitionEvent = id;
-  let res;
-  try {
-    res = resolveMatch({ rivalId: rival.id, name: rival.name }, { exhibition: true });
-  } finally {
-    exhibitionEvent = null;
-    state.activeSkills = saved;
-  }
+  const res = withExhibition(id, () => resolveMatch({ rivalId: rival.id, name: rival.name }, { exhibition: true }));
   const before = { you: sr.you, opp: sr.opp };
   if (res.win) sr.you += 1;
   else sr.opp += 1;
@@ -3489,17 +3525,8 @@ function triNextGame(id) {
     if (f.kind === "duel") rival = f.opp;
     else rivals = [A, B];
   }
-  const saved = state.activeSkills;
-  state.activeSkills = [EVENTS[id].skill.key];
-  exhibitionEvent = id;
-  let winPct;
-  try {
-    const p = (r) => winProbabilityAgainst({ rivalId: r.id, name: r.name });
-    winPct = oddsPct(rivals ? p(A) * p(B) : p(rival));
-  } finally {
-    exhibitionEvent = null;
-    state.activeSkills = saved;
-  }
+  const p = (r) => winProbabilityAgainst({ rivalId: r.id, name: r.name });
+  const winPct = withExhibition(id, () => oddsPct(rivals ? p(A) * p(B) : p(rival)));
   const name = rivals ? `${A.name} & ${B.name}` : rival.name;
   // A series that's behind plays its next game as today ends.
   return { id, n, rival, rivals, name, kind, winPct, series: { you: sr.you.filter(Boolean).length, opp: sr.you.filter((w) => !w).length }, daysUntil: Math.max(1, BAL.preseasonDays - PY_GAMES + n - state.phaseDay) };
@@ -3518,17 +3545,7 @@ function triPlayDay(id) {
   // that lost a day somehow still carries on rather than skipping ahead.
   const n = sr.you.length < 2 ? sr.you.length + 1 : 3;
   const t = TRI_BY_TIER[triTier(id)];
-  const play = (opp) => {
-    const saved = state.activeSkills;
-    state.activeSkills = [E.skill.key];
-    exhibitionEvent = id;
-    try {
-      return resolveMatch({ rivalId: opp.id, name: opp.name }, { exhibition: true });
-    } finally {
-      exhibitionEvent = null;
-      state.activeSkills = saved;
-    }
-  };
+  const play = (opp) => withExhibition(id, () => resolveMatch({ rivalId: opp.id, name: opp.name }, { exhibition: true }));
   if (n <= 2) {
     const opp = n === 1 ? A : B;
     const res = play(opp);
@@ -3565,17 +3582,7 @@ function triPlayDay(id) {
   } else {
     // Three-way: you play both at once; the highest score on the day wins.
     // Shown against the stronger of the two.
-    const saved = state.activeSkills;
-    state.activeSkills = [E.skill.key];
-    exhibitionEvent = id;
-    let muA, muB;
-    try {
-      muA = matchup({ rivalId: A.id, name: A.name });
-      muB = matchup({ rivalId: B.id, name: B.name });
-    } finally {
-      exhibitionEvent = null;
-      state.activeSkills = saved;
-    }
+    const [muA, muB] = withExhibition(id, () => [matchup({ rivalId: A.id, name: A.name }), matchup({ rivalId: B.id, name: B.name })]);
     const main = muA.oppMatch >= muB.oppMatch ? A : B, other = main === A ? B : A;
     const muO = main === A ? muB : muA;
     res = play(main);
@@ -3841,9 +3848,7 @@ function joinCamp() {
   state.yearCashFlow.expenses += price;
   state.camp = { year: state.year, joined: true, price, days: offseasonDaysLeft() };
   state.carbHours = 0;
-  const e = { html: `🏕️ Joined the training camp for ${state.camp.days} days (−$${fmt(price)}). ${CAMP.activityHours}h a day of camp life; ${24 - CAMP.activityHours}h for skills.`, cls: "event-good" };
-  state.logEntries.push(e);
-  appendLog(e.html, e.cls);
+  logEvent(`🏕️ Joined the training camp for ${state.camp.days} days (−$${fmt(price)}). ${CAMP.activityHours}h a day of camp life; ${24 - CAMP.activityHours}h for skills.`, "event-good");
   return true;
 }
 // What the camp is, point by point (the season-end screen and the offer).
@@ -4228,17 +4233,6 @@ function processDayEnd() {
   return { matchResult, phaseEvent, yearSummary, newYearNow };
 }
 
-// Qualitative read on a specific known opponent vs the player's current
-// rank — concrete now that the schedule/bracket tells us exactly who's
-// next, rather than a vague matchmaking estimate.
-function difficultyLabel(opponentRating, rank) {
-  const diff = opponentRating - rank;
-  if (diff <= -80) return "Favorable";
-  if (diff < 60) return "Even";
-  if (diff < 180) return "Tough";
-  return "Elite";
-}
-
 // Phrases a days-until countdown for the topbar/Career "next up" text.
 // 1 day away means ending today's day is what triggers it, so "after
 // today" reads clearer in context than "in 1d" — everything else is
@@ -4285,7 +4279,6 @@ function getNextMatchInfo() {
     if (!fixture) return { kind: "regular-end", label: "Season wrapping up…" };
     const roundNum = s.roundIndex + 1;
     const liveRating = liveOpponentRating(fixture);
-    const diff = difficultyLabel(liveRating, s.rank);
     const winPct = oddsPct(winProbabilityAgainst(fixture));
     const oppRating = Math.round(liveRating);
     return {
@@ -4294,7 +4287,6 @@ function getNextMatchInfo() {
       opponentName: fixture.name,
       opponentRating: oppRating,
       opponentRivalId: fixture.rivalId,
-      difficulty: diff,
       winPct,
       label: daysUntil <= 0
         ? `Rd ${roundNum} TODAY vs ${fixture.name} · ${winPct}%`
@@ -4312,7 +4304,6 @@ function getNextMatchInfo() {
     const opp = idx >= 0 ? p.currentRound[idx % 2 === 0 ? idx + 1 : idx - 1] : null;
     const roundName = PLAYOFF_ROUND_NAMES[p.stage];
     const liveRating = opp ? liveOpponentRating(opp) : null;
-    const diff = opp ? difficultyLabel(liveRating, s.rank) : null;
     const winPct = opp ? oddsPct(winProbabilityAgainst(opp)) : null;
     const oppRating = opp ? Math.round(liveRating) : null;
     return {
@@ -4321,7 +4312,6 @@ function getNextMatchInfo() {
       opponentName: opp ? opp.name : "?",
       opponentRating: oppRating,
       opponentRivalId: opp ? opp.rivalId : null,
-      difficulty: diff,
       winPct,
       label: daysUntil <= 0
         ? `${roundName} TODAY vs ${opp ? opp.name : "?"}${winPct != null ? " · " + winPct + "%" : ""}`
@@ -4853,6 +4843,11 @@ function renderPlanner() {
   }
 }
 
+// Adds a line to the saved log and shows it.
+function logEvent(html, cls = "") {
+  state.logEntries.push({ html, cls });
+  appendLog(html, cls);
+}
 function appendLog(html, cls) {
   const entry = document.createElement("div");
   entry.className = `log-entry ${cls || ""}`.trim();
@@ -5653,6 +5648,7 @@ function switchToGame(len) {
   if (!raw) return startNewGame(len);
   try {
     state = migrateSave(JSON.parse(raw));
+    lastWritten = { key: slotKey(len), str: raw };
   } catch (e) {
     applyGameLength(state.gameLength);
     alert("That game's save couldn't be read.");
@@ -5771,9 +5767,7 @@ function openSpecialisations({ required = false, onDone = null } = {}, picked = 
     if (picked.length !== n) return;
     const losses = setSpecialisations(picked);
     if (losses.length) {
-      const e = { html: `⭐ Specialisations: ${picked.map((k) => skillMeta(k).name).join(", ")}. ${losses.map((l) => `${skillMeta(l.key).icon} ${skillMeta(l.key).name} ${fmt(l.from)} → ${l.to}`).join(", ")}.`, cls: "event-bad" };
-      state.logEntries.push(e);
-      appendLog(e.html, e.cls);
+      logEvent(`⭐ Specialisations: ${picked.map((k) => skillMeta(k).name).join(", ")}. ${losses.map((l) => `${skillMeta(l.key).icon} ${skillMeta(l.key).name} ${fmt(l.from)} → ${l.to}`).join(", ")}.`, "event-bad");
     }
     saveState();
     closeModal();
@@ -5796,7 +5790,8 @@ function openNameModal(isFirstTime) {
       ${isFirstTime ? eduModeChoiceHtml({ intro: true }) : ""}
       <button class="primary-btn" id="nameSaveBtn">Save</button>
     </div>`;
-  openModal(html);
+  // A new player has to be named: closing it any other way brings it back.
+  openModal(html, isFirstTime ? { onDismiss: () => !state.playerName && setTimeout(() => openNameModal(true), 0) } : {});
   eduModeChoiceWire();
   const input = $("playerNameInput");
   input.focus();
@@ -6444,7 +6439,7 @@ function myMatchesHtml() {
           attrs: m.legacy ? "" : `data-mi="${i}"`,
         };
       });
-      const legacyNote = list.some((x) => x.m.legacy) ? `<p class="modal-sub">Matches without details were played before full results were saved.</p>` : "";
+      const legacyNote = list.some((x) => x.m.legacy) ? `<p class="modal-sub">Greyed matches keep just the score: full results are kept for the last ${BAL.fullResultSeasons} seasons.</p>` : "";
       return `<div class="modal-section">
         <h3>Year ${y}${tiers.length ? ` · ${tiers.map(lg).join(" → ")}` : ""} · ${wdl(w, d, list.length - w - d)}</h3>
         ${resultsListHtml(rows)}${legacyNote}
@@ -7673,7 +7668,16 @@ function openSaveTransfer(tab = saveTransferTab || state.gameLength) {
   } catch (e) {
     raw = null;
   }
-  const saved = current ? state : raw ? JSON.parse(raw) : null;
+  // An unreadable slot counts as empty here, so Import can still replace it.
+  let saved = current ? state : null;
+  if (!current && raw) {
+    try {
+      saved = JSON.parse(raw);
+      if (!saved || typeof saved !== "object" || saved.year == null) saved = null;
+    } catch (e) {
+      saved = null;
+    }
+  }
   const canShare = typeof navigator.share === "function";
   const tabs = `<div class="league-tabs">${GAME_LENGTH_KEYS.map((k) => `<button class="league-tab ${k === tab ? "active" : ""}" data-xfer-tab="${k}">${gameLengthInfo(k).icon} ${gameLengthInfo(k).name}${k === state.gameLength ? " (playing)" : ""}</button>`).join("")}</div>`;
   const exportHtml = saved
@@ -7855,11 +7859,10 @@ function runDay() {
   const phaseBefore = state.seasonPhase;
   const tierBefore = state.leagueTier;
   const leaveBefore = onLeave();
+  const statusBefore = state.employment.status;
   if (!state.phaseStart) state.phaseStart = phaseSnapshot();
   const dayHeaderHtml = `Day ${state.day} — Results`;
-  const entry = { html: dayHeaderHtml, cls: "day-header" };
-  state.logEntries.push(entry);
-  appendLog(entry.html, entry.cls);
+  logEvent(dayHeaderHtml, "day-header");
 
   const events = resolveDay();
   events.forEach((ev) => {
@@ -7904,15 +7907,11 @@ function runDay() {
     const summary = matchResult.exhibition
       ? `${label}${oppText} — ${matchResult.win ? "WON" : "LOST"}.`
       : `🏆 ${label}${oppText} (${matchResult.opponentRating}) — ${matchResult.win ? "WON" : matchResult.draw ? "DREW" : "LOST"}. Rating ${fmt(matchResult.rankBefore)} → ${fmt(state.rank)}. +$${matchResult.cashReward}.`;
-    const e = { html: summary, cls: "event-match" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(summary, "event-match");
   }
 
   if (phaseEvent) {
-    const e = { html: phaseEvent, cls: "event-season" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(phaseEvent, "event-season");
   }
 
   // A new phase: build its splash screen (summary of the phase just played,
@@ -7929,9 +7928,7 @@ function runDay() {
   if (newYearNow) {
     const ny = startNewYear();
     yearSummary = ny.yearSummary;
-    const e = { html: ny.phaseEvent, cls: "event-season" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(ny.phaseEvent, "event-season");
     splashes.push(buildPhaseSplash("offseason", "preseason", { yearSummary, tierBefore }));
     state.phaseStart = phaseSnapshot();
   }
@@ -7941,20 +7938,19 @@ function runDay() {
   // required hours when the season does (the plan may need trimming).
   if (onLeave()) state.allocation.work = 0;
   else if (leaveBefore && state.employment.status !== "unemployed") state.allocation.work = requiredWorkHours();
+  // Hired on leave's last day (found while still off, so Work stayed 0h):
+  // the season starts today, so Work goes to the required hours too.
+  else if (statusBefore === "unemployed" && state.employment.status !== "unemployed" && !state.allocation.work) state.allocation.work = requiredWorkHours();
 
   const skillCycleEvent = advanceSkillCycle(wasInSeason);
   if (skillCycleEvent) {
-    const e = { html: skillCycleEvent, cls: "event-season" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(skillCycleEvent, "event-season");
   }
 
   if (yearSummary) {
     const raiseText = yearSummary.newPayRate != null ? ` 📈 Pay is now $${fmt(yearSummary.newPayRate)}/day.` : "";
     const summary = `💰 Year ${yearSummary.year} cash flow: +$${fmt(yearSummary.workPay)} work, +$${fmt(yearSummary.matchCash)} matches, -$${fmt(yearSummary.expenses)} expenses → net ${fmtSigned(yearSummary.net, 0)}.${raiseText}`;
-    const e = { html: summary, cls: "event-season" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(summary, "event-season");
   }
 
   // Energy items can be bought again once the week is over.
@@ -7968,13 +7964,15 @@ function runDay() {
   state.day += 1;
   // After the day ticks over, so the new week's wage is pro-rated for it.
   state.staff.missed = [];
-  if (Object.keys(endedHires).length) staffWeekEnded(endedHires);
-  // Back from camp: staff paused there are picked up again (auto-rehire).
+  // Back from camp: staff paused there are picked up again (auto-rehire) —
+  // with the week's ended contracts in one go, so one message covers both.
   const paused = (state.staff && state.staff.paused) || {};
+  let rehire = endedHires;
   if (!inCamp() && Object.keys(paused).length) {
     state.staff.paused = {};
-    staffWeekEnded(paused);
+    rehire = { ...paused, ...endedHires };
   }
+  if (Object.keys(rehire).length) staffWeekEnded(rehire);
   return { matchResult, phaseEvent, yearSummary, splashes };
 }
 
@@ -8114,9 +8112,7 @@ function endWeek(run) {
   }
   const { daysRun, unassigned } = run;
   if (stopReason) {
-    const e = { html: `⏸️ End Week stopped after ${daysRun} of ${planned} day${planned === 1 ? "" : "s"}: ${stopReason}`, cls: "event-bad" };
-    state.logEntries.push(e);
-    appendLog(e.html, e.cls);
+    logEvent(`⏸️ End Week stopped after ${daysRun} of ${planned} day${planned === 1 ? "" : "s"}: ${stopReason}`, "event-bad");
   }
   finishTurn();
   const summaryHtml = weekSummaryHtml({ start, daysRun, planned, stopReason, unassigned });
@@ -8265,7 +8261,8 @@ function renderAll() {
     state.logEntries.push(welcome);
     appendLog(welcome.html, welcome.cls);
   } else if (lastLoadedFromSave) {
-    appendLog(`Welcome back — resumed from Day ${state.day}.`, "event-good");
+    logEvent(`Welcome back — resumed from Day ${state.day}.`, "event-good");
+    lastLoadedFromSave = false; // once per load, not on every re-render
   }
 
   if (loadFailed) {
@@ -8605,7 +8602,9 @@ function eduTrainingDue(days) {
 // Runs (or picks up) a training check: its functions one after another,
 // then the bonus.
 function openEduTraining(m, onDone) {
-  if (!state.edu.train || state.edu.train.key !== m.key) state.edu.train = { key: m.key, i: 0, right: 0, total: 0, fns: [] };
+  // Keyed by the day and the invitational: switching invitational part-way
+  // starts the new one's check afresh rather than carrying a score over.
+  if (!state.edu.train || state.edu.train.key !== m.key || (state.edu.train.event && state.edu.train.event !== m.event)) state.edu.train = { key: m.key, event: m.event, i: 0, right: 0, total: 0, fns: [] };
   const t = state.edu.train;
   if (t.i >= eduTrainCount(m.event)) return eduTrainingSummary(m, onDone);
   const sub = { ...m, key: `${m.key}#${t.i}`, trainKey: m.key, trainIdx: t.i, exclude: t.fns || [] };
@@ -8635,9 +8634,7 @@ function eduTrainingSummary(m, onDone) {
   state.edu.trainDone = [...(state.edu.trainDone || []), m.key].slice(-12);
   state.edu.train = null;
   const pct = Math.round(100 * acc);
-  const e = { html: `📘 Training check: ${t.right}/${t.total} right (${pct}%) — ${E.skill.icon} ${E.skill.name} +${fmt1(gain)}${courseGain > 0 ? `, 📚 course +${fmt1(courseGain)}h` : ""}.${done.map((c) => ` ${c.icon} Mastered ${c.name}!`).join("")}`, cls: "event-good" };
-  state.logEntries.push(e);
-  appendLog(e.html, e.cls);
+  logEvent(`📘 Training check: ${t.right}/${t.total} right (${pct}%) — ${E.skill.icon} ${E.skill.name} +${fmt1(gain)}${courseGain > 0 ? `, 📚 course +${fmt1(courseGain)}h` : ""}.${done.map((c) => ` ${c.icon} Mastered ${c.name}!`).join("")}`, "event-good");
   saveState();
   const i = evCurrent(m.event);
   openModal(`
@@ -8791,9 +8788,7 @@ function eduAllMastered() {
 function eduCheckCompletionist() {
   if (!eduCompletionist() || (state.trophies && state.trophies.completionist) || !eduAllMastered()) return;
   state.trophies.completionist = state.year;
-  const e = { html: `📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions, every invitational's set and every question mastered — a trophy for the cabinet.`, cls: "event-good" };
-  state.logEntries.push(e);
-  appendLog(e.html, e.cls);
+  logEvent(`📚 <b>Completionist!</b> Every one of Excel's ${EDU_LIST.length} functions, every invitational's set and every question mastered — a trophy for the cabinet.`, "event-good");
 }
 
 // A finished quiz: its score for the match, and the function's record —
@@ -9072,15 +9067,7 @@ function eduCareerHtml() {
 // game plays on its own skill, as the match will.
 function eduBreakdownFor(m) {
   if (!m.event || !EVENTS[m.event]) return performanceBreakdown();
-  const saved = state.activeSkills;
-  state.activeSkills = [EVENTS[m.event].skill.key];
-  exhibitionEvent = m.event;
-  try {
-    return performanceBreakdown();
-  } finally {
-    exhibitionEvent = null;
-    state.activeSkills = saved;
-  }
+  return withExhibition(m.event, performanceBreakdown);
 }
 function eduReview(m, cur, f, onDone) {
   const qs = cur.qs, picks = cur.picks;
@@ -9338,7 +9325,7 @@ function openFeedback(type = "bug") {
     if (r.result === "sent") feedbackRemember(report, r.number, r.key);
     else feedbackQueue(report);
     $("fbText").value = "";
-    status.textContent = r.result === "sent" ? `✅ Sent — thank you! It's report #${r.number}; follow it below.` : "📤 Saved on this device — it'll send by itself next time you're online.";
+    status.textContent = r.result === "sent" ? (r.number ? `✅ Sent — thank you! It's report #${r.number}; follow it below.` : "✅ Sent — thank you!") : "📤 Saved on this device — it'll send by itself next time you're online.";
     $("fbReports").innerHTML = feedbackReportsHtml();
     $("fbSend").disabled = false;
   });
@@ -9355,6 +9342,23 @@ function init() {
   setTimeout(flushFeedbackOutbox, 3000);
   wireInputs();
   renderAll();
+  // iOS can close a Home Screen app in the background without warning:
+  // save whenever it's hidden, so a plan set up since the last End Day
+  // (sliders, a choice made from the plan) isn't lost.
+  // (Only once a game has begun: a new player still choosing their game
+  // must see the game picker again next time, not a half-made save.)
+  const saveIfStarted = () => {
+    if (!STORAGE_OK || !state || !state.playerName) return;
+    try {
+      const key = slotKey(state.gameLength), stored = localStorage.getItem(key);
+      if (lastWritten.key !== key || stored !== lastWritten.str) return; // saved elsewhere since
+      if (JSON.stringify(state) !== stored) saveState();
+    } catch (e) {
+      // storage unavailable: nothing to do
+    }
+  };
+  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && saveIfStarted());
+  window.addEventListener("pagehide", saveIfStarted);
 
   if (needsGamePick) {
     openGames({ first: true });
@@ -9395,9 +9399,26 @@ function init() {
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (!hadController || refreshedForUpdate) return;
       refreshedForUpdate = true;
-      window.location.reload();
+      reloadWhenIdle();
     });
   }
+}
+
+// A new version reloads the page — but not while a pop-up with a text box
+// is open (a half-typed report or name would be lost): it waits until it's
+// closed. The game is saved first either way.
+function reloadWhenIdle() {
+  const typing = () => !$("modalOverlay").classList.contains("hidden") && !!$("modalBody").querySelector("textarea, input[type=text], input[type=email], input:not([type])");
+  const go = () => {
+    saveState();
+    window.location.reload();
+  };
+  if (!typing()) return go();
+  const wait = setInterval(() => {
+    if (typing()) return;
+    clearInterval(wait);
+    go();
+  }, 1000);
 }
 
 // Start even if the document finished parsing before this script ran

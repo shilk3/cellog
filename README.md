@@ -50,7 +50,12 @@ repo only). It carries the version, league and season, device and the last
 which report numbers are the player's and shows their status in 📬 My
 reports (labels: bug, suggestion, in progress, fixed, won't do); a comment
 starting with 📣 shows there as a note to the player. Reports written offline
-wait on the device and send themselves later.
+wait on the device and send themselves later. Each report gets a key (an HMAC
+of its number) that only the sending device holds; a status check needs it.
+The function refuses posts from other websites, rate-limits per address
+(before anything else runs) and caps new issues a day. Set
+`FEEDBACK_SECRET` too: without it the keys come from the token, so rotating
+the token would invalidate every player's keys.
 
 **Guides** (☰ → ❓ Help, also offline): 🗺️ [Mechanics Map](https://cellog.vercel.app/guide/map.html)
 — every mechanic as a box with arrows for what it pushes on (tap one to
@@ -319,7 +324,8 @@ goal keeps its best, so rust or a lost title never takes it back down.
 table position and your win chance, then your path through the playoff
 bracket once it starts, plus the whole playoff bracket (seeds, results, the
 champion) during the playoffs and offseason — and keeps every match
-you play — tap one to reopen its full result screen — plus every result in
+you play (this season's and last season's can be tapped to reopen their full
+result screen; older ones keep just the score, so the save stays small) — plus every result in
 all 5 leagues, round by round, for this season and last. Tap any rival's
 name (there or in a league table) to see their season so far. Your matches
 and every rival's page share one layout: round, W/L, the opponent with their

@@ -13,14 +13,21 @@
 
 const crypto = require("crypto");
 const REPO = process.env.FEEDBACK_REPO || "shilk3/cellog-feedback";
-const LIMITS = { text: 4000, email: 200, log: 8000, context: 3000, save: 600000 };
+const LIMITS = { text: 4000, email: 200, log: 8000, context: 3000, save: 240000 };
 const SAVE_CHUNK = 60000; // an issue comment holds 65,536 characters
 const RATE = { max: 6, windowMs: 10 * 60 * 1000 }; // reports per address, best effort
-const STATUS_RATE = { max: 30, windowMs: 10 * 60 * 1000 }; // status checks per address
-const STATUS_IDS = 20; // reports per status check
+const STATUS_RATE = { max: 12, windowMs: 10 * 60 * 1000 }; // status checks per address
+const STATUS_IDS = 10; // reports per status check
+const DAILY_CAP = 60; // new issues a day, all senders (per instance, best effort)
+const STATUS_CACHE_MS = 2 * 60 * 1000; // an issue's status is re-read at most this often
+// Every request that passes the Origin check is from the game's own pages
+// (a request with no Origin, like curl, is let through: browsers always send
+// one on a cross-site POST, so another website can't use its visitors).
 const recent = new Map();
 const recentStatus = new Map();
 const sentRids = new Map(); // rid → issue number, while this instance lives
+const statusCache = new Map(); // issue number → { at, issue }
+let today = { day: "", count: 0 };
 
 // The live game, its GitHub Pages copy, Vercel previews of it, and local dev.
 function allowedOrigin(origin) {
@@ -56,13 +63,34 @@ const cell = (s) => quiet(String(s)).replace(/\|/g, "\\|").replace(/\n/g, " ");
 
 function rateLimited(ip, map = recent, rate = RATE) {
   const now = Date.now();
+  // Forget addresses that have gone quiet, so the map can't grow for ever.
+  if (map.size > 2000) map.forEach((hits, k) => hits.every((t) => now - t >= rate.windowMs) && map.delete(k));
   const hits = (map.get(ip) || []).filter((t) => now - t < rate.windowMs);
   hits.push(now);
   map.set(ip, hits);
   return hits.length > rate.max;
 }
+// Keeps a Map to its newest `max` entries.
+function capMap(map, max) {
+  while (map.size > max) map.delete(map.keys().next().value);
+}
+function overDailyCap() {
+  const day = new Date().toISOString().slice(0, 10);
+  if (today.day !== day) today = { day, count: 0 };
+  return today.count >= DAILY_CAP;
+}
+async function issueCached(n) {
+  const hit = statusCache.get(n);
+  if (hit && Date.now() - hit.at < STATUS_CACHE_MS) return hit.issue;
+  const issue = await gh(`/issues/${n}`);
+  statusCache.set(n, { at: Date.now(), issue: { number: issue.number, state: issue.state, labels: issue.labels, comments: issue.comments } });
+  capMap(statusCache, 500);
+  return statusCache.get(n).issue;
+}
 const ipOf = (req) => String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
-// A report's key: only the device that sent it gets it back.
+// A report's key: only the device that sent it gets it back. Set
+// FEEDBACK_SECRET in Vercel to keep keys stable: without it they come from
+// the token, so rotating the token would make every player's keys invalid.
 const SECRET = process.env.FEEDBACK_SECRET || crypto.createHash("sha256").update(String(process.env.FEEDBACK_GITHUB_TOKEN)).digest("hex");
 const keyOf = (n) => crypto.createHmac("sha256", SECRET).update(String(n)).digest("hex").slice(0, 16);
 const keyOk = (n, key) => /^[0-9a-f]{16}$/.test(key || "") && crypto.timingSafeEqual(Buffer.from(key), Buffer.from(keyOf(n)));
@@ -86,8 +114,8 @@ async function playerNote(issue) {
   return note ? note.body.trim().replace(/^📣\s*/, "").replace(/\n+-{3,}\n[\s\S]*$/, "").trim().slice(0, 300) : "";
 }
 
-// ?ids=12:key,7 — with a report's key: its status and 📣 note; without
-// (reports sent before keys): its status only.
+// ?ids=12:key,9:key — each report's status and 📣 note, but only with its
+// key (so nobody can look up other people's reports); without it: unknown.
 async function status(req, res) {
   if (rateLimited(ipOf(req), recentStatus, STATUS_RATE)) return res.status(429).json({ error: "Too many checks — try again in a few minutes." });
   const ids = String(req.query.ids || "")
@@ -100,9 +128,10 @@ async function status(req, res) {
     .slice(0, STATUS_IDS);
   const reports = await Promise.all(
     ids.map(async ({ n, key }) => {
+      if (!keyOk(n, key)) return { n, status: "unknown" };
       try {
-        const issue = await gh(`/issues/${n}`);
-        return keyOk(n, key) ? { n, status: statusOf(issue), note: await playerNote(issue) } : { n, status: statusOf(issue) };
+        const issue = await issueCached(n);
+        return { n, status: statusOf(issue), note: await playerNote(issue) };
       } catch (e) {
         return { n, status: "unknown" };
       }
@@ -112,13 +141,22 @@ async function status(req, res) {
 }
 
 async function create(req, res) {
-  const b = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
-  if (b.website) return res.status(200).json({ ok: true }); // the hidden field: a bot filled it in
+  let b;
+  try {
+    b = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+  } catch (e) {
+    return res.status(400).json({ error: "That report couldn't be read." });
+  }
+  if (!b || typeof b !== "object") return res.status(400).json({ error: "That report couldn't be read." });
+  if (b.website) return res.status(200).json({ ok: true, number: null }); // the hidden field: a bot filled it in
   const type = b.type === "suggestion" ? "suggestion" : "bug";
   const text = str(b.text, LIMITS.text).trim();
   if (text.length < 5) return res.status(400).json({ error: "Please say a little more." });
   const email = str(b.email, LIMITS.email).trim();
   if (email && !/^[^\s@`]+@[^\s@`]+\.[^\s@`]+$/.test(email)) return res.status(400).json({ error: "That email doesn't look right." });
+  // Limits first, so nothing (not even the resend check below) runs
+  // unchecked.
+  if (rateLimited(ipOf(req))) return res.status(429).json({ error: "That's a lot of reports in a short time — please try again in a few minutes." });
   // Sent before (the reply was lost, say): the same issue, not another.
   const rid = /^[a-z0-9]{8,40}$/.test(b.rid || "") ? b.rid : "";
   if (rid) {
@@ -133,7 +171,7 @@ async function create(req, res) {
     }
     if (number) return res.status(200).json({ ok: true, number, key: keyOf(number) });
   }
-  if (rateLimited(ipOf(req))) return res.status(429).json({ error: "That's a lot of reports in a short time — please try again in a few minutes." });
+  if (overDailyCap()) return res.status(429).json({ error: "Lots of reports today — yours is saved and will try again later." });
 
   const ctx = b.context && typeof b.context === "object" ? b.context : {};
   const ctxRows = Object.entries(ctx)
@@ -142,11 +180,11 @@ async function create(req, res) {
     .join("\n")
     .slice(0, LIMITS.context);
   const log = str(Array.isArray(b.log) ? b.log.join("\n") : b.log, LIMITS.log).replace(/```/g, "ˋˋˋ");
-  // A save code is its prefix and base64 — anything else isn't attached.
-  const save = (() => {
-    const s = str(b.save, LIMITS.save).replace(/\s+/g, "");
-    return /^CG1[zj]:[A-Za-z0-9+/=]+$/.test(s) ? s : "";
-  })();
+  // A save code is its prefix and base64 — anything else (or one too big
+  // to attach whole) isn't attached, and the report says so.
+  const rawSave = typeof b.save === "string" ? b.save.replace(/\s+/g, "") : "";
+  const save = rawSave.length <= LIMITS.save && /^CG1[zj]:[A-Za-z0-9+/=]+$/.test(rawSave) ? rawSave : "";
+  const saveSkipped = rawSave && !save;
   const firstLine = text.split("\n")[0].replace(/\s+/g, " ").trim();
   const title = quiet(`${type === "bug" ? "🐞" : "💡"} ${firstLine.length > 70 ? firstLine.slice(0, 69) + "…" : firstLine}`);
   const body = [
@@ -159,13 +197,17 @@ async function create(req, res) {
     "|---|---|",
     ctxRows || "| (none) | |",
     log ? `\n<details><summary>Last log lines</summary>\n\n\`\`\`text\n${log}\n\`\`\`\n</details>` : "",
-    save ? `\n💾 Save attached in the comments below (${Math.ceil(save.length / SAVE_CHUNK)} part${save.length > SAVE_CHUNK ? "s" : ""}).` : "",
+    save ? `\n💾 Save attached in the comments below (${Math.ceil(save.length / SAVE_CHUNK)} part${save.length > SAVE_CHUNK ? "s" : ""}).` : saveSkipped ? "\n💾 A save was sent but not attached (too big, or not a save code)." : "",
     "",
     `<sub>Sent from the in-game form${rid ? ` (ref ${rid})` : ""}. A comment starting with 📣 shows in the player's My reports.</sub>`,
   ].join("\n");
 
   const issue = await gh("/issues", "POST", { title, body, labels: [type] });
-  if (rid) sentRids.set(rid, issue.number);
+  today.count += 1;
+  if (rid) {
+    sentRids.set(rid, issue.number);
+    capMap(sentRids, 1000);
+  }
   // The report's in: a save that can't be attached doesn't undo it (a
   // failure here would only make the device send it all again).
   if (save) {
@@ -185,6 +227,7 @@ async function create(req, res) {
 
 module.exports = async (req, res) => {
   const origin = req.headers.origin || "";
+  if (origin && !allowedOrigin(origin)) return res.status(403).json({ error: "forbidden" });
   if (allowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
