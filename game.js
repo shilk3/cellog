@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.16.1";
+const APP_VERSION = "5.16.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -870,7 +870,7 @@ function movesGolf(moves) {
 const SKILLS = [
   { key: "data", name: "Data Analysis", icon: "📈" },
   { key: "map", name: "Mapping", icon: "🗺️" },
-  { key: "text", name: "Text Processing", icon: "📝" },
+  { key: "text", name: "Text Parsing", icon: "📝" },
   { key: "games", name: "Game Logic", icon: "🎲" },
   { key: "math", name: "Math & Formula", icon: "🔢" },
   { key: "time", name: "Time & Dates", icon: "⏱️" },

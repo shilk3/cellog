@@ -73,7 +73,7 @@ day has up to 24 hours — split them across Skill Training, Gym, Sleep,
 Relax, and Food. Everything is connected:
 
 - **Skill Training** raises one of 7 case specialties — Data Analysis,
-  Mapping, Text Processing, Game Logic, Math & Formula, Time & Dates, and
+  Mapping, Text Parsing, Game Logic, Math & Formula, Time & Dates, and
   Cards & Rand. During the season only 1-3 skills are "active"
   (trainable) each round — 1 in 30% of weeks, 2 in 50%, 3 in 20% —
   revealed at the start of that round's week —

@@ -12,7 +12,7 @@ ARIAL = "Arial"
 HEAD = PatternFill("solid", fgColor="1F4E3D")
 INPUT = PatternFill("solid", fgColor="FFF2CC")
 thin = Side(style="thin", color="D9D9D9")
-SKILL = {"data": "Data Analysis", "map": "Mapping", "text": "Text Processing", "games": "Game Logic", "math": "Math & Formula", "time": "Time & Dates", "cards": "Cards & Rand"}
+SKILL = {"data": "Data Analysis", "map": "Mapping", "text": "Text Parsing", "games": "Game Logic", "math": "Math & Formula", "time": "Time & Dates", "cards": "Cards & Rand"}
 LEAGUE = {5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan"}
 
 js = open("edu-general.js").read()
