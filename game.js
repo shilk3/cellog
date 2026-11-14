@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.16.3";
+const APP_VERSION = "5.16.4";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1293,6 +1293,23 @@ function setSpecialisations(keys, s = state) {
     }
   });
   return losses;
+}
+// The number after the slash (plan and Career): the most a skill can reach
+// or hold right now — its training ceiling, or what its XP holds it at if
+// that's higher. So a skill held at 80 by its XP
+// with no coach reads 80/80 (safe, maxed for now), while one above its
+// ceiling that XP doesn't hold reads e.g. 58/50 (it rusts without an hour).
+function skillShownCap(key) {
+  const cap = skillCap(key);
+  if (isTopSkill(key) || isEventSkill(key)) return cap;
+  const held = Math.min(state.stats.skills[key], skillXp(key));
+  return Math.max(cap, Math.floor(held + 1e-9));
+}
+// What sets that number, for Career's "cap: …" note.
+function skillShownCapCause(key) {
+  const shown = skillShownCap(key);
+  if (shown <= skillCap(key)) return skillCapCause(key);
+  return shown >= leagueSkillCap(key) ? `${lg(state.peakLeagueTier)}${isSpecialisation(key) ? "" : ", not a ⭐"}` : "XP";
 }
 // Which gate is holding a skill's ceiling down — tells the player whether
 // the fix is hiring a coach (Staff) or a promotion (peak league).
@@ -4647,7 +4664,7 @@ function renderPlannerRows() {
 
   trainableSkills().forEach((key) => {
     const meta = skillMeta(key);
-    const cap = skillCap(key);
+    const cap = skillShownCap(key);
     const lvl = staffLevel(coachKey(key));
     // Tap it to go straight to this skill's coach in Staff.
     const shopTag = isTopSkill(key) || isEventSkill(key)
@@ -6100,11 +6117,11 @@ function openCareer({ keepScroll = false } = {}) {
       <p class="modal-sub">⭐ skills can reach ${leagueSkillCap()}, the rest ${leagueSkillCap() - BAL.otherSkillCapGap} (${lg(state.peakLeagueTier)} best). Average ${skillAverage()}.</p>`}
       ${inSeason() ? `<p class="modal-sub skills-legend">🟢 = this week's focus, the only skills you can train and the ones tested in the next match.</p>` : ""}
       ${(inTop() ? TOP_SKILLS : SKILLS).map((sk) => {
-        const cap = skillCap(sk.key);
+        const cap = skillShownCap(sk.key);
         const val = state.stats.skills[sk.key];
         const pct = clamp(val, 0, 100);
         const active = trainableSkills().includes(sk.key);
-        const cause = skillCapCause(sk.key);
+        const cause = skillShownCapCause(sk.key);
         return `
         <div class="skill-row-detail ${active ? "skill-row-detail-active" : ""}">
           <div class="skill-row-detail-label"><span>${sk.icon} ${sk.name}${isSpecialisation(sk.key) ? " ⭐" : ""}${active ? " 🟢" : ""}</span><span>${fmt(val)}/${cap}${cause ? ` · cap: ${cause}` : ""}${xpText(sk.key)}</span></div>
