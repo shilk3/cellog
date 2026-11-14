@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.16.4";
+const APP_VERSION = "5.16.5";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4673,14 +4673,14 @@ function renderPlannerRows() {
       ? `<button class="skill-shop-tag coach-link" data-coach="${key}">🏕️ Lv${lvl}</button>`
       : lvl > 0
       ? `<button class="skill-shop-tag coach-link" data-coach="${key}">🧑‍🏫 Lv${lvl}</button>`
-      : `<button class="skill-shop-tag skill-shop-tag-none coach-link" data-coach="${key}">no coach</button>`;
+      : `<button class="skill-shop-tag skill-shop-tag-none coach-link" data-coach="${key}" aria-label="No coach — tap for Staff">🧑‍🏫 –</button>`;
     rows.push(
       comboRowHtml(key, {
         icon: meta.icon,
         label: `${meta.name}${isSpecialisation(key) ? " ⭐" : ""}`,
-        // No "held" word: the slider's blue-grey track already says it won't
-        // rust (a coach, or XP at its level) — and keeps the row on 2 lines.
-        outcomeText: `${fmt(s.skills[key])}/${cap}${xpText(key)}`,
+        // 🛡️ = won't rust today: under 1h, but a coach or its XP holds it
+        // (an emoji, not the word "held", so the row stays on 2 lines).
+        outcomeText: `${fmt(s.skills[key])}/${cap}${(a.skills[key] || 0) < BAL.skillDecayThresholdHours && (lvl > 0 || s.skills[key] <= skillXp(key) + 1e-9) ? " 🛡️" : ""}${xpText(key)}`,
         value: s.skills[key],
         previewValue: preview.skills[key],
         cap,
@@ -7533,7 +7533,7 @@ function openHowTo() {
 
   sec("rust", "📉", "Skill rust", ul([
     `A skill trained under ${B.skillDecayThresholdHours}h a day — or locked because it's not in focus — slowly rusts (about half a point a week).`,
-    "A hired <b>Coach</b> stops their skill rusting at all, trained or not. Under 1h, a skill that won't rust (coached, or at its XP) shows a blue-grey slider instead of red.",
+    "A hired <b>Coach</b> stops their skill rusting at all, trained or not. Under 1h, a skill that won't rust (coached, or at its XP) shows <b>🛡️</b> after its number and a blue-grey slider instead of red. <b>🧑‍🏫 –</b> means no coach (tap it for Staff).",
     "Above its ceiling a skill is never cut down: 1h a day holds it.",
     "<b>🎓 Experience is a floor:</b> a skill never rusts below its XP.",
   ]));
