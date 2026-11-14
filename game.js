@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.13.1";
+const APP_VERSION = "5.13.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -8837,7 +8837,7 @@ function eduFinishQuiz(cur) {
   });
   state.edu.asked = (state.edu.asked || 0) + total;
   state.edu.correct = (state.edu.correct || 0) + right;
-  state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly, gen };
+  state.edu.quiz = { key: cur.key, fn: cur.fn, right, total, acc: right / total, newly, gen, genNewly };
   state.edu.current = null;
   if (newly || genNewly) eduCheckCompletionist();
   return state.edu.quiz;
@@ -9113,6 +9113,7 @@ function eduReview(m, cur, f, onDone) {
       <p class="edu-desc">${escapeHtml(f.desc)}${f.grp ? `. <span class="kv-dim">Takes: ${escapeHtml(f.takes)}</span>` : ""}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
       ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.</div>` : ""}
       ${genLine}
+      ${gi >= 0 && res.genNewly ? `<div class="callout edu-mastered">🏅 Mastered! This question won't come up again until you've mastered the rest.</div>` : ""}
       ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
       ${!counts ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
       ${!counts || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set ? `${eduSetIcon(qs[gi].set)} ${EDU_SET_INFO[qs[gi].set].name}` : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
