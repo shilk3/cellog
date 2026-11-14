@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.15.0";
+const APP_VERSION = "5.15.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -2351,7 +2351,7 @@ function resolveEmploymentDay() {
       state.allocation.work = requiredWorkHours();
       events.push({
         type: "good",
-        text: onLeave() ? `💼 Found a new job! You start when the season does — on paid leave until then.` : `💼 Found a new job! Work resumes at ${BAL.workHoursRequired}h/day.`,
+        text: onLeave() ? `💼 Found a new job! You start when the season does — on paid leave until then.` : `💼 Found a new job! Work resumes at ${requiredWorkHours()}h/day${playoffSponsored() ? " — 🎁 your new employer sponsors your playoff run (6h, full pay)" : ""}.`,
       });
     } else if (workH > 0) {
       events.push({ type: "neutral", text: `🔍 Job search: ${fmt(emp.jobSearchHours)}/${jobSearchTarget()}h` });
@@ -7229,7 +7229,7 @@ function dayEventCards(before) {
     } else {
       cards.push({
         icon: "💼", tone: "good", title: "Hired!",
-        body: `The job search paid off. Work is back to <b>${BAL.workHoursRequired}h/day</b> at $${fmt(emp.workPay)}/day, with a full set of ${fmt1(BAL.strikesToFire)} chances.${isOverAllocated() ? ` It's back in your plan, which now uses <b>${totalAssigned()}h</b> of today's ${todayHours()}h.` : ""}`,
+        body: `The job search paid off. Work is back to <b>${requiredWorkHours()}h/day</b> at $${fmt(emp.workPay)}/day${playoffSponsored() ? ` — 🎁 your new employer is sponsoring your playoff run, so it's ${BAL.playoffWorkHours}h instead of ${BAL.workHoursRequired}h, at full pay, until you're out` : ""}, with a full set of ${fmt1(BAL.strikesToFire)} chances.${isOverAllocated() ? ` It's back in your plan, which now uses <b>${totalAssigned()}h</b> of today's ${todayHours()}h.` : ""}`,
         tip: isOverAllocated() ? "Trim training or other hours to fit, then carry on. Missing Work hours costs chances again from tomorrow." : "Missing Work hours costs chances again from tomorrow — check the Work slider fits today's plan.",
       });
     }
