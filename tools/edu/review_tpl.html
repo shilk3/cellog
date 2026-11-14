@@ -60,8 +60,8 @@ td.args code { font-size: 12.5px; }
     <select id="skill" aria-label="Skill">
       <option value="all">All skills</option>
       <option value="data">📈 Data Analysis</option><option value="map">🗺️ Mapping</option><option value="text">📝 Text Processing</option>
-      <option value="games">🎲 Game Logic</option><option value="math">🔢 Math &amp; Formulas</option><option value="time">⏱️ Time &amp; Dates</option>
-      <option value="cards">🃏 Cards &amp; Random</option>
+      <option value="games">🎲 Game Logic</option><option value="math">🔢 Math &amp; Formula</option><option value="time">⏱️ Time &amp; Dates</option>
+      <option value="cards">🃏 Cards &amp; Rand</option>
     </select>
     <span class="count" id="count"></span>
   </div>
@@ -80,7 +80,7 @@ td.args code { font-size: 12.5px; }
 </div>
 <script>
 __DATA__
-const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Random" };
+const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Rand" };
 const TITAN = { lambda: "LAMBDA Craft", single: "Single-Cell", speed: "Speed & Shortcuts" };
 const LEAGUE = { 5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);

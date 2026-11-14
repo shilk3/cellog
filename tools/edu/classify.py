@@ -87,7 +87,7 @@ assert not missing, f"default-set functions without a league: {sorted(missing)}"
 tier.update(core)
 
 # The seven skills (leagues 5-1): by Microsoft's category, with probability,
-# combinatorics and random picks under Cards & Random.
+# combinatorics and random picks under Cards & Rand.
 CARDS = set("RAND RANDBETWEEN RANDARRAY CHOOSE CHOOSECOLS CHOOSEROWS COMBIN COMBINA PERMUT PERMUTATIONA FACT FACTDOUBLE MULTINOMIAL PROB STANDARDIZE PHI GAUSS FISHER FISHERINV".split())
 def is_prob(n):
     return bool(re.search(r"\.(DIST|INV|TEST)|DIST$|^(CONFIDENCE|Z\.TEST|T\.|F\.|CHISQ|BINOM|NEGBINOM|HYPGEOM|POISSON|EXPON|GAMMA|BETA|LOGNORM|WEIBULL|NORM)", n))

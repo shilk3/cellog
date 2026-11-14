@@ -74,7 +74,7 @@ __BANK__
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const argsHtml = (list) => list && list.length ? "<code>" + list.map((a) => a.startsWith("[") ? `<span class="opt">${esc(a)}</span>` : esc(a === "..." ? "…" : a)).join(", ") + "</code>" : "<span class='opt'>(none)</span>";
 const counts = (list) => { const l = list || []; const mand = l.filter((a) => !a.startsWith("[") && a !== "…" && a !== "...").length; const opt = l.filter((a) => a.startsWith("[")).length; return [mand, l.some((a) => a === "…" || a === "...") ? opt + "+…" : String(opt)]; };
-const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Random" };
+const SKILL = { data: "📈 Data Analysis", map: "🗺️ Mapping", text: "📝 Text", games: "🎲 Game Logic", math: "🔢 Math", time: "⏱️ Time & Dates", cards: "🃏 Cards & Rand" };
 const LEAGUE = { 5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan" };
 const TABS = [
   { id: "excel", label: "Excel functions", note: "In every Knowledge check. League = the first league it can be asked in (rebalanced towards League 5 so early leagues have plenty to master).",

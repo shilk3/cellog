@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.16.0";
+const APP_VERSION = "5.16.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -872,9 +872,9 @@ const SKILLS = [
   { key: "map", name: "Mapping", icon: "🗺️" },
   { key: "text", name: "Text Processing", icon: "📝" },
   { key: "games", name: "Game Logic", icon: "🎲" },
-  { key: "math", name: "Math & Formulas", icon: "🔢" },
+  { key: "math", name: "Math & Formula", icon: "🔢" },
   { key: "time", name: "Time & Dates", icon: "⏱️" },
-  { key: "cards", name: "Cards & Random", icon: "🃏" },
+  { key: "cards", name: "Cards & Rand", icon: "🃏" },
 ];
 const SKILL_KEYS = SKILLS.map((s) => s.key);
 function skillMeta(key) {

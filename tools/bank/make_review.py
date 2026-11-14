@@ -27,7 +27,7 @@ pandas = json.loads("[" + re.search(r"const EDU_PANDAS = \[(.*?)\];", js, re.S).
 pq = json.load(open("tools/pq/levelled.json"))
 vba = json.load(open("tools/vba/levelled.json"))
 rb = json.load(open("tools/robot/robot_clean.json"))
-SKILL = {"data": "Data Analysis", "map": "Mapping", "text": "Text Processing", "games": "Game Logic", "math": "Math & Formulas", "time": "Time & Dates", "cards": "Cards & Random"}
+SKILL = {"data": "Data Analysis", "map": "Mapping", "text": "Text Processing", "games": "Game Logic", "math": "Math & Formula", "time": "Time & Dates", "cards": "Cards & Rand"}
 LEAGUE = {5: "League 5", 4: "League 4", 3: "League 3", 2: "League 2", 1: "League 1", 0: "Titan"}
 PQLV = {1: "Common", 2: "Everyday", 3: "Rare"}
 EXCEL_LAMBDA = ["LAMBDA", "LET", "MAP", "REDUCE", "SCAN", "BYROW", "BYCOL", "MAKEARRAY", "ISOMITTED"]
