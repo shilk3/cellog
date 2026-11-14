@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.13.0";
+const APP_VERSION = "5.13.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5139,14 +5139,20 @@ function ratingCashExplainerHtml(result) {
     <div class="match-sub perf-note">Your cash "Before" already includes today's pay and living costs, so the change is just this match's prize.</div>`;
 }
 
-// Under Performance: how much of it was your answers (📘 Knowledge mode).
+// Under Performance: its two parts in points, adding up to it — your
+// answers (📘 Knowledge mode) and everything else.
 function knowledgeRows(result, row) {
   const k = result.knowledge;
   if (!k) return "";
-  const right = k.youRight != null ? `${k.youRight} of ${k.youTotal}` : "a guess";
-  return row(`📘 Knowledge · ${k.share}%`, fmt1(k.you), fmt1(k.opp), "perf-sub") +
-    row("✅ Answers right", right, `~${k.oppAcc}%`, "perf-sub") +
-    row(`🧠 Skill &amp; condition · ${100 - k.share}%`, fmt1(k.youRest), fmt1(k.oppRest), "perf-sub");
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const parts = (perf, know) => {
+    const kp = r1((k.share / 100) * know);
+    return [kp, typeof perf === "number" ? r1(r1(perf) - kp) : null];
+  };
+  const [yk, yr] = parts(result.sides.you.perfScore, k.you);
+  const [ok, or] = parts(result.sides.opp.perfScore, k.opp);
+  return row("📘 Knowledge", fmt1(yk), fmt1(ok), "perf-sub") +
+    row("🧠 Skill &amp; condition", fmt1(yr), or == null ? "–" : fmt1(or), "perf-sub");
 }
 // Head to Head's focus-skill row, laid out like Performance: each side's
 // focus-skill average → the edge it earns (only the side ahead gets one).
