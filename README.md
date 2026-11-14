@@ -151,7 +151,11 @@ Relax, and Food. Everything is connected:
   season starts (a screen says so if your plan then needs trimming). A job
   search carries on as normal through leave. Otherwise no exceptions (up
   to 4h of overtime on top pays half your hourly rate — $4/h at the
-  starting $70/day, rising with raises) — you
+  starting $70/day, rising with raises; and 🎁 while you're in the
+  playoffs your employer sponsors the run: Work needs only 6h, at full
+  pay, until you're out or the Final's played — Work drops to 6h in your
+  plan, overtime still starts above 9h, and End Day asks before spending
+  hours 6–9 that earn nothing) — you
   start with 3.0 chances, and the bar shows exactly what today's shortfall
   will cost before you end the day. Pay is tied to still *having* the job,
   not to hitting the exact hour target every day: come up short and you

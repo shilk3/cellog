@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.14.0";
+const APP_VERSION = "5.15.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -173,6 +173,7 @@ const BAL = {
   // go pro. Work/Pro Duties share one slider and one strike system —
   // only what's "required" and what it's called changes with status.
   workHoursRequired: 9, // Employed: Work hours/day required to avoid a strike
+  playoffWorkHours: 6, // …while you're in the playoffs: your employer sponsors the run (full pay; overtime still from 9h)
   proDutyHoursRequired: 5, // Pro: Pro Duties hours/day required; hours above this master techniques
   // Pay isn't flat: it rises $10 at each year end in whichever role you're
   // in, tracked per role (state.employment.workPay / .proPay). A day job's
@@ -1395,7 +1396,15 @@ const WORK_STRIKE_TABLE = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.1, 0]; // Wor
 const PRO_STRIKE_TABLE = [1, 0.7, 0.4, 0.2, 0.1, 0]; // Pro Duties: 5h/day required
 function strikeAmount(hours, isPro) {
   const table = isPro ? PRO_STRIKE_TABLE : WORK_STRIKE_TABLE;
-  return table[clamp(Math.floor(hours), 0, table.length - 1)];
+  // By hours short of what's required (a sponsored playoff day needs fewer).
+  const short = (isPro ? BAL.proDutyHoursRequired : requiredWorkHours("employed")) - Math.floor(hours);
+  return table[clamp(table.length - 1 - short, 0, table.length - 1)];
+}
+// 🎁 Through to the playoffs and employed: your employer sponsors the run —
+// Work needs only BAL.playoffWorkHours a day (still full pay) until you're
+// out or the Final's been played.
+function playoffSponsored(s = state) {
+  return s.employment.status === "employed" && s.seasonPhase === "playoffs";
 }
 function employmentStrikeCount() {
   const raw = state.employment.strikes.reduce((sum, s) => sum + (s.amount != null ? s.amount : 1), 0);
@@ -1417,7 +1426,7 @@ function jobSecurityPct() {
 // Chances due back today come back when the day resolves, so they're
 // counted in too. On annual leave nothing can be lost — only regained.
 function jobSecurityPreviewPct(hours, isPro) {
-  const required = isPro ? BAL.proDutyHoursRequired : BAL.workHoursRequired;
+  const required = isPro ? BAL.proDutyHoursRequired : requiredWorkHours("employed");
   const loss = onLeave() || hours >= required ? 0 : strikeAmount(hours, isPro);
   const kept = state.employment.strikes.filter((x) => state.day - x.day < BAL.strikeWindowDays);
   const used = kept.reduce((sum, x) => sum + (x.amount != null ? x.amount : 1), 0);
@@ -1434,7 +1443,7 @@ function leaveDaysLeft() {
   return BAL.preseasonDays - state.phaseDay;
 }
 function requiredWorkHours(st = state.employment.status) {
-  return st === "pro" ? BAL.proDutyHoursRequired : st === "employed" ? BAL.workHoursRequired : BAL.jobSearchMinHours;
+  return st === "pro" ? BAL.proDutyHoursRequired : st === "employed" ? (playoffSponsored() ? BAL.playoffWorkHours : BAL.workHoursRequired) : BAL.jobSearchMinHours;
 }
 function workMaxHours(st = state.employment.status, s = state) {
   if (onLeave(st, s)) return 0;
@@ -2339,7 +2348,7 @@ function resolveEmploymentDay() {
       emp.jobSearchHoursNeeded = null;
       // Job Search allows up to 16h but Work caps at its 9h requirement, so
       // reset to exactly that rather than leaving extra hours stranded.
-      state.allocation.work = BAL.workHoursRequired;
+      state.allocation.work = requiredWorkHours();
       events.push({
         type: "good",
         text: onLeave() ? `💼 Found a new job! You start when the season does — on paid leave until then.` : `💼 Found a new job! Work resumes at ${BAL.workHoursRequired}h/day.`,
@@ -2356,7 +2365,7 @@ function resolveEmploymentDay() {
     events.push({ type: "neutral", text: `🏖️ Annual leave: +$${pay} pay` });
   } else {
     const isPro = emp.status === "pro";
-    const required = isPro ? BAL.proDutyHoursRequired : BAL.workHoursRequired;
+    const required = isPro ? BAL.proDutyHoursRequired : requiredWorkHours("employed");
 
     // Pay is tied to still HAVING the job, not to hitting the exact hour
     // target every single day — falling short costs a chance (below), not
@@ -2370,7 +2379,7 @@ function resolveEmploymentDay() {
       if (ot > 0) {
         state.cash += ot;
         state.yearCashFlow.workPay += ot;
-        events.push({ type: "good", text: `💼 Overtime ${workH - required}h: +$${ot}` });
+        events.push({ type: "good", text: `💼 Overtime ${workH - BAL.workHoursRequired}h: +$${ot}` });
       }
       if (isPro) {
         const extra = workH - required;
@@ -4606,12 +4615,13 @@ function workRowHtml() {
       barClass: "work",
     });
   }
-  const required = isPro ? BAL.proDutyHoursRequired : BAL.workHoursRequired;
+  const required = isPro ? BAL.proDutyHoursRequired : requiredWorkHours("employed");
   const atRisk = hours < required;
   const livesText = `${fmt1(livesRemaining())}/${fmt1(BAL.strikesToFire)} left`;
   const ot = overtimePay(hours);
   const otText = ot > 0 ? ` · +$${ot} OT` : "";
-  const outcomeText = (atRisk ? "⚠️ " : "") + (isPro ? `${livesText} · ${techniqueStatusText()}` : `${livesText}${otText}`);
+  const sponsorText = !isPro && playoffSponsored() ? `🎁 ${BAL.playoffWorkHours}h playoffs · ` : "";
+  const outcomeText = (atRisk ? "⚠️ " : "") + sponsorText + (isPro ? `${livesText} · ${techniqueStatusText()}` : `${livesText}${otText}`);
   const statusTag = netPerDayTag((isPro ? emp.proPay : emp.workPay) + ot - BAL.dailyExpenses);
   return comboRowHtml("work", {
     icon: isPro ? "📱" : "💼",
@@ -5858,7 +5868,7 @@ function employmentSectionHtml() {
   const goProHint = checkGoProEligible()
     ? "Thresholds met — going pro next time a day resolves."
     : `Go pro once you've reached League ${BAL.goProLeagueTier} and your 7 skills average ${BAL.goProAverage[2]}+ (${BAL.goProAverage[1]}+ once League 1 is your best) — now: ${state.peakLeagueTier <= BAL.goProLeagueTier ? `${lg(state.peakLeagueTier)} ✓` : `best so far ${lg(state.peakLeagueTier)}`}, average ${skillAverage()}${state.peakLeagueTier <= BAL.goProLeagueTier ? ` of ${proAverageBar()} needed` : ""}.`;
-  return `${expensesLine}${leaveLine}<p>💼 <b>Employed</b> · Work ${BAL.workHoursRequired}h/day required ($${fmt(emp.workPay)}/day) · ${fmt1(lives)}/${fmt1(BAL.strikesToFire)} chances</p>${strikeLines}
+  return `${expensesLine}${leaveLine}<p>💼 <b>Employed</b> · Work ${requiredWorkHours("employed")}h/day required${playoffSponsored() ? " (🎁 sponsored playoff run)" : ""} ($${fmt(emp.workPay)}/day) · ${fmt1(lives)}/${fmt1(BAL.strikesToFire)} chances</p>${strikeLines}
     <p class="modal-sub">${goProHint}</p>`;
 }
 
@@ -6910,6 +6920,7 @@ function buildPhaseSplash(from, to, { yearSummary = null, tierBefore = state.lea
     next.push(["📅 Rounds", playoffFormatText()]);
     next.push(["👑 Champion", `+$${BAL.championCash.toLocaleString()} · +${BAL.championRating} rating${playedTier > 1 ? " · promoted" : ""}`]);
     next.push(["💔 Knocked out", "off-season to the Final (or 🏕️ camp)"]);
+    if (playoffSponsored()) notes.push(`🎁 <b>Your employer is sponsoring your playoff run:</b> ${BAL.workHoursRequired - BAL.playoffWorkHours}h a day off work (Work needs ${BAL.playoffWorkHours}h, full pay) while you're still in. Work is down to ${BAL.playoffWorkHours}h in your plan — put the spare hours into training.`);
   } else if (from === "regular" && to === "offseason") {
     icon = "📋"; title = "Regular season over"; sub = `Year ${state.year} · ${lg(playedTier)}`;
     how.push(["📊 Finished", `#${state.lastPlayerPosition} of ${leagueSizeFor(state.lastStandingsTier)}`]);
@@ -7526,6 +7537,7 @@ function openHowTo() {
       `Work <b>${B.workHoursRequired}h/day</b>, except on annual leave (below). Pay starts at $${B.workPayMin}/day and rises $${B.payRaisePerYear} at each year end, up to $${workPayCap()}/day. Pay never drops: losing a job keeps your rate for the next one. Living costs are <b>$${B.dailyExpenses}/day</b>, always.`,
       `<b>🏖️ Annual leave:</b> the ${B.preseasonDays}-day preseason is paid time off — no Work or Pro Duties, full pay, no chances at risk, and used chances still come back on time. A job search carries on as normal. Skill coaches are half price.`,
       `<b>Overtime:</b> up to ${B.overtimeMaxHours}h extra at half your hourly rate ($${Math.round(B.workPayMin / B.workHoursRequired / 2)}/h at $${B.workPayMin}/day).`,
+      `<b>🎁 Playoff sponsorship:</b> while you're in the playoffs your employer gives you ${B.workHoursRequired - B.playoffWorkHours}h a day off — Work needs only <b>${B.playoffWorkHours}h</b>, still at full pay, until you're knocked out or the Final's played. Work drops to ${B.playoffWorkHours}h in your plan by itself; hours from ${B.playoffWorkHours}h to ${B.workHoursRequired}h earn nothing extra (overtime still starts above ${B.workHoursRequired}h), and End Day asks before spending them.`,
       `Short on Work hours? You keep your pay but lose part of a <b>chance</b> (back after ${B.strikeWindowDays} days). Lose all ${fmt1(B.strikesToFire)} and you're fired.`,
       `Fired: the Work slider becomes <b>Job Search</b> — ${B.jobSearchHoursRange[0]}–${B.jobSearchHoursRange[1]}h in total gets you hired, at least ${B.jobSearchMinHours}h a day. Your pay rate carries over to the new job.`,
       `<b>Go pro</b> automatically once you've reached League ${B.goProLeagueTier} (ever) and your 7 skills average ${B.goProAverage[2]}+ (${B.goProAverage[1]}+ once you've reached League 1). You stay pro to the end of the year whatever your skills do; it's renewed only if they still average that when the year ends — if not, you're back to finding a job. Pro: ${B.proDutyHoursRequired}h/day of Pro Duties from $${B.proPayMin}/day (or your work pay, if that's higher), +$${B.payRaisePerYear} at each year end with no limit. Losing the sponsor never lowers your pay: the next job pays your pro rate, up to a day job's $${workPayCap()}.`,
@@ -7911,6 +7923,7 @@ function runDay() {
   const tierBefore = state.leagueTier;
   const leaveBefore = onLeave();
   const statusBefore = state.employment.status;
+  const sponsoredBefore = playoffSponsored();
   if (!state.phaseStart) state.phaseStart = phaseSnapshot();
   const dayHeaderHtml = `Day ${state.day} — Results`;
   logEvent(dayHeaderHtml, "day-header");
@@ -7992,6 +8005,10 @@ function runDay() {
   // Hired on leave's last day (found while still off, so Work stayed 0h):
   // the season starts today, so Work goes to the required hours too.
   else if (statusBefore === "unemployed" && state.employment.status !== "unemployed" && !state.allocation.work) state.allocation.work = requiredWorkHours();
+  // 🎁 The playoff sponsorship: Work drops to its hours as the playoffs
+  // start (an overtime plan is left alone), and back up when they end.
+  if (!sponsoredBefore && playoffSponsored() && state.allocation.work > BAL.playoffWorkHours && state.allocation.work <= BAL.workHoursRequired) state.allocation.work = BAL.playoffWorkHours;
+  else if (sponsoredBefore && !playoffSponsored() && state.employment.status === "employed" && !onLeave() && state.allocation.work < BAL.workHoursRequired) state.allocation.work = BAL.workHoursRequired;
 
   const skillCycleEvent = advanceSkillCycle(wasInSeason);
   if (skillCycleEvent) {
@@ -8038,6 +8055,29 @@ function finishTurn() {
 
 // Hours left out of the plan are lost (they never carry over): ask before
 // End Day / End Week uses them up.
+// 🎁 A sponsored playoff day with Work over its hours but not into overtime:
+// those hours earn nothing — ask before they're spent.
+function confirmSponsoredWork(kind, go) {
+  if (endDayBlocker()) return;
+  const w = state.allocation.work || 0;
+  if (!playoffSponsored() || w <= BAL.playoffWorkHours || w > BAL.workHoursRequired) return go();
+  const extra = w - BAL.playoffWorkHours;
+  const week = kind === "week";
+  const label = week ? $("endWeekBtn").textContent.replace(/\s*\d+d\s*$/, "").trim() : "End Day ▶";
+  openModal(`
+    <div class="splash">
+      <div class="splash-icon">🎁</div>
+      <div class="splash-title">${extra}h of unpaid work</div>
+      <p class="modal-sub">Your playoff sponsorship only needs <b>${BAL.playoffWorkHours}h</b> of Work, at full pay. Hours from ${BAL.playoffWorkHours}h to ${BAL.workHoursRequired}h earn nothing extra (overtime starts above ${BAL.workHoursRequired}h) — they could go into training instead.</p>
+      <button class="ghost-btn" id="sponsorBack">Change my plan</button>
+      <button class="primary-btn" id="sponsorGo">${label} anyway</button>
+    </div>`);
+  $("sponsorBack").addEventListener("click", closeModal);
+  $("sponsorGo").addEventListener("click", () => {
+    closeModal();
+    go();
+  });
+}
 function confirmUnassigned(kind, go) {
   if (endDayBlocker()) return;
   const spare = todayHours() - totalAssigned();
@@ -8285,8 +8325,8 @@ function wireInputs() {
     setAllocation(key, getAllocHours(key) + dir);
   });
 
-  $("endDayBtn").addEventListener("click", () => confirmUnassigned("day", endDay));
-  $("endWeekBtn").addEventListener("click", () => confirmUnassigned("week", endWeek));
+  $("endDayBtn").addEventListener("click", () => confirmSponsoredWork("day", () => confirmUnassigned("day", endDay)));
+  $("endWeekBtn").addEventListener("click", () => confirmSponsoredWork("week", () => confirmUnassigned("week", endWeek)));
   $("menuBtn").addEventListener("click", openMenu);
   $("cashChip").addEventListener("click", openShop);
   $("rankChip").addEventListener("click", openCareer);
