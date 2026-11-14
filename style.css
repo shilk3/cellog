@@ -1027,3 +1027,9 @@ details.match-more[open] { padding-bottom: 8px; }
 .edu-progress { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--accent); }
 /* Career: All / Still to do */
 .career-view { margin: 10px 0 2px; }
+
+/* Playoffs page: a match still to play reads "vs", both sides at full colour */
+.res-vs-row .res-side:last-child { color: inherit; }
+.res-vs { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+.res-vs small { font-size: 10.5px; color: var(--accent); white-space: nowrap; }
+.res-tbd { color: var(--text-dim); font-style: italic; }

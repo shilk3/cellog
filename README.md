@@ -327,6 +327,12 @@ you've done. Every goal counts: each league climbed, each of the 7 skills at
 the League 1 table and its playoffs. Partly done counts partly, and each
 goal keeps its best, so rust or a lost title never takes it back down.
 
+**🏆 Playoffs page**: while you're in the playoffs the 🏅 button (normally the
+league tables) opens your playoffs round by round — played matches as "beat",
+the rest as "vs" with each side's win chance (rival pairs on the same model
+their matches are played with), slots still to be decided as "Winner #a /
+#b" — with tabs for the other leagues' playoffs and a link to the tables.
+
 **Match History** (menu, the Log header, Leagues and Career) has an
 **Upcoming** tab — the rest of the regular season with each opponent's rating,
 table position and your win chance, then your path through the playoff

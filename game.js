@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.15.1";
+const APP_VERSION = "5.16.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -6714,6 +6714,94 @@ function playoffBracketHtml(tier, year) {
   </div>`;
 }
 
+// 🏆 The playoffs, round by round (the 🏅 button while you're in them):
+// played matches as "beat", the rest as "vs" with each side's win chance,
+// and slots still to be decided as "Winner #a / #b".
+// A rival-vs-rival match's chance, on the same model resolveNpcMatch plays
+// it with (performance, the focus-skill edge, logistic luck).
+function npcWinProb(A, B) {
+  const keys = npcFocusKeys(A);
+  const edge = (rivalFocusAverage(A, keys) - rivalFocusAverage(B, keys)) * matchWeights().edge;
+  const d = matchBase(rivalPerformance(A)) + Math.max(0, edge) - (matchBase(rivalPerformance(B)) + Math.max(0, -edge));
+  return 1 / (1 + Math.pow(10, -d / matchWeights().luck));
+}
+function playoffsLive() {
+  return state.seasonPhase === "playoffs" && state.playoff && !state.playoff.eliminated && !state.playoff.champion;
+}
+function openPlayoffs(view = {}) {
+  const year = state.year;
+  const tiers = tabTiers().filter((t) => playoffBracket(t, year));
+  const tier = view.tier != null && tiers.includes(view.tier) ? view.tier : state.playoff ? state.playoff.tier : tiers[0];
+  const rounds = playoffBracket(tier, year) || [];
+  const stages = rounds.map((r) => r.stage);
+  // The round being played now: the first with a match still to play.
+  const live = rounds.findIndex((r) => r.matches.some((m) => !m.winner));
+  const at = view.stage && stages.includes(view.stage) ? stages.indexOf(view.stage) : live >= 0 ? live : stages.length - 1;
+  const r = rounds[at];
+  const played = ((ensureHistory().league[year] || {})[tier] || {})[r ? r.stage : ""] || [];
+  const idOf = (t) => (t.isPlayer ? HISTORY_PLAYER_ID : t.rivalId);
+  const ratingOf = (t) => {
+    const rec = played.find(([w, l]) => w === idOf(t) || l === idOf(t));
+    if (rec) return rec[0] === idOf(t) ? rec[2] : rec[3];
+    return Math.round(t.isPlayer ? state.rank : (findRival(t.rivalId) || {}).rating || 0);
+  };
+  const side = (t) => `<span class="res-side"><span class="res-pos">#${t.seed}</span> ${historyNameLink(idOf(t))} <span class="res-rt">${ratingOf(t)}</span></span>`;
+  const tbd = (from) => `<span class="res-side res-tbd">${from && from.a && from.b ? `Winner #${from.a.seed} / #${from.b.seed}` : "TBD"}</span>`;
+  const chance = (a, b) => {
+    if (a.isPlayer || b.isPlayer) {
+      const you = oddsPct(winProbabilityAgainst(a.isPlayer ? b : a));
+      return a.isPlayer ? [you, 100 - you] : [100 - you, you];
+    }
+    const A = findRival(a.rivalId), B = findRival(b.rivalId);
+    if (!A || !B) return null;
+    const pa = Math.round(npcWinProb(A, B) * 100);
+    return [pa, 100 - pa];
+  };
+  const rows = r
+    ? r.matches
+        .map((m) => {
+          const you = (m.a && m.a.isPlayer) || (m.b && m.b.isPlayer) ? " res-you" : "";
+          if (m.winner) {
+            const loser = m.winner === m.a ? m.b : m.a;
+            return `<div class="res-row${you}">${side(m.winner)}<span class="res-beat">beat</span>${side(loser)}</div>`;
+          }
+          if (m.a && m.b) {
+            const c = chance(m.a, m.b);
+            return `<div class="res-row res-vs-row${you}">${side(m.a)}<span class="res-beat res-vs">vs${c ? `<small>${c[0]}% · ${c[1]}%</small>` : ""}</span>${side(m.b)}</div>`;
+          }
+          return `<div class="res-row res-vs-row${you}">${m.a ? side(m.a) : tbd(m.fromA)}<span class="res-beat res-vs">vs</span>${m.b ? side(m.b) : tbd(m.fromB)}</div>`;
+        })
+        .join("")
+    : "";
+  const p = state.playoff;
+  const yours = p && tier === p.tier;
+  const days = BAL.roundIntervalDays - state.phaseDay;
+  const head = yours && playoffsLive() ? `<p class="modal-sub">${PLAYOFF_ROUND_NAMES[p.stage]} ${days <= 0 ? "today" : daysUntilPhrase(days)} · you're seed #${p.playerSeed}. Single elimination — lose and you're out.</p>` : "";
+  const tierTabs = tiers.length > 1 ? `<div class="league-tabs">${tiers.map((t) => `<button class="league-tab ${t === tier ? "active" : ""}" data-ptier="${t}">${tabLabel(t)}</button>`).join("")}</div>` : "";
+  const stepper = r
+    ? `<div class="round-stepper">
+      <button class="icon-btn" data-pstage="${at > 0 ? stages[at - 1] : ""}" ${at > 0 ? "" : "disabled"} aria-label="Previous round">◀</button>
+      <span>${PLAYOFF_ROUND_NAMES[r.stage]}</span>
+      <button class="icon-btn" data-pstage="${at < stages.length - 1 ? stages[at + 1] : ""}" ${at < stages.length - 1 ? "" : "disabled"} aria-label="Next round">▶</button>
+    </div>`
+    : "";
+  openModal(
+    `${stickyHeadHtml(`🏆 Year ${year} playoffs`)}
+    ${head}
+    ${tierTabs}
+    ${stepper}
+    <div class="res-list">${rows || `<p class="modal-sub">No playoffs to show yet.</p>`}</div>
+    <p class="modal-sub"># = seed (final table position). Win chances use everyone's rating and skills today, on this week's focus skills; ratings are as they stand now (as they went in, for a match already played). Tap a name to see that rival's season.</p>
+    <div class="menu-row" id="poTables"><span>📊 League tables</span><span class="arrow">›</span></div>`,
+    { ownClose: true, keepScroll: !!view.keepScroll, page: { key: "playoffs", reopen: () => openPlayoffs({ tier, stage: r && r.stage }) } }
+  );
+  const body = $("modalBody");
+  body.querySelectorAll("[data-ptier]").forEach((b) => b.addEventListener("click", () => openPlayoffs({ tier: Number(b.dataset.ptier), keepScroll: true })));
+  body.querySelectorAll("[data-pstage]").forEach((b) => b.addEventListener("click", () => b.dataset.pstage && openPlayoffs({ tier, stage: b.dataset.pstage, keepScroll: true })));
+  body.querySelectorAll("[data-rival]").forEach((b) => b.addEventListener("click", () => openRival(Number(b.dataset.rival))));
+  $("poTables").addEventListener("click", () => openLeagues(state.leagueTier));
+}
+
 function openHistory(opts = {}) {
   const tab = opts.tab || "mine";
   const view = opts.view || {};
@@ -8330,7 +8418,8 @@ function wireInputs() {
   $("menuBtn").addEventListener("click", openMenu);
   $("cashChip").addEventListener("click", openShop);
   $("rankChip").addEventListener("click", openCareer);
-  $("leaguesBtn").addEventListener("click", () => openLeagues(state.leagueTier));
+  // In the playoffs it opens the playoffs; otherwise the league tables.
+  $("leaguesBtn").addEventListener("click", () => (playoffsLive() ? openPlayoffs() : openLeagues(state.leagueTier)));
   $("matchCounter").addEventListener("click", openNextMatch);
   $("matchCounter2").addEventListener("click", openNextMatch);
   $("historyLink").addEventListener("click", () => openHistory());
