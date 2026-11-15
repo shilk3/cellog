@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.18.0";
+const APP_VERSION = "5.18.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4812,6 +4812,30 @@ function renderPlannerRows() {
       barClass: "phys",
     })
   );
+  const capToday = dailyHoursCap(s.nutrition);
+  const capTomorrow = dailyHoursCap(preview.nutrition);
+  let nutritionOutcome = `${fmt(s.nutrition)}/100`;
+  if (capToday < BAL.dailyHoursCeiling) nutritionOutcome += ` · ${capToday}h today`;
+  if (capTomorrow !== capToday) nutritionOutcome += ` → ${capTomorrow}h tomorrow`;
+  const carbToday = state.carbHours || 0;
+  const carbTomorrow = carbHoursFrom(a.nutrition, s.nutrition);
+  // One 🍝 for both parts so the row fits: "🍝 +2h today · +3h tmrw".
+  const carbParts = [carbToday ? `+${carbToday}h today` : "", carbTomorrow ? `+${carbTomorrow}h tmrw` : ""].filter(Boolean);
+  if (carbParts.length) nutritionOutcome += ` · 🍝 ${carbParts.join(" · ")}`;
+  rows.push(
+    comboRowHtml("nutrition", {
+      icon: "🥗",
+      label: "Food",
+      outcomeText: nutritionOutcome,
+      value: s.nutrition,
+      previewValue: preview.nutrition,
+      cap: 100,
+      hours: a.nutrition,
+      maxHours: ACT_MAX.nutrition,
+      markerHours: BAL.skillDecayThresholdHours,
+      barClass: "nutrition",
+    })
+  );
   rows.push(
     comboRowHtml("sleep", {
       icon: "🌙",
@@ -4860,7 +4884,7 @@ function renderPlannerRows() {
       barClass: "composure",
     })
   );
-  // 👪 Support: green = a good day, red = a bad day; the hatched end is the
+  // 👪 Support: pink = a good day, grey = a bad day; the hatched end is the
   // pressure floor this match can't get below.
   if (supportActive()) {
     const floor = supportFloor(), max = 100 - floor;
@@ -4869,7 +4893,7 @@ function renderPlannerRows() {
       comboRowHtml("support", {
         icon: "👪",
         label: "Support",
-        outcomeText: `${fmt(good)}% good · floor ${floor}%`,
+        outcomeText: `${fmt(good)}%`,
         value: good,
         previewValue: after,
         cap: max,
@@ -4881,30 +4905,6 @@ function renderPlannerRows() {
       })
     );
   }
-  const capToday = dailyHoursCap(s.nutrition);
-  const capTomorrow = dailyHoursCap(preview.nutrition);
-  let nutritionOutcome = `${fmt(s.nutrition)}/100`;
-  if (capToday < BAL.dailyHoursCeiling) nutritionOutcome += ` · ${capToday}h today`;
-  if (capTomorrow !== capToday) nutritionOutcome += ` → ${capTomorrow}h tomorrow`;
-  const carbToday = state.carbHours || 0;
-  const carbTomorrow = carbHoursFrom(a.nutrition, s.nutrition);
-  // One 🍝 for both parts so the row fits: "🍝 +2h today · +3h tmrw".
-  const carbParts = [carbToday ? `+${carbToday}h today` : "", carbTomorrow ? `+${carbTomorrow}h tmrw` : ""].filter(Boolean);
-  if (carbParts.length) nutritionOutcome += ` · 🍝 ${carbParts.join(" · ")}`;
-  rows.push(
-    comboRowHtml("nutrition", {
-      icon: "🥗",
-      label: "Food",
-      outcomeText: nutritionOutcome,
-      value: s.nutrition,
-      previewValue: preview.nutrition,
-      cap: 100,
-      hours: a.nutrition,
-      maxHours: ACT_MAX.nutrition,
-      markerHours: BAL.skillDecayThresholdHours,
-      barClass: "nutrition",
-    })
-  );
 
   $("plannerRows").innerHTML = rows.join("");
 }
@@ -7632,9 +7632,9 @@ function openHowTo() {
     ${tbl(["Slider", "Builds", "Minimum"], [
       ["📈 Skills (7)", "that skill", `${B.skillDecayThresholdHours}h each`],
       ["🏃 Gym", "Physical Health", `${B.skillDecayThresholdHours}h`],
+      ["🥗 Food", "Nutrition", `${B.skillDecayThresholdHours}h`],
       ["🌙 Sleep", "Rest", `${B.idealSleep}h`],
       ["🎮 Relax", "Calm", `${B.relaxComposureThreshold}h`],
-      ["🥗 Food", "Nutrition", `${B.skillDecayThresholdHours}h`],
       ["💼 Work", "pay, keeps the job", `${B.workHoursRequired}h (none on leave)`],
     ])}
     ${ul([
@@ -7671,8 +7671,8 @@ function openHowTo() {
     ${tbl(["Calm on match day", "Your skills count"], [[`${B.composureMatchMid}+`, "100%"], [`${B.composureMatchLow}–${B.composureMatchMid - 1}`, "75%"], [`under ${B.composureMatchLow}`, "50%"]])}`);
 
   sec("support", "👪", "Support", ul([
-    `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the week leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good, 50% bad</b>.`,
-    `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds over the week before and carries through all three).`,
+    `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the week leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good</b> (pink), <b>50% bad</b> (grey) — the number on the row is the good part.`,
+    `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad (the hatched end) that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds over the week before and carries through all three).`,
     `On match day it's rolled: a <b>good day</b> adds <b>+${B.supportEffect}</b> to your match-day rating, a <b>bad day</b> takes ${B.supportEffect} off. Head to Head shows which, under Luck. The bar starts again at 50/50 after each league or playoff match.`,
   ]))
 

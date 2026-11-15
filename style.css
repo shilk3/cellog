@@ -1037,8 +1037,8 @@ details.match-more[open] { padding-bottom: 8px; }
 
 /* 👪 Support: the bar is good (green) over bad (red); pink slider */
 .activity[data-act="support"] input[type="range"]::-webkit-slider-thumb { background: var(--support); box-shadow: 0 0 0 1px var(--support); }
-.bar-fill.support { background: var(--skill); }
-.activity[data-act="support"] .combo-bar { background: rgba(255, 93, 93, 0.55); }
+.bar-fill.support { background: var(--support); }
+.activity[data-act="support"] .combo-bar { background: rgba(147, 161, 189, 0.4); }
 
 /* Compact plan (⚙️ Settings): icon, bar and − 2h + on one line, the rest under it. */
 .activity.compact-row { padding: 5px 0; }
