@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.19.1";
+const APP_VERSION = "5.19.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -3023,7 +3023,11 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
         key: k,
         you: Math.round(state.stats.skills[k]),
         youSpec: isSpecialisation(k),
+        // What course parts (or moves) add on top, so the lines add up.
+        youMoves: Math.round(movesEdge(playerTopMoves(), k) * 10) / 10,
+        course: !!(exhibitionEvent || swapEvent()),
         opp: mu.rival ? Math.round(rivalSkill(mu.rival, k)) : null,
+        oppMoves: mu.rival ? Math.round(movesEdge(rivalTopMoves(mu.rival), k) * 10) / 10 : 0,
         oppSpec: mu.rival && mu.rival.specs ? mu.rival.specs.includes(k) : false,
       })),
     },
@@ -5304,8 +5308,10 @@ function focusEdgeRow(result, row) {
   const cell = (avg, edge) => (avg != null ? `${fmt1(avg)} → ${signedNum(edge || 0)}` : edge ? signedNum(edge) : "–");
   const star = (on) => (on ? " ⭐" : "");
   // One line per focus skill under it, like the performance table's skills.
+  // A skill plus what its course parts add ("72 + 5.5 📚"): the average above.
+  const plus = (n, course) => (n ? ` + ${Number.isInteger(n) ? n : fmt1(n)}${course ? " 📚" : ""}` : "");
   const lines = f && f.skills
-    ? f.skills.map((x) => row(`${skillMeta(x.key).icon} ${skillMeta(x.key).name}`, `${x.you}${star(x.youSpec)}`, x.opp != null ? `${x.opp}${star(x.oppSpec)}` : "", "perf-sub")).join("")
+    ? f.skills.map((x) => row(`${skillMeta(x.key).icon} ${skillMeta(x.key).name}`, `${x.you}${plus(x.youMoves, x.course)}${star(x.youSpec)}`, x.opp != null ? `${x.opp}${plus(x.oppMoves)}${star(x.oppSpec)}` : "", "perf-sub")).join("")
     : "";
   const icons = f && !f.skills ? ` <span class="h2h-icons">${f.keys.map((k) => skillMeta(k).icon).join("")}</span>` : "";
   return row(`🎯 Focus skills${icons}`, cell(f && f.you, y.edge), cell(f && f.opp, o.edge)) + lines;
@@ -5328,8 +5334,12 @@ function headToHeadHtml(result) {
         ${row("📈 Performance", `${y.perfScore.toFixed(1)} → ${perfPts(y.perfAdj)}`, `${typeof o.perfScore === "number" ? o.perfScore.toFixed(1) : o.perfScore} → ${perfPts(o.perfAdj)}`)}
         ${knowledgeRows(result, row)}
         ${y.edge != null ? focusEdgeRow(result, row) : ""}
-        ${row("🎲 Luck on the day", signedNum(y.luck), signedNum(o.luck))}
-        ${result.support ? row(`👪 Support · ${result.support.good ? "good" : "bad"} day`, signedNum(result.support.delta), "–", "perf-sub") : ""}
+        ${result.support
+          // With Support, Luck is the random draw plus Support, like Performance's parts.
+          ? row("🎲 Luck on the day", signedNum(y.luck + result.support.delta), signedNum(o.luck)) +
+            row("🔀 Random draw", signedNum(y.luck), signedNum(o.luck), "perf-sub") +
+            row(`👪 Support · ${result.support.good ? "good" : "bad"} day`, signedNum(result.support.delta), "–", "perf-sub")
+          : row("🎲 Luck on the day", signedNum(y.luck), signedNum(o.luck))}
       </tbody>
       <tfoot>${row("Match-day rating", y.final, o.final)}</tfoot>
     </table>${finishTimeHtml(result)}`;
@@ -7730,7 +7740,7 @@ function openHowTo() {
   sec("support", "👪", "Support", ul([
     `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the whole preseason leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good</b> (pink), <b>50% bad</b> (grey) — the number on the row is the good part.`,
     `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad (the hatched end) that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds all preseason and carries through all three).`,
-    `On match day it's rolled: a <b>good day</b> adds <b>+${B.supportEffect}</b> to your match-day rating, a <b>bad day</b> takes ${B.supportEffect} off. Head to Head shows which, under Luck. The bar starts again at 50/50 after each league or playoff match.`,
+    `On match day it's rolled: a <b>good day</b> adds <b>+${B.supportEffect}</b> to your match-day rating, a <b>bad day</b> takes ${B.supportEffect} off. Head to Head shows it under Luck, which adds the random draw and Support together. The bar starts again at 50/50 after each league or playoff match.`,
     `<b>🧠 Sports Psychologist</b> (Staff): while hired, the bar starts match weeks at <b>${UPGRADES.psych.levels.map((l) => l.supportStart).join(" / ")}%</b> good (Lv1 / 2 / 3) instead of 50%.`,
     `<b>${FAMILY_TICKETS.icon} ${FAMILY_TICKETS.name}</b> (Items, $${FAMILY_TICKETS.price}): <b>+${FAMILY_TICKETS.good}%</b> good for your next match — once per match, each invitational game too. Neither goes past the pressure floor.`,
   ]))
