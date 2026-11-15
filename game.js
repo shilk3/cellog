@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.22.0";
+const APP_VERSION = "5.23.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1909,6 +1909,7 @@ function migrateSave(parsed) {
   a.exercise = clamp(a.exercise || 0, 0, BAL.gymMaxHours);
   a.work = clamp(a.work || 0, 0, workMaxHours(fresh.employment.status, fresh));
   eduGroupCarryOver(fresh);
+  eduGenCarryOver(fresh);
   if (fresh.matchHistory && Array.isArray(fresh.matchHistory.mine)) compactOldMatches(fresh.matchHistory, fresh.year);
   sanitizeSave(fresh);
   // An injury from before injury.reduced was kept already had the hired
@@ -5816,7 +5817,7 @@ function knowledgeCards() {
     else cards.push({ key: `f:${k}`, type: `bank:${id}`, fn: f, sort: f.name, last: last(fns[k]) });
   }));
   const genDone = (q) => gen[q.id] && gen[q.id].mastered;
-  EDU_GEN.forEach((q) => genDone(q) && cards.push({ key: `g:${q.id}`, type: "gen", q, sort: q.text, last: last(gen[q.id]) }));
+  EDU_GEN.forEach((q) => genDone(q) && cards.push({ key: `g:${q.id}`, type: "gen", q, sort: q.alt ? q.a : q.text, last: last(gen[q.id]) }));
   Object.keys(EDU_SETS).forEach((id) => EDU_SETS[id].forEach((q) => genDone(q) && cards.push({ key: `g:${q.id}`, type: `set:${id}`, q, sort: q.text, last: last(gen[q.id]) })));
   return cards;
 }
@@ -5830,7 +5831,9 @@ function knowledgeCardHtml(c, typeOf) {
   const t = typeOf[c.type];
   const star = `<button class="know-star${knowledgeFav(c.key) ? " on" : ""}" data-fav="${escapeHtml(c.key)}" aria-label="${knowledgeFav(c.key) ? "Remove from" : "Add to"} favourites">${knowledgeFav(c.key) ? "★" : "☆"}</button>`;
   let body;
-  if (c.q) {
+  if (c.q && c.q.alt) {
+    body = `<div class="know-title"><code>${escapeHtml(c.q.a)}</code></div><div class="know-line">${escapeHtml(c.q.alt.a)}</div><div class="know-tag">${t.icon} ${escapeHtml(c.q.topic)} · asked either way round</div>`;
+  } else if (c.q) {
     body = `<div class="know-title">${escapeHtml(c.q.text)}</div><div class="know-answer">✓ ${escapeHtml(c.q.a)}</div><div class="know-tag">${t.icon} ${escapeHtml(c.q.topic || t.name)}</div>`;
   } else if (c.member) {
     const f = c.fn;
@@ -5850,7 +5853,7 @@ const knowView = { favs: false, type: "all", sort: "az", q: "" };
 function knowledgeListHtml() {
   const types = knowledgeTypes(), typeOf = Object.fromEntries(types.map((t) => [t.id, t]));
   const q = knowView.q.trim().toLowerCase();
-  const text = (c) => (c.q ? `${c.q.text} ${c.q.a} ${c.q.topic || ""}` : `${c.member ? `${c.member.name} ${c.member.t} ` : ""}${c.fn.name} ${c.fn.desc} ${c.fn.cat || ""} ${c.fn.src || ""} ${c.fn.group || ""}`).toLowerCase();
+  const text = (c) => (c.q ? `${c.q.text} ${c.q.a} ${c.q.topic || ""} ${c.q.alt ? c.q.alt.a : ""}` : `${c.member ? `${c.member.name} ${c.member.t} ` : ""}${c.fn.name} ${c.fn.desc} ${c.fn.cat || ""} ${c.fn.src || ""} ${c.fn.group || ""}`).toLowerCase();
   let cards = knowledgeCards().filter((c) => (!knowView.favs || knowledgeFav(c.key)) && (knowView.type === "all" || c.type === knowView.type) && (!q || text(c).includes(q)));
   if (!cards.length) return `<p class="modal-sub know-empty">${knowView.favs ? "No favourites here yet — tap ☆ on a card to add it." : "Nothing matches."}</p>`;
   if (knowView.sort === "new") {
@@ -7989,7 +7992,7 @@ function openHowTo() {
     `It asks about the ${EDU_CORE.length} functions that matter in Excel esports. Switch on <b>📚 Completionist</b> to add Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. Switch the questions off for pure management.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
     `<b>📘 Knowledge</b> (in the Menu, once you've mastered something): every function and question you've mastered, with its answers — one card each. Filter by type, search, sort A–Z or newest, and tap ☆ to keep favourites (saved with this game).`,
-    `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
+    `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all; a shortcut is asked either way round — which keys, or what they do). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. New ones come before repeats: the week's focus skills, then any skill at your level, then the next league's. Getting it wrong never stops the function being mastered.`,
     `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Rivals answer too — about ${Math.round(EDU_RIVAL_ACC[5] * 100)}% right in League 5, up to ${Math.round(EDU_RIVAL_ACC[TOP_TIER] * 100)}% at the top — so turning it up pays when you get more right than your league's rivals, and costs you when you get fewer. At 0% it's practice only: questions are still asked and mastered, but your answers don't affect matches.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
     "Get every question right in one go and that function is <b>🏅 mastered</b>: it isn't asked again until you've mastered the rest. Ones you got wrong come back sooner. Career and Completion count how many you've mastered.",
@@ -9010,7 +9013,62 @@ function eduBankList(id) {
 const eduRecKey = (f) => (f.bank ? `${f.bank}:${f.name}` : f.name);
 // 💡 General knowledge (edu-general.js): one question per Knowledge check,
 // mastered on its own (answer it right once).
-const EDU_GEN = (typeof EDU_GENERAL === "undefined" ? [] : EDU_GENERAL).map(([id, skill, titan, tier, topic, text, a, ...wrong]) => ({ id, skill, titan, tier, topic, text, a, wrong }));
+const EDU_GEN_ALL = (typeof EDU_GENERAL === "undefined" ? [] : EDU_GENERAL).map(([id, skill, titan, tier, topic, text, a, ...wrong]) => ({ id, skill, titan, tier, topic, text, a, wrong }));
+// A shortcut is one question asked either way round: "Which shortcut: go to
+// A1?" (its id) or, half the time, "What does Ctrl+Home do?" (alt).
+// altOf maps the other way round's id to the question's (altFor: back).
+// A function, not a const: saves are migrated while the page is loading.
+function eduGenPairs() {
+  if (eduGenPairs.cache) return eduGenPairs.cache;
+  const rows = typeof EDU_GENERAL === "undefined" ? [] : EDU_GENERAL; // [id, skill, titan, tier, topic, text, a, …]
+  const lowerFirst = (x) => x.charAt(0).toLowerCase() + x.slice(1);
+  const whatDoes = new Map();
+  rows.forEach((r) => {
+    const m = r[4] === "Keyboard shortcuts" && r[5].match(/^What does (.+) do\?$/);
+    if (m) whatDoes.set(`${m[1]}|${lowerFirst(r[6])}`, r[0]);
+  });
+  const altOf = {}, altFor = {};
+  rows.forEach((r) => {
+    const m = r[4] === "Keyboard shortcuts" && r[5].match(/^Which shortcut: (.+)\?$/);
+    const alt = m && whatDoes.get(`${r[6]}|${m[1]}`);
+    if (alt) {
+      altOf[alt] = r[0];
+      altFor[r[0]] = alt;
+    }
+  });
+  return (eduGenPairs.cache = { altOf, altFor });
+}
+const EDU_GEN = (() => {
+  const { altOf, altFor } = eduGenPairs();
+  const byId = new Map(EDU_GEN_ALL.map((g) => [g.id, g]));
+  return EDU_GEN_ALL.filter((g) => !altOf[g.id]).map((g) => {
+    const alt = altFor[g.id] && byId.get(altFor[g.id]);
+    return alt ? { ...g, alt: { id: alt.id, text: alt.text, a: alt.a, wrong: alt.wrong } } : g;
+  });
+})();
+// A save from before: a shortcut mastered (or a favourite) either way round
+// counts for the one question.
+function eduGenCarryOver(s) {
+  if (!s.edu || !s.edu.gen) return;
+  const gen = s.edu.gen, favs = s.edu.favs || {};
+  Object.entries(eduGenPairs().altOf).forEach(([alt, main]) => {
+    const a = gen[alt];
+    if (a) {
+      const m = gen[main];
+      if (!m) gen[main] = { ...a };
+      else {
+        m.seen = (m.seen || 0) + (a.seen || 0);
+        m.mastered = !!(m.mastered || a.mastered);
+        m.last = Math.max(m.last || 0, a.last || 0);
+      }
+      delete gen[alt];
+    }
+    if (favs[`g:${alt}`]) {
+      favs[`g:${main}`] = true;
+      delete favs[`g:${alt}`];
+    }
+  });
+}
 // The invitationals' own sets (edu-inv.js): an invitational's general
 // question comes from its set — Mobile's from the function picker, with
 // three "Excel on mobile" questions in place of a function. Once you've
@@ -9056,13 +9114,21 @@ function eduPickGeneral(m) {
   const own = m.event ? eduEventGenSet(m.event) : [];
   const rec = state.edu.gen || {};
   if (own.some((g) => !(rec[g.id] && rec[g.id].mastered))) return eduPickQuestion(own);
-  const upTo = [...EDU_GEN, ...eduMergedSets().flatMap((id) => EDU_SETS[id])].filter((g) => g.tier >= state.leagueTier);
+  const all = [...EDU_GEN, ...eduMergedSets().flatMap((id) => EDU_SETS[id])];
+  const upTo = all.filter((g) => g.tier >= state.leagueTier);
   let pool = upTo;
   if (!m.event && !m.practice) {
     const keys = state.activeSkills || [];
     const mine = upTo.filter((g) => (inTop() ? keys.includes(g.titan) : keys.includes(g.skill)));
     if (mine.length) pool = mine;
   }
+  // Something new before a repeat: the week's focus skills, then any skill
+  // at your level, then one league up. Only then the longest-ago mastered.
+  const open = (list) => list.filter((g) => !(rec[g.id] && rec[g.id].mastered));
+  if (open(pool).length) return eduPickQuestion(pool);
+  if (open(upTo).length) return eduPickQuestion(upTo);
+  const ahead = open(all.filter((g) => g.tier >= state.leagueTier - 1));
+  if (ahead.length) return eduPickQuestion(ahead);
   return eduPickQuestion(pool);
 }
 function eduPickQuestion(pool) {
@@ -9085,7 +9151,9 @@ function eduPickQuestion(pool) {
 function eduAddGeneral(quiz, m) {
   if (m.train) return quiz; // training checks are the invitational's own set only
   const g = eduPickGeneral(m);
-  if (g) quiz.qs.push({ k: "gen", gid: g.id, set: g.set, t: g.text, a: g.a, o: eduShuffle([g.a, ...g.wrong]) });
+  // A shortcut: either way round, at random (one question, one record).
+  const q = g && g.alt && Math.random() < 0.5 ? g.alt : g;
+  if (g) quiz.qs.push({ k: "gen", gid: g.id, set: g.set, t: q.text, a: q.a, o: eduShuffle([q.a, ...q.wrong]) });
   return quiz;
 }
 // 📱 The Mobile Invitational's check: three questions on Excel on mobile
@@ -9102,6 +9170,7 @@ function eduBuildPhoneQuiz(m) {
 // A general or phone question's record: mastered once it's answered right.
 // True if that's just happened.
 function eduGenMark(gid, right) {
+  gid = eduGenPairs().altOf[gid] || gid; // a check started before the merge
   const g = (state.edu.gen = state.edu.gen || {});
   const r = (g[gid] = g[gid] || { seen: 0, mastered: false, last: 0 });
   r.seen += 1;

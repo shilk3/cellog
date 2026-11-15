@@ -36,8 +36,11 @@ scripts in `tools/edu/`. Every check ends with one 💡 general question
 (Windows keyboard shortcuts, PivotTables, tables, charts, formats,
 references, errors…), worth a quarter of that share and mastered on its
 own — so at 20% it's Skill 44%, Health 20%, Calm 12%, Rest 4%, functions
-15%, general 5%. The 489 questions are in `edu-general.js`, built
-by `tools/gk/`.
+15%, general 5%. The questions are in `edu-general.js`, built by
+`tools/gk/`: 376 in all, as each of the 113 Windows shortcuts is one question
+asked either way round (which keys, or what they do), mastered once. New
+ones always come before a repeat: the week's focus skills first, then any
+skill at your level, then the next league's.
 
 **📘 Knowledge** (in the ☰ Menu once you've mastered anything): every
 function and general question you've mastered, with its answers, one card
