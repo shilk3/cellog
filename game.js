@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.20.0";
+const APP_VERSION = "5.20.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -233,7 +233,7 @@ const BAL = {
   xpPlayoffMult: 2,
   // An invitational's skill: only a few games a year, so each counts for
   // more — it fills in about as many years as a ⭐ takes seasons.
-  xpEventMult: 8,
+  xpEventMult: 16,
 };
 
 // Game lengths, chosen when a game starts (state.gameLength). Each has its
