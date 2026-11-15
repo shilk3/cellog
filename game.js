@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.17.1";
+const APP_VERSION = "5.18.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -4563,6 +4563,29 @@ function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap,
   // threshold reads at a glance, not just from the marker tick.
   const meetsMarker = markerHours > 0 ? hours >= markerHours : null;
   const sliderCls = meetsMarker === null ? "" : meetsMarker ? "slider-meets" : heldBelow ? "slider-held" : "slider-under";
+  const barHtml = `<div class="bar combo-bar"><div class="bar-fill ${barClass}" style="width:${barPct}%"></div>${lockedZoneHtml(cap, scaleMax)}${overlayHtml}${bankHtml(bank, bankPreview)}${xpStrip}</div>`;
+  // Compact (⚙️ Settings): icon, bar and − 2h + on one line, the rest
+  // under it. The hours are green once they meet the minimum, red when not.
+  if (compactPlan()) {
+    const hrsCls = meetsMarker === null ? "" : meetsMarker ? "hrs-meets" : heldBelow ? "hrs-held" : "hrs-under";
+    return `
+  <div class="activity combo-row compact-row ${barClass === "skill" ? "skill-row" : ""}" data-act="${key}" style="${disabled ? "opacity:0.45" : ""}">
+    <div class="compact-top">
+      <span class="activity-icon">${icon}</span>
+      ${barHtml}
+      <div class="compact-step">
+        <button class="step-btn" data-key="${key}" data-dir="-1" aria-label="Less ${label}" ${disabled ? "disabled" : ""}>−</button>
+        <span class="activity-hours ${hrsCls}"><span id="hoursVal_${key}">${hours}</span>h</span>
+        <button class="step-btn" data-key="${key}" data-dir="1" aria-label="More ${label}" ${disabled ? "disabled" : ""}>+</button>
+      </div>
+    </div>
+    <div class="activity-row compact-info">
+      <span class="activity-name">${label}</span>
+      ${shopTag || ""}
+      <span class="combo-outcome">${outcomeHtml(outcomeText)}</span>
+    </div>
+  </div>`;
+  }
   return `
   <div class="activity combo-row ${barClass === "skill" ? "skill-row" : ""}" data-act="${key}" style="${disabled ? "opacity:0.45" : ""}">
     <div class="activity-row">
@@ -4572,7 +4595,7 @@ function comboRowHtml(key, { icon, label, outcomeText, value, previewValue, cap,
       <span class="combo-outcome">${outcomeHtml(outcomeText)}</span>
       <span class="activity-hours"><span id="hoursVal_${key}">${hours}</span>h</span>
     </div>
-    <div class="bar combo-bar"><div class="bar-fill ${barClass}" style="width:${barPct}%"></div>${lockedZoneHtml(cap, scaleMax)}${overlayHtml}${bankHtml(bank, bankPreview)}${xpStrip}</div>
+    ${barHtml}
     <div class="stepper">
       <button class="step-btn" data-key="${key}" data-dir="-1" ${disabled ? "disabled" : ""}>−</button>
       <div class="slider-wrap">
@@ -5670,6 +5693,7 @@ function openSettings() {
     <h2>⚙️ Settings</h2>
     ${menuRow("menuGames", "🎮 Games", `${g.icon} ${g.name} game`)}
     ${menuRow("menuEdu", "📘 Knowledge mode", eduModeLabel())}
+    ${menuRow("menuCompact", "📐 Compact plan", compactPlan() ? "On · − / + buttons" : "Off · sliders")}
     ${menuRow("menuRename", "✏️ Rename Player")}
     ${menuRow("menuSaveTransfer", "💾 Export / Import Save")}
     ${menuRow("menuInstall", "📲 Add to Home Screen")}
@@ -5678,6 +5702,11 @@ function openSettings() {
   $("menuBack").addEventListener("click", openMenu);
   $("menuGames").addEventListener("click", () => openGames());
   $("menuEdu").addEventListener("click", () => openEduModeInfo({ back: openSettings }));
+  $("menuCompact").addEventListener("click", () => {
+    setCompactPlan(!compactPlan());
+    renderPlanner();
+    openSettings();
+  });
   $("menuRename").addEventListener("click", () => openNameModal(false));
   $("menuSaveTransfer").addEventListener("click", () => openSaveTransfer(state.gameLength));
   $("menuInstall").addEventListener("click", openInstall);
@@ -5971,6 +6000,24 @@ function currentStatsHtml() {
         </div>`
     )
     .join("");
+}
+
+// Compact plan: − / + instead of sliders (this device remembers it).
+const COMPACT_KEY = "cellog_compact_plan";
+function compactPlan() {
+  try {
+    return localStorage.getItem(COMPACT_KEY) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+function setCompactPlan(on) {
+  try {
+    if (on) localStorage.setItem(COMPACT_KEY, "1");
+    else localStorage.removeItem(COMPACT_KEY);
+  } catch (e) {
+    /* storage blocked: it just won't be remembered */
+  }
 }
 
 // Career's view: everything, or only what's still to do (this device
@@ -7592,6 +7639,7 @@ function openHowTo() {
     ])}
     ${ul([
       "Below its <b>minimum</b> (the tick on each slider) a stat slips instead of growing. The slider track turns green when you've met it, red when you haven't.",
+      "Short on screen? <b>⚙️ Settings → 📐 Compact plan</b> swaps every slider for <b>− 2h +</b> beside its bar, so the whole day fits on one screen. Hold − or + to keep going. The hours turn <b>green</b> once they meet the minimum, <b>red</b> when they don't (blue-grey when 🛡️ means it won't rust anyway).",
       "Each bar previews <b>tomorrow</b>: green for a gain, red for a loss.",
       `Preseason and the off-season: all 7 skills can be trained. In the season only that week's <b>1–3 focus skills</b> can (1 skill ${Math.round(B.focusSkillOdds[1] * 100)}% of weeks, 2 skills ${Math.round(B.focusSkillOdds[2] * 100)}%, 3 skills ${Math.round(B.focusSkillOdds[3] * 100)}%) — and they're exactly what the week's match tests.`,
     ])}`);
@@ -8529,6 +8577,45 @@ function wireInputs() {
     const got = getAllocHours(drag.key);
     if (got !== want) Object.assign(drag, { from: got, x: e.clientX });
   });
+  const HOLD_DELAY_MS = 400, HOLD_REPEAT_MS = 110;
+  let hold = null, skipClick = false;
+  const stopHold = () => {
+    if (!hold) return;
+    clearTimeout(hold.timer);
+    clearInterval(hold.rep);
+    hold = null;
+  };
+  const stepOk = (key) => !((key === "exercise" && state.injury.active) || (key === "work" && onLeave()));
+  container.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest(".step-btn");
+    if (!btn || btn.disabled || (e.pointerType === "mouse" && e.button !== 0)) return;
+    stopHold();
+    skipClick = false;
+    const key = btn.dataset.key, dir = Number(btn.dataset.dir);
+    if (!stepOk(key)) return;
+    hold = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    hold.timer = setTimeout(() => {
+      if (!hold) return;
+      skipClick = true;
+      const step = () => setAllocation(key, getAllocHours(key) + dir);
+      step();
+      hold.rep = setInterval(step, HOLD_REPEAT_MS);
+    }, HOLD_DELAY_MS);
+  });
+  // A scroll that starts on a button isn't a hold.
+  window.addEventListener("pointermove", (e) => {
+    if (hold && e.pointerId === hold.id && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 10) stopHold();
+  });
+  const endHold = (e) => {
+    if (!hold || e.pointerId !== hold.id) return;
+    stopHold();
+    // The click that follows a hold isn't one more step.
+    if (skipClick) setTimeout(() => (skipClick = false), 400);
+  };
+  window.addEventListener("pointerup", endHold);
+  window.addEventListener("pointercancel", endHold);
+  window.addEventListener("blur", stopHold);
+  container.addEventListener("contextmenu", (e) => { if (e.target.closest(".step-btn")) e.preventDefault(); });
   const endDrag = (e) => { if (drag && e.pointerId === drag.id) drag = null; };
   window.addEventListener("pointerup", endDrag);
   window.addEventListener("pointercancel", endDrag);
@@ -8538,6 +8625,10 @@ function wireInputs() {
     if (coach) return openShop({ tab: "staff", coach: coachKey(coach.dataset.coach) });
     const btn = e.target.closest(".step-btn");
     if (!btn) return;
+    if (skipClick) {
+      skipClick = false;
+      return;
+    }
     const key = btn.getAttribute("data-key");
     if (key === "exercise" && state.injury.active) return;
     if (key === "work" && onLeave()) return;
