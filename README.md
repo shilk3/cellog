@@ -39,6 +39,15 @@ own — so at 20% it's Skill 44%, Health 20%, Calm 12%, Rest 4%, functions
 15%, general 5%. The 489 questions are in `edu-general.js`, built
 by `tools/gk/`.
 
+**📘 Knowledge** (in the ☰ Menu once you've mastered anything): every
+function and general question you've mastered, with its answers, one card
+each — a function's full syntax ([optional] arguments in brackets), how many
+mandatory and optional arguments it takes and what it does; a question and
+its right answer. Only mastered ones (they never come up again, so nothing
+is spoiled). Filter by type, search, sort A–Z or newest, and tap ☆ to make a
+favourite, then ★ Favourites shows just those. Favourites are saved with
+each game (so they travel with Export / Import).
+
 **📤 Share my career** (Career & Season): draws a 1080×1350 card of the
 career so far — name, year and league, rating, table, season record,
 completion, skills and a few totals — on a canvas in the app, then hands it

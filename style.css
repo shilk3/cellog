@@ -1056,3 +1056,27 @@ details.match-more[open] { padding-bottom: 8px; }
 /* End Day: hours that won't do anything */
 .wasted-list { list-style: none; text-align: left; margin: 8px 0 4px; padding-left: 0; font-size: 14px; line-height: 1.45; }
 .wasted-list li { margin-bottom: 4px; }
+
+/* 📘 Knowledge: mastered cards */
+.know-total { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-left: 6px; }
+.know-tabs { margin: 8px 0; }
+.know-filters { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+.know-filters select, .know-filters input {
+  min-width: 0; height: 34px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-elev-2); color: var(--text); font: inherit; font-size: 14px; padding: 0 8px;
+}
+.know-filters select { flex: 1 1 40%; }
+.know-filters input { flex: 1 1 45%; }
+.know-filters .know-sort { flex: none; height: 34px; }
+.know-head { font-size: 13px; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); }
+.know-count { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.know-card { display: flex; gap: 8px; align-items: flex-start; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 10px 10px 6px; margin-bottom: 8px; }
+.know-star { flex: none; width: 32px; height: 32px; border: none; background: none; color: var(--text-dim); font-size: 20px; line-height: 1; padding: 0; cursor: pointer; }
+.know-star.on { color: #ffd166; }
+.know-body { min-width: 0; flex: 1; font-size: 14px; line-height: 1.4; }
+.know-title { font-weight: 700; overflow-wrap: anywhere; }
+.know-title code { font-size: 13.5px; }
+.know-answer { color: var(--accent); font-weight: 700; margin-top: 3px; }
+.know-line { margin-top: 3px; overflow-wrap: anywhere; }
+.know-tag { margin-top: 5px; font-size: 12px; color: var(--text-dim); }
+.know-empty { margin-top: 16px; text-align: center; }

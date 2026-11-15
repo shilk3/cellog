@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.21.0";
+const APP_VERSION = "5.22.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -1727,7 +1727,7 @@ function freshState() {
     // 📘 Knowledge mode: on/off and its set ("esports" / "completionist"),
     // each function's record (seen, mastered), the Knowledge check in
     // progress and the last one finished (for its match). On for new games.
-    edu: { on: true, set: "esports", share: 0.2, fns: {}, gen: {}, current: null, quiz: null, asked: 0, correct: 0, genAsked: 0, genCorrect: 0 },
+    edu: { on: true, set: "esports", share: 0.2, fns: {}, gen: {}, favs: {}, current: null, quiz: null, asked: 0, correct: 0, genAsked: 0, genCorrect: 0 },
     staffUnlockNoted: null, // best league whose Staff unlocks the new year's screen has announced
     completion: { best: {}, feats: {} }, // see completionGoals
     leagueStandings: { 1: null, 2: null, 3: null, 4: null, 5: null }, // last fully completed season per tier
@@ -5740,6 +5740,7 @@ function menuBackRow() {
 }
 function openMenu() {
   const g = gameLengthInfo(state.gameLength);
+  const knowNow = knowledgeCards().length;
   const reports = feedbackLoad(FEEDBACK_KEYS.reports, []).length;
   const html = `
     <h2>Menu</h2>
@@ -5747,6 +5748,7 @@ function openMenu() {
     ${menuRow("menuCareer", "📈 Career &amp; Season")}
     ${menuRow("menuLeagues", "🏅 Leagues")}
     ${menuRow("menuHistory", "📜 Match History")}
+    ${knowNow ? menuRow("menuKnowledge", "📘 Knowledge", `${knowNow} mastered`) : ""}
     ${menuRow("menuSettings", "⚙️ Settings", `${g.icon} ${g.name} game · ${eduModeLabel()}`)}
     ${menuRow("menuHelp", "❓ Help", reports ? "📬 my reports" : "how to play, guides, bugs")}
     <div class="version-tag">CELLOG v${APP_VERSION}</div>
@@ -5756,6 +5758,7 @@ function openMenu() {
   $("menuCareer").addEventListener("click", openCareer);
   $("menuLeagues").addEventListener("click", () => openLeagues(state.leagueTier));
   $("menuHistory").addEventListener("click", () => openHistory());
+  if (knowNow) $("menuKnowledge").addEventListener("click", () => openKnowledge());
   $("menuSettings").addEventListener("click", openSettings);
   $("menuHelp").addEventListener("click", openHelp);
 }
@@ -5785,6 +5788,139 @@ function openSettings() {
   $("menuInstall").addEventListener("click", openInstall);
   $("menuReset").addEventListener("click", () => {
     if (confirm(`Restart your ${g.name} game? This wipes its progress (your other games are kept).`)) startNewGame(state.gameLength);
+  });
+}
+/* ---------------------------------------------------------------------- */
+/* 📘 Knowledge: everything you've mastered, with its answers              */
+/* ---------------------------------------------------------------------- */
+// Only mastered items (they never come up again, so nothing is spoiled),
+// one card each. Types appear once something in them is mastered, so an
+// invitational's never shows before you've played it.
+function knowledgeTypes() {
+  const t = [{ id: "excel", icon: "📗", name: "Excel functions" }, { id: "gen", icon: "💡", name: "General knowledge" }];
+  // (Power Query is asked in groups, but shown a card per function.)
+  Object.keys(EDU_BANK).forEach((id) => t.push({ id: `bank:${id}`, icon: EDU_BANK_INFO[id].icon, name: id === "pq" ? "Power Query functions" : EDU_BANK_INFO[id].name }));
+  Object.keys(EDU_SET_INFO).forEach((id) => t.push({ id: `set:${id}`, icon: eduSetIcon(id), name: EDU_SET_INFO[id].name }));
+  return t;
+}
+function knowledgeCards() {
+  const fns = (state.edu && state.edu.fns) || {}, gen = (state.edu && state.edu.gen) || {};
+  const done = (k) => fns[k] && fns[k].mastered, last = (r) => (r && r.last) || 0;
+  const cards = [];
+  EDU_LIST.forEach((f) => done(f.name) && cards.push({ key: `f:${f.name}`, type: "excel", fn: f, sort: f.name, last: last(fns[f.name]) }));
+  Object.keys(EDU_BANK).forEach((id) => EDU_BANK[id].forEach((f) => {
+    const k = eduRecKey(f);
+    if (!done(k)) return;
+    // A Power Query group: a card for each of its functions.
+    if (f.grp) f.members.forEach((m) => cards.push({ key: `f:pq:${m.name}`, type: `bank:${id}`, fn: f, member: m, sort: m.name, last: last(fns[k]) }));
+    else cards.push({ key: `f:${k}`, type: `bank:${id}`, fn: f, sort: f.name, last: last(fns[k]) });
+  }));
+  const genDone = (q) => gen[q.id] && gen[q.id].mastered;
+  EDU_GEN.forEach((q) => genDone(q) && cards.push({ key: `g:${q.id}`, type: "gen", q, sort: q.text, last: last(gen[q.id]) }));
+  Object.keys(EDU_SETS).forEach((id) => EDU_SETS[id].forEach((q) => genDone(q) && cards.push({ key: `g:${q.id}`, type: `set:${id}`, q, sort: q.text, last: last(gen[q.id]) })));
+  return cards;
+}
+function knowledgeFav(key) {
+  return !!(state.edu.favs && state.edu.favs[key]);
+}
+function knowledgeSyntax(f) {
+  return `${escapeHtml(f.name)}(${f.args.map((a) => escapeHtml(a.rep ? "…" : a.label)).join(", ")})`;
+}
+function knowledgeCardHtml(c, typeOf) {
+  const t = typeOf[c.type];
+  const star = `<button class="know-star${knowledgeFav(c.key) ? " on" : ""}" data-fav="${escapeHtml(c.key)}" aria-label="${knowledgeFav(c.key) ? "Remove from" : "Add to"} favourites">${knowledgeFav(c.key) ? "★" : "☆"}</button>`;
+  let body;
+  if (c.q) {
+    body = `<div class="know-title">${escapeHtml(c.q.text)}</div><div class="know-answer">✓ ${escapeHtml(c.q.a)}</div><div class="know-tag">${t.icon} ${escapeHtml(c.q.topic || t.name)}</div>`;
+  } else if (c.member) {
+    const f = c.fn;
+    body = `<div class="know-title"><code>${escapeHtml(c.member.name)}</code></div><div class="know-line">${escapeHtml(c.member.t)} <b>✓ this one</b></div><div class="know-line kv-dim">${escapeHtml(f.desc)} · takes ${escapeHtml(f.takes)}</div><div class="know-tag">${t.icon} ${escapeHtml(f.name)}</div>`;
+  } else if (c.fn.cmd) {
+    const f = c.fn;
+    body = `<div class="know-title"><code>🤖 ${escapeHtml(f.name)}</code></div><div class="know-line">${escapeHtml(f.desc)}</div><div class="know-tag">${t.icon} ${escapeHtml(f.src)}${f.group ? ` · ${escapeHtml(f.group)}` : ""}</div>`;
+  } else {
+    const f = c.fn;
+    const mand = f.args.filter((a) => !a.opt).length, opt = f.args.filter((a) => a.opt && !a.rep).length, rep = f.args.some((a) => a.rep);
+    body = `<div class="know-title"><code>${knowledgeSyntax(f)}</code></div><div class="know-line kv-dim">${mand} mandatory · ${opt} optional${rep ? " + repeats" : ""}</div><div class="know-line">${escapeHtml(f.desc)}</div><div class="know-tag">${t.icon} ${escapeHtml(f.cat || t.name)}</div>`;
+  }
+  return `<div class="know-card">${star}<div class="know-body">${body}</div></div>`;
+}
+// What the screen is showing (kept while the game is open).
+const knowView = { favs: false, type: "all", sort: "az", q: "" };
+function knowledgeListHtml() {
+  const types = knowledgeTypes(), typeOf = Object.fromEntries(types.map((t) => [t.id, t]));
+  const q = knowView.q.trim().toLowerCase();
+  const text = (c) => (c.q ? `${c.q.text} ${c.q.a} ${c.q.topic || ""}` : `${c.member ? `${c.member.name} ${c.member.t} ` : ""}${c.fn.name} ${c.fn.desc} ${c.fn.cat || ""} ${c.fn.src || ""} ${c.fn.group || ""}`).toLowerCase();
+  let cards = knowledgeCards().filter((c) => (!knowView.favs || knowledgeFav(c.key)) && (knowView.type === "all" || c.type === knowView.type) && (!q || text(c).includes(q)));
+  if (!cards.length) return `<p class="modal-sub know-empty">${knowView.favs ? "No favourites here yet — tap ☆ on a card to add it." : "Nothing matches."}</p>`;
+  if (knowView.sort === "new") {
+    cards.sort((a, b) => b.last - a.last || a.sort.localeCompare(b.sort));
+    return `<div class="know-count">${cards.length}</div>` + cards.map((c) => knowledgeCardHtml(c, typeOf)).join("");
+  }
+  // A–Z within each type, types in order.
+  const order = types.map((t) => t.id);
+  cards.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || a.sort.localeCompare(b.sort, undefined, { sensitivity: "base" }));
+  let out = "", cur = null;
+  cards.forEach((c) => {
+    if (c.type !== cur) {
+      cur = c.type;
+      const n = cards.filter((x) => x.type === cur).length;
+      out += `<h3 class="know-head">${typeOf[cur].icon} ${typeOf[cur].name} <span class="kv-dim">${n}</span></h3>`;
+    }
+    out += knowledgeCardHtml(c, typeOf);
+  });
+  return out;
+}
+function openKnowledge() {
+  const all = knowledgeCards();
+  const types = knowledgeTypes().filter((t) => all.some((c) => c.type === t.id));
+  if (knowView.type !== "all" && !types.some((t) => t.id === knowView.type)) knowView.type = "all";
+  const favN = all.filter((c) => knowledgeFav(c.key)).length;
+  openModal(`
+    ${menuBackRow()}
+    <h2>📘 Knowledge <span class="know-total">${all.length} mastered</span></h2>
+    <p class="modal-sub">Everything you've mastered, with its answers — it won't come up in a check again. Tap ☆ to keep a favourite.</p>
+    <div class="league-tabs know-tabs"><button class="league-tab ${knowView.favs ? "" : "active"}" data-kfav="0">All</button><button class="league-tab ${knowView.favs ? "active" : ""}" data-kfav="1">★ Favourites${favN ? ` ${favN}` : ""}</button></div>
+    <div class="know-filters">
+      <select id="knowType" aria-label="Type"><option value="all">All types</option>${types.map((t) => `<option value="${t.id}" ${knowView.type === t.id ? "selected" : ""}>${t.icon} ${t.name}</option>`).join("")}</select>
+      <input id="knowSearch" type="search" placeholder="🔍 Search" value="${escapeHtml(knowView.q)}" autocomplete="off" />
+      <button class="league-tab know-sort" id="knowSort">${knowView.sort === "az" ? "A–Z" : "Newest"}</button>
+    </div>
+    <div id="knowList">${knowledgeListHtml()}</div>
+  `, { page: { key: "knowledge", reopen: openKnowledge } });
+  $("menuBack").addEventListener("click", openMenu);
+  const redraw = () => ($("knowList").innerHTML = knowledgeListHtml());
+  document.querySelectorAll("[data-kfav]").forEach((b) => b.addEventListener("click", () => {
+    knowView.favs = b.dataset.kfav === "1";
+    openKnowledge();
+  }));
+  $("knowType").addEventListener("change", (e) => {
+    knowView.type = e.target.value;
+    redraw();
+  });
+  $("knowSearch").addEventListener("input", (e) => {
+    knowView.q = e.target.value;
+    redraw();
+  });
+  $("knowSort").addEventListener("click", (e) => {
+    knowView.sort = knowView.sort === "az" ? "new" : "az";
+    e.target.textContent = knowView.sort === "az" ? "A–Z" : "Newest";
+    redraw();
+  });
+  $("knowList").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-fav]");
+    if (!b) return;
+    const favs = (state.edu.favs = state.edu.favs || {});
+    if (favs[b.dataset.fav]) delete favs[b.dataset.fav];
+    else favs[b.dataset.fav] = true;
+    saveState();
+    const on = !!favs[b.dataset.fav];
+    b.classList.toggle("on", on);
+    b.textContent = on ? "★" : "☆";
+    b.setAttribute("aria-label", `${on ? "Remove from" : "Add to"} favourites`);
+    const tab = document.querySelector('[data-kfav="1"]'), n = Object.keys(favs).length;
+    if (tab) tab.textContent = `★ Favourites${n ? ` ${n}` : ""}`;
+    if (knowView.favs && !on) redraw();
   });
 }
 function openHelp() {
@@ -7852,6 +7988,7 @@ function openHowTo() {
     `On for new games — change it any time in ☰ → ⚙️ Settings → 📘 Knowledge mode. It's <b>${eduModeLabel()}</b> for this game.`,
     `It asks about the ${EDU_CORE.length} functions that matter in Excel esports. Switch on <b>📚 Completionist</b> to add Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. Switch the questions off for pure management.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
+    `<b>📘 Knowledge</b> (in the Menu, once you've mastered something): every function and question you've mastered, with its answers — one card each. Filter by type, search, sort A–Z or newest, and tap ☆ to keep favourites (saved with this game).`,
     `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. Getting it wrong never stops the function being mastered.`,
     `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Rivals answer too — about ${Math.round(EDU_RIVAL_ACC[5] * 100)}% right in League 5, up to ${Math.round(EDU_RIVAL_ACC[TOP_TIER] * 100)}% at the top — so turning it up pays when you get more right than your league's rivals, and costs you when you get fewer. At 0% it's practice only: questions are still asked and mastered, but your answers don't affect matches.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
