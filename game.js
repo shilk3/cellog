@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.20.2";
+const APP_VERSION = "5.21.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -7718,6 +7718,7 @@ function openHowTo() {
 
   sec("buttons", "▶️", "End Day & End Week", ul([
     "<b>End Day ▶</b> plays one day.",
+    "Before it does, it warns you about hours that won't do anything today: a skill already at its cap (beyond the 1h that stops rust, or all of them when 🛡️ a coach or its XP holds it anyway), or 👪 Support past what fills its bar.",
     "<b>To Match ▶▶</b> repeats today's plan up to and including the next match, then shows the result plus a week summary. Outside the season it's <b>End Week ▶▶</b> (up to 7 days).",
     "It stops early so you can re-plan on an injury, losing or finding a job, going pro, burnout, a new technique, or Nutrition shrinking the day below your plan. Each of those also gets its own screen.",
     "Hours you haven't assigned are lost — they never carry over. If any are left when you press either button, it asks first.",
@@ -8421,6 +8422,53 @@ function confirmSponsoredWork(kind, go) {
     go();
   });
 }
+// Hours that change nothing today: a skill already at its cap (the hours
+// past what stops it rusting — all of them when a coach or its XP holds it
+// anyway), and Support hours past what fills the bar to its floor.
+function wastedHours() {
+  const a = state.allocation, out = [];
+  const tol = 0.005;
+  const skillAfter = (k, h) => computeDayResult({ ...a, skills: { ...a.skills, [k]: h } }, state.stats, state.injury.active, state.burnout.active).skills[k];
+  trainableSkills().forEach((k) => {
+    const h = a.skills[k] || 0;
+    if (h <= 0) return;
+    const full = skillAfter(k, h);
+    if (full > state.stats.skills[k] + tol) return; // still climbing
+    let need = 0;
+    while (need < h && Math.abs(skillAfter(k, need) - full) > tol) need++;
+    if (need < h) {
+      const meta = skillMeta(k);
+      out.push({ icon: meta.icon, name: meta.name, hours: h - need, of: h, why: need ? `at its cap — ${need}h is enough to stop it rusting` : "at its cap, and it won't rust anyway 🛡️" });
+    }
+  });
+  if (supportActive() && (a.support || 0) > 0) {
+    const max = 100 - supportFloor(), need = Math.max(0, Math.ceil((max - supportGood()) / BAL.supportPerHour));
+    if (a.support > need) out.push({ icon: "👪", name: "Support", hours: a.support - need, of: a.support, why: need ? `${need}h fills the bar to its most (${max}%)` : `the bar is already at its most (${max}%)` });
+  }
+  return out;
+}
+function confirmWasted(kind, go) {
+  if (endDayBlocker()) return;
+  const list = wastedHours();
+  if (!list.length) return go();
+  const total = list.reduce((t, x) => t + x.hours, 0);
+  const week = kind === "week";
+  const label = week ? $("endWeekBtn").textContent.replace(/\s*\d+d\s*$/, "").trim() : "End Day ▶";
+  openModal(`
+    <div class="splash">
+      <div class="splash-icon">🛡️</div>
+      <div class="splash-title">${total}h won't do anything${week ? " today" : ""}</div>
+      <ul class="wasted-list">${list.map((x) => `<li>${x.icon} <b>${x.name}</b>: ${x.hours === x.of ? `all ${x.hours}h` : `${x.hours}h of ${x.of}h`} — ${x.why}</li>`).join("")}</ul>
+      <p class="modal-sub">They could go into a skill that's still climbing, or rest.</p>
+      <button class="ghost-btn" id="wasteBack">Change my plan</button>
+      <button class="primary-btn" id="wasteGo">${label} anyway</button>
+    </div>`);
+  $("wasteBack").addEventListener("click", closeModal);
+  $("wasteGo").addEventListener("click", () => {
+    closeModal();
+    go();
+  });
+}
 function confirmUnassigned(kind, go) {
   if (endDayBlocker()) return;
   const spare = todayHours() - totalAssigned();
@@ -8711,8 +8759,8 @@ function wireInputs() {
     setAllocation(key, getAllocHours(key) + dir);
   });
 
-  $("endDayBtn").addEventListener("click", () => confirmSponsoredWork("day", () => confirmUnassigned("day", endDay)));
-  $("endWeekBtn").addEventListener("click", () => confirmSponsoredWork("week", () => confirmUnassigned("week", endWeek)));
+  $("endDayBtn").addEventListener("click", () => confirmSponsoredWork("day", () => confirmUnassigned("day", () => confirmWasted("day", endDay))));
+  $("endWeekBtn").addEventListener("click", () => confirmSponsoredWork("week", () => confirmUnassigned("week", () => confirmWasted("week", endWeek))));
   $("menuBtn").addEventListener("click", openMenu);
   $("cashChip").addEventListener("click", openShop);
   $("rankChip").addEventListener("click", openCareer);
