@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.16.5";
+const APP_VERSION = "5.17.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -179,7 +179,7 @@ const BAL = {
   // rolled: good adds supportEffect to your match-day rating, bad takes it off.
   supportMaxHours: 3,
   supportPerHour: 2,
-  supportEffect: 20,
+  supportEffect: 30,
   supportFloors: { regular: 10, playoffs: 20, final: 30, event: [20, 30, 40] },
   playoffWorkHours: 6, // …while you're in the playoffs: your employer sponsors the run (full pay; overtime still from 9h)
   proDutyHoursRequired: 5, // Pro: Pro Duties hours/day required; hours above this master techniques

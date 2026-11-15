@@ -333,8 +333,8 @@ Its bar starts each week 50% good / 50% bad; each hour (0–3 a day, no
 minimum) turns 2% of it good, down to a pressure floor of bad that grows
 with the stakes — 10% regular season, 20% playoffs, 30% a Final, and 20 / 30
 / 40% for an invitational's games 1–3 (the bar builds over the week before
-and carries through the series). On match day it's rolled: good adds +20 to
-your match-day rating, bad takes 20 off, shown under Luck in Head to Head.
+and carries through the series). On match day it's rolled: good adds +30 to
+your match-day rating, bad takes 30 off, shown under Luck in Head to Head.
 The win chance shown everywhere already blends the two. It resets after
 each league or playoff match.
 
