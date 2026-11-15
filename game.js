@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.20.1";
+const APP_VERSION = "5.20.2";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -232,16 +232,16 @@ const BAL = {
   xpFromTier: 4,
   xpPlayoffMult: 2,
   // An invitational's skill: only a few games a year, so each counts for
-  // more — it fills in about as many years as a ⭐ takes seasons.
-  xpEventMult: 16,
+  // more (the game length's: Full 16, Half 24, Short 32).
+  xpEventPerGame: 16, // (length)
 };
 
 // Game lengths, chosen when a game starts (state.gameLength). Each has its
 // own save slot. A year ends on the day of the Final either way.
 const GAME_LENGTHS = {
-  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4, techniqueDays: 10, techniqueHours: [8, 12], topRoundRobins: 1 },
-  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2, techniqueDays: 19, techniqueHours: [15, 23], topRoundRobins: 2 },
-  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1, techniqueDays: 38, techniqueHours: [30, 45], topRoundRobins: 4 },
+  short: { key: "short", name: "Short", icon: "⚡", blurb: "a quarter-length season", leagueSize: 10, playoffSize: 4, moveCount: 2, preseasonDays: 7, xpPerMatch: 4, xpEventPerGame: 32, techniqueDays: 10, techniqueHours: [8, 12], topRoundRobins: 1 },
+  half: { key: "half", name: "Half", icon: "🌗", blurb: "a half-length season", leagueSize: 20, playoffSize: 8, moveCount: 3, preseasonDays: 14, xpPerMatch: 2, xpEventPerGame: 24, techniqueDays: 19, techniqueHours: [15, 23], topRoundRobins: 2 },
+  full: { key: "full", name: "Full", icon: "🏟️", blurb: "the full season", leagueSize: 40, playoffSize: 16, moveCount: 4, preseasonDays: 21, xpPerMatch: 1, xpEventPerGame: 16, techniqueDays: 38, techniqueHours: [30, 45], topRoundRobins: 4 },
 };
 const GAME_LENGTH_KEYS = ["short", "half", "full"];
 const ALL_PLAYOFF_STAGES = ["r16", "qf", "sf", "f"];
@@ -269,6 +269,7 @@ function applyGameLength(key) {
   BAL.promotionTablePlaces = g.moveCount - 1;
   BAL.preseasonDays = g.preseasonDays;
   BAL.xpPerMatch = g.xpPerMatch;
+  BAL.xpEventPerGame = g.xpEventPerGame;
   BAL.techniqueIntervalDays = g.techniqueDays;
   [BAL.techniqueMinHours, BAL.techniqueMaxHours] = g.techniqueHours;
   BAL.topRoundRobins = g.topRoundRobins;
@@ -2877,7 +2878,7 @@ function xpEarnsHere(tier = state.leagueTier) {
 // invitationals') earn the base, as they always have.
 function xpGainFor(key, knockout) {
   const ko = knockout ? BAL.xpPlayoffMult : 1;
-  if (isEventSkill(key)) return BAL.xpPerMatch * BAL.xpEventMult;
+  if (isEventSkill(key)) return BAL.xpEventPerGame;
   if (!SKILL_KEYS.includes(key)) return BAL.xpPerMatch * ko;
   if (isSpecialisation(key)) return BAL.xpPerMatch * BAL.xpSpecMult * ko;
   return knockout ? BAL.xpPerMatch : 0;
@@ -7805,7 +7806,7 @@ function openHowTo() {
 
   if (pyUnlocked() && state.python && state.python.revealed) sec("py", "🐍", PY_EVENT_NAME, ul([
     `At the end of a preseason you join — a must in your second year at the top, your choice from the fourth: <b>best of ${PY_GAMES}</b> against <b>${PY_RIVAL.name}</b> (Python ${PY_RIVAL.python}), a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. An exhibition — no rating, prize or record at stake.`,
-    `Python stands in for the focus skills: it's the skill part of performance and the focus-skill edge. Health, Calm, Rest, luck and finish time count as usual (${PY_RIVAL.name}'s condition is ${PY_RIVAL.condition}). Each game earns its skill <b>+${B.xpPerMatch * B.xpEventMult} XP</b>, win or lose (it sets your finish time).`,
+    `Python stands in for the focus skills: it's the skill part of performance and the focus-skill edge. Health, Calm, Rest, luck and finish time count as usual (${PY_RIVAL.name}'s condition is ${PY_RIVAL.condition}). Each game earns its skill <b>+${B.xpEventPerGame} XP</b>, win or lose (it sets your finish time).`,
     `During the preseason your ${TOP_LEAGUE_NAME} skills are set aside (frozen). Two sliders: 🐍 Python (never rusts) and 📚 the course, its parts in order: ${PY_COURSE.map((t, i) => `${t.icon} ${t.name} (${pyCourseHours(i)}h — ${t.desc})`).join(", ")}.`,
     `Your first win brings a signature move for the league: <b>Python in Excel</b> — +2 on every focus skill in the edge, finish 30s sooner.`,
     `<b>Finishing the game:</b> top of the ${TOP_LEAGUE_NAME} table, its playoffs, the ${PY_EVENT_NAME} and the invitational that follows it — each at least once, in any years.`,
@@ -7815,7 +7816,7 @@ function openHowTo() {
 
   if (mobRevealed()) sec("mob", "📱", MOB_EVENT_NAME, ul([
     `At the end of a preseason you join: <b>best of ${PY_GAMES}</b> against <b>${MOB_RIVAL_NAME}</b>, a game on each of the last ${PY_GAMES} days — all ${PY_GAMES} are always played. It's offered from League 4 up in a preseason after a season <b>without a promotion</b> (you stayed put or went down)${inTop() ? ", and any year at the top from your fourth" : ""}. The first one is a must; after that you can join or not.`,
-    `He plays to your league: 📱 Mobile Excel ${[4, 3, 2, 1].map((t) => `${MOB_BY_TIER[t].mobile} in League ${t}`).join(", ")}${inTop() ? `, ${MOB_BY_TIER[0].mobile} at the top` : ""}. Mobile Excel stands in for the focus skills in the series; Health, Calm, Rest, luck and finish time count as usual. Each game earns its skill <b>+${B.xpPerMatch * B.xpEventMult} XP</b>, win or lose (it sets your finish time).`,
+    `He plays to your league: 📱 Mobile Excel ${[4, 3, 2, 1].map((t) => `${MOB_BY_TIER[t].mobile} in League ${t}`).join(", ")}${inTop() ? `, ${MOB_BY_TIER[0].mobile} at the top` : ""}. Mobile Excel stands in for the focus skills in the series; Health, Calm, Rest, luck and finish time count as usual. Each game earns its skill <b>+${B.xpEventPerGame} XP</b>, win or lose (it sets your finish time).`,
     `Two sliders${inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: 📱 Mobile Excel (never rusts) and 📚 the course, its parts in order: ${MOB_COURSE.map((t, i) => `${t.icon} ${t.name} (${evCourseHours("mob", i)}h — ${t.desc})`).join(", ")}.`,
     `No rating or record at stake. Win the series for a prize — ${[4, 3, 2, 1].map((t) => `$${fmt(MOB_BY_TIER[t].prize)} in League ${t}`).join(", ")}${inTop() ? `, $${fmt(MOB_BY_TIER[0].prize)} at the top` : ""} — and a 🏆 trophy. A 3–0 is a 🧹 clean sweep: a trophy of its own.`,
     ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is ${EDU.phoneQs} questions on Excel on mobile (in place of a function), then which function-list category a function is under (in place of the general question). Once you've played it, both sets join your general questions (marked 📱).`] : []),
@@ -7826,7 +7827,7 @@ function openHowTo() {
     const E = EVENTS[id], [A, B] = evRivals(id);
     sec(id, E.icon, E.name, ul([
       `A 🔺 <b>Triangle Series</b> against <b>${A.name}</b> and <b>${B.name}</b> at the end of a preseason you join (the first is a must). Day 1 you play ${A.name}, day 2 ${B.name} — and they play each other. Day 3 is the final: whoever won both against whoever won one. All three 1–1? A <b>three-way final</b>, where you have to beat both. Lose both group games and you watch the final.`,
-      `They play to your league: ${E.skill.name} ${Object.keys(TRI_BY_TIER).map(Number).filter((t) => t >= E.firstTier || id === "lam").reverse().map((t) => `${TRI_BY_TIER[t].skill + TRI_SPREAD}/${TRI_BY_TIER[t].skill - TRI_SPREAD} ${t === TOP_TIER ? "at the top" : `in League ${t}`}`).join(", ")}. ${E.skill.name} stands in for the focus skills; Health, Calm, Rest, luck and finish time count as usual. Each game earns its skill <b>+${B.xpPerMatch * B.xpEventMult} XP</b>, win or lose (it sets your finish time).`,
+      `They play to your league: ${E.skill.name} ${Object.keys(TRI_BY_TIER).map(Number).filter((t) => t >= E.firstTier || id === "lam").reverse().map((t) => `${TRI_BY_TIER[t].skill + TRI_SPREAD}/${TRI_BY_TIER[t].skill - TRI_SPREAD} ${t === TOP_TIER ? "at the top" : `in League ${t}`}`).join(", ")}. ${E.skill.name} stands in for the focus skills; Health, Calm, Rest, luck and finish time count as usual. Each game earns its skill <b>+${B.xpEventPerGame} XP</b>, win or lose (it sets your finish time).`,
       `Two sliders${E.firstTier === TOP_TIER || inTop() ? " (instead of everything else at the top)" : ", alongside your seven skills"}: ${E.skill.icon} ${E.skill.name} (never rusts) and 📚 the course, its parts in order: ${E.course.map((t, i) => `${t.icon} ${t.name} (${evCourseHours(id, i)}h — ${t.desc})`).join(", ")}.`,
       `No rating or record at stake. Win the final for a prize and a 🏆 trophy. Win all three games for a 🧹 <b>clean sweep</b>; win a three-way final for 🔺 <b>Last One Standing</b>.`,
       ...(eduOn() ? [`📘 Knowledge mode: each game's Knowledge check is on ${EDU_BANK_INFO[id].what}, its general question from the invitational's own set. Once you've played it, they also turn up in your normal checks now and then, and its general questions join yours (marked ${E.icon}).`] : []),
