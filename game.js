@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.19.0";
+const APP_VERSION = "5.19.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5595,7 +5595,7 @@ function shopHtml(tab = shopTab) {
       <div class="shop-item-info">
         <div class="shop-item-name">${T.name}</div>
         <div class="staff-line staff-stat">+${T.good}% good on 👪 Support for your next match</div>
-        <div class="staff-line">${supportActive() ? `Support ${fmt(supportGood())}% now (never past the pressure floor)` : "Only in a week with a match"}</div>
+        <div class="staff-line">${supportActive() ? `Support ${fmt(supportGood())}% now (never past the pressure floor)` : "Only when a match is coming up"}</div>
         <div class="staff-actions">${
           ticketsBooked()
             ? `<span class="staff-hired">✓ Booked for this match</span>`
@@ -6909,13 +6909,12 @@ function npcWinProb(A, B) {
   return 1 / (1 + Math.pow(10, -d / matchWeights().luck));
 }
 // 👪 Support is on in weeks with a match of yours: the regular season, your
-// playoffs, and the week leading into an invitational's games.
+// playoffs, and the whole preseason leading into an invitational's games.
 function supportActive() {
   if (state.seasonPhase === "regular") return true;
   if (state.seasonPhase === "playoffs") return playoffsLive();
   if (isPreseason()) {
-    const g = supportEventGame();
-    return !!(g && g.daysUntil <= 7);
+    return !!supportEventGame();
   }
   return false;
 }
@@ -7729,8 +7728,8 @@ function openHowTo() {
     ${tbl(["Calm on match day", "Your skills count"], [[`${B.composureMatchMid}+`, "100%"], [`${B.composureMatchLow}–${B.composureMatchMid - 1}`, "75%"], [`under ${B.composureMatchLow}`, "50%"]])}`);
 
   sec("support", "👪", "Support", ul([
-    `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the week leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good</b> (pink), <b>50% bad</b> (grey) — the number on the row is the good part.`,
-    `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad (the hatched end) that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds over the week before and carries through all three).`,
+    `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the whole preseason leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good</b> (pink), <b>50% bad</b> (grey) — the number on the row is the good part.`,
+    `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad (the hatched end) that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds all preseason and carries through all three).`,
     `On match day it's rolled: a <b>good day</b> adds <b>+${B.supportEffect}</b> to your match-day rating, a <b>bad day</b> takes ${B.supportEffect} off. Head to Head shows which, under Luck. The bar starts again at 50/50 after each league or playoff match.`,
     `<b>🧠 Sports Psychologist</b> (Staff): while hired, the bar starts match weeks at <b>${UPGRADES.psych.levels.map((l) => l.supportStart).join(" / ")}%</b> good (Lv1 / 2 / 3) instead of 50%.`,
     `<b>${FAMILY_TICKETS.icon} ${FAMILY_TICKETS.name}</b> (Items, $${FAMILY_TICKETS.price}): <b>+${FAMILY_TICKETS.good}%</b> good for your next match — once per match, each invitational game too. Neither goes past the pressure floor.`,
