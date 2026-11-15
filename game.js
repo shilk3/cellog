@@ -173,6 +173,14 @@ const BAL = {
   // go pro. Work/Pro Duties share one slider and one strike system —
   // only what's "required" and what it's called changes with status.
   workHoursRequired: 9, // Employed: Work hours/day required to avoid a strike
+  // 👪 Support (family & friends): a bar that starts each match week 50%
+  // good / 50% bad; each hour turns supportPerHour% of it good, down to a
+  // pressure floor of bad that grows with the stakes. On match day it's
+  // rolled: good adds supportEffect to your match-day rating, bad takes it off.
+  supportMaxHours: 3,
+  supportPerHour: 2,
+  supportEffect: 20,
+  supportFloors: { regular: 10, playoffs: 20, final: 30, event: [20, 30, 40] },
   playoffWorkHours: 6, // …while you're in the playoffs: your employer sponsors the run (full pay; overtime still from 9h)
   proDutyHoursRequired: 5, // Pro: Pro Duties hours/day required; hours above this master techniques
   // Pay isn't flat: it rises $10 at each year end in whichever role you're
@@ -1658,6 +1666,7 @@ function freshState() {
     carbHours: 0, // extra hours today, banked by yesterday's extra Food
     phaseStart: null, // snapshot taken when each phase begins (phaseSnapshot) — for the phase splash
     specialisations: null, // the 3 ⭐ skills that can reach the full league cap — chosen after naming the player
+    support: { good: 50 }, // 👪 this match week's Support bar: % good (the rest bad)
     pendingSplash: null, // phase splashes not yet dismissed (a list: a season can end and a new year start on one day)
     tutorialSeen: false,
     topReveal: false, // just arrived somewhere new — the next year's splash explains it
@@ -1720,6 +1729,7 @@ function freshState() {
       relax: BAL.relaxComposureThreshold,
       nutrition: 1,
       work: 0, // a new career starts in preseason, on annual leave
+      support: 0, // 👪 hours with family & friends (weeks with a match)
       pycourse: 0, // a later preseason's course
       mobcourse: 0, // the Mobile Invitational's course
       pqcourse: 0, // …and the Triangle Series ones'
@@ -2172,6 +2182,12 @@ function previewTomorrow() {
 function resolveDay() {
   const a = state.allocation;
   const s = state.stats;
+  // 👪 Support: today's hours turn some of the bar good (the floor is
+  // applied when the match is rolled, so it can't go past the lowest one).
+  if (supportActive() && a.support > 0) {
+    if (!state.support) state.support = { good: 50 };
+    state.support.good = Math.min(100 - BAL.supportFloors.regular, state.support.good + a.support * BAL.supportPerHour);
+  }
   const recoveryEff = upgradeEffect("recovery");
   const events = [];
   // An injury picked up today starts counting down tomorrow — otherwise a
@@ -2761,10 +2777,21 @@ function matchup(entry, keys = state.activeSkills) {
   const knockout = playerKnockout();
   const youXp = focusXpAverage(keys), oppXp = rival ? rivalXp(rival) : 0;
   const youBonus = playerFinishBonus(), oppBonus = rivalFinishBonus(rival);
-  const odds = outcomeOdds(yourMatch - oppMatch, { xpLead: youXp - oppXp, secLead: youBonus - oppBonus });
-  const winProb = odds.win, deadHeatProb = odds.deadHeat;
+  const oddsAt = (gap) => outcomeOdds(gap, { xpLead: youXp - oppXp, secLead: youBonus - oppBonus });
+  // 👪 Support: the chance blends a good day (+effect) and a bad day (−effect).
+  const supportP = supportActive() ? supportGood() / 100 : null;
+  let winProb, deadHeatProb;
+  if (supportP == null) {
+    const odds = oddsAt(yourMatch - oppMatch);
+    winProb = odds.win;
+    deadHeatProb = odds.deadHeat;
+  } else {
+    const E = BAL.supportEffect, g = oddsAt(yourMatch - oppMatch + E), b = oddsAt(yourMatch - oppMatch - E);
+    winProb = supportP * g.win + (1 - supportP) * b.win;
+    deadHeatProb = supportP * g.deadHeat + (1 - supportP) * b.deadHeat;
+  }
   const golf = (movesGolf(playerTopMoves()) ? 1 : 0) - (movesGolf(rivalTopMoves(rival)) ? 1 : 0);
-  return { rival, oppRating, yourPerf, oppPerf, youFocus, oppFocus, yourEdge, oppEdge, yourMatch, oppMatch, winProb, deadHeatProb, youXp, oppXp, youBonus, oppBonus, golf, knockout };
+  return { rival, oppRating, yourPerf, oppPerf, youFocus, oppFocus, yourEdge, oppEdge, yourMatch, oppMatch, winProb, deadHeatProb, youXp, oppXp, youBonus, oppBonus, golf, knockout, supportP };
 }
 
 // Resolves one real match for the player against a specific opponent rating.
@@ -2852,7 +2879,15 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   // same as a single "roll under your win chance", just told as two scores.
   const yourLuck = matchLuckDraw();
   const oppLuck = matchLuckDraw();
-  const yourFinal = matchRating + yourLuck;
+  // 👪 Support: rolled against this week's bar — good adds, bad takes away.
+  const support = mu.supportP == null ? null : (() => {
+    const good = Math.random() < mu.supportP;
+    return { good, pct: Math.round(mu.supportP * 100), delta: good ? BAL.supportEffect : -BAL.supportEffect };
+  })();
+  // A league or playoff match ends the week: the bar starts again at 50/50.
+  // (An invitational's bar carries through its games.)
+  if (support && !exhibition) state.support = { good: 50 };
+  const yourFinal = matchRating + yourLuck + (support ? support.delta : 0);
   const oppFinal = opponentMatchRating + oppLuck;
   // Both finish times (your XP is what you had going in).
   const yourTime = finishTime(mu.youXp, mu.youBonus), oppTime = finishTime(mu.oppXp, mu.oppBonus);
@@ -2900,7 +2935,8 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   const oppPerfShown = Math.round(matchBase(mu.oppPerf));
   const yourEdgeShown = Math.round(mu.yourEdge);
   const oppEdgeShown = Math.round(mu.oppEdge);
-  const baseGap = yourPerfShown + yourEdgeShown - (oppPerfShown + oppEdgeShown);
+  const supportShown = support ? support.delta : 0;
+  const baseGap = yourPerfShown + yourEdgeShown + supportShown - (oppPerfShown + oppEdgeShown);
   let yourLuckShown = Math.round(yourLuck * LUCK_SHOWN);
   let oppLuckShown = Math.round(oppLuck * LUCK_SHOWN);
   const shownGap = baseGap + yourLuckShown - oppLuckShown; // your total − theirs
@@ -2922,7 +2958,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
     yourLuckShown += yourPart;
     oppLuckShown -= fix - yourPart;
   }
-  const yourFinalShown = yourPerfShown + yourEdgeShown + yourLuckShown;
+  const yourFinalShown = yourPerfShown + yourEdgeShown + yourLuckShown + supportShown;
   const oppFinalShown = oppPerfShown + oppEdgeShown + oppLuckShown;
 
   return {
@@ -2930,6 +2966,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
     raw: { yourFinal, oppFinal, yourTime, oppTime },
     edu: eduQuiz ? { fn: eduQuiz.fn ? eduQuiz.fn.replace(/^[a-z]+:/, "") : "📱 phone", right: eduQuiz.right, total: eduQuiz.total } : null,
     knowledge: knowledgeSplit(breakdown, mu.rival, eduQuiz),
+    support,
     win,
     draw, // always false now — older results may hold a draw
     decidedOnTime, // a dead heat settled by the faster finish
@@ -4404,7 +4441,7 @@ function phaseLabelText() {
 /* ---------------------------------------------------------------------- */
 const $ = (id) => document.getElementById(id);
 
-const ACT_MAX = { exercise: BAL.gymMaxHours, sleep: 12, relax: 12, nutrition: 4, ...Object.fromEntries(EVENT_IDS.map((id) => [EVENTS[id].courseAct, 16])) };
+const ACT_MAX = { exercise: BAL.gymMaxHours, sleep: 12, relax: 12, nutrition: 4, support: BAL.supportMaxHours, ...Object.fromEntries(EVENT_IDS.map((id) => [EVENTS[id].courseAct, 16])) };
 const SKILL_MAX_HOURS = 16;
 
 function markerPct(threshold, max) {
@@ -4485,7 +4522,7 @@ function totalAssigned() {
   const skillSum = trainableSkills().reduce((sum, k) => sum + (a.skills[k] || 0), 0);
   if (inCamp()) return skillSum; // camp runs the rest of the day
   const cev = courseEvent();
-  return skillSum + a.exercise + a.sleep + a.relax + a.nutrition + (a.work || 0) + (cev ? a[EVENTS[cev].courseAct] || 0 : 0);
+  return skillSum + a.exercise + a.sleep + a.relax + a.nutrition + (a.work || 0) + (supportActive() ? a.support || 0 : 0) + (cev ? a[EVENTS[cev].courseAct] || 0 : 0);
 }
 
 // One row does double duty as both the stat readout (name, value/cap, bar)
@@ -4800,6 +4837,27 @@ function renderPlannerRows() {
       barClass: "composure",
     })
   );
+  // 👪 Support: green = a good day, red = a bad day; the hatched end is the
+  // pressure floor this match can't get below.
+  if (supportActive()) {
+    const floor = supportFloor(), max = 100 - floor;
+    const good = supportGood(), after = Math.min(max, ((state.support && state.support.good) || 50) + (a.support || 0) * BAL.supportPerHour);
+    rows.push(
+      comboRowHtml("support", {
+        icon: "👪",
+        label: "Support",
+        outcomeText: `${fmt(good)}% good · floor ${floor}%`,
+        value: good,
+        previewValue: after,
+        cap: max,
+        scaleMax: 100,
+        hours: a.support || 0,
+        maxHours: BAL.supportMaxHours,
+        markerHours: 0,
+        barClass: "support",
+      })
+    );
+  }
   const capToday = dailyHoursCap(s.nutrition);
   const capTomorrow = dailyHoursCap(preview.nutrition);
   let nutritionOutcome = `${fmt(s.nutrition)}/100`;
@@ -5215,6 +5273,7 @@ function headToHeadHtml(result) {
         ${knowledgeRows(result, row)}
         ${y.edge != null ? focusEdgeRow(result, row) : ""}
         ${row("🎲 Luck on the day", signedNum(y.luck), signedNum(o.luck))}
+        ${result.support ? row(`👪 Support · ${result.support.good ? "good" : "bad"} day`, signedNum(result.support.delta), "–", "perf-sub") : ""}
       </tbody>
       <tfoot>${row("Match-day rating", y.final, o.final)}</tfoot>
     </table>${finishTimeHtml(result)}`;
@@ -6744,6 +6803,51 @@ function npcWinProb(A, B) {
   const d = matchBase(rivalPerformance(A)) + Math.max(0, edge) - (matchBase(rivalPerformance(B)) + Math.max(0, -edge));
   return 1 / (1 + Math.pow(10, -d / matchWeights().luck));
 }
+// 👪 Support is on in weeks with a match of yours: the regular season, your
+// playoffs, and the week leading into an invitational's games.
+function supportActive() {
+  if (state.seasonPhase === "regular") return true;
+  if (state.seasonPhase === "playoffs") return playoffsLive();
+  if (isPreseason()) {
+    const g = supportEventGame();
+    return !!(g && g.daysUntil <= 7);
+  }
+  return false;
+}
+// The invitational's next game — its number and how far off — without the
+// win chance nextEventGame() works out (that would ask Support again).
+function supportEventGame() {
+  const id = preseasonEvent();
+  if (!id || !EVENTS[id]) return null;
+  const es = evState(id);
+  if (!es) return null;
+  let n;
+  if (EVENTS[id].tri) {
+    const sr = es.series && es.series.year === state.year && es.series.tri ? es.series : null;
+    if (sr && sr.final) return null;
+    n = (sr ? sr.you.length : 0) + 1;
+  } else {
+    const sr = es.series && es.series.year === state.year ? es.series : { you: 0, opp: 0 };
+    n = sr.you + sr.opp + 1;
+  }
+  if (n > PY_GAMES) return null;
+  return { id, n, daysUntil: BAL.preseasonDays - PY_GAMES + n - state.phaseDay };
+}
+// The pressure floor (the least the bad part can shrink to) for your next match.
+function supportFloor() {
+  const F = BAL.supportFloors;
+  if (isPreseason()) {
+    const g = supportEventGame();
+    return g ? F.event[clamp(g.n, 1, F.event.length) - 1] : F.regular;
+  }
+  if (state.seasonPhase === "playoffs") return state.playoff && state.playoff.stage === "f" ? F.final : F.playoffs;
+  return F.regular;
+}
+// This match's chance of a good day (%), floor applied.
+function supportGood() {
+  const g = (state.support && state.support.good) || 50;
+  return Math.min(g, 100 - supportFloor());
+}
 function playoffsLive() {
   return state.seasonPhase === "playoffs" && state.playoff && !state.playoff.eliminated && !state.playoff.champion;
 }
@@ -7518,6 +7622,12 @@ function openHowTo() {
     ])}
     ${tbl(["Calm on match day", "Your skills count"], [[`${B.composureMatchMid}+`, "100%"], [`${B.composureMatchLow}–${B.composureMatchMid - 1}`, "75%"], [`under ${B.composureMatchLow}`, "50%"]])}`);
 
+  sec("support", "👪", "Support", ul([
+    `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the week leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good, 50% bad</b>.`,
+    `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds over the week before and carries through all three).`,
+    `On match day it's rolled: a <b>good day</b> adds <b>+${B.supportEffect}</b> to your match-day rating, a <b>bad day</b> takes ${B.supportEffect} off. Head to Head shows which, under Luck. The bar starts again at 50/50 after each league or playoff match.`,
+  ]))
+
   sec("nutrition", "🥗", "Nutrition & day length", ul([
     `Nutrition sets how many hours tomorrow has: <b>${B.dailyHoursFloor}h</b> at ${B.nutritionHoursCapLow} or below, rising to the full <b>${B.dailyHoursCeiling}h</b> at ${B.nutritionHoursCapHigh}+.`,
     `Under ${B.skillDecayThresholdHours}h of Food a day, Nutrition drops.`,
@@ -8112,6 +8222,9 @@ function runDay() {
   // Hired on leave's last day (found while still off, so Work stayed 0h):
   // the season starts today, so Work goes to the required hours too.
   else if (statusBefore === "unemployed" && state.employment.status !== "unemployed" && !state.allocation.work) state.allocation.work = requiredWorkHours();
+  // 👪 A new phase is a new week for Support; out of match weeks it's off.
+  if (state.seasonPhase !== phaseBefore) state.support = { good: 50 };
+  if (!supportActive()) state.allocation.support = 0;
   // 🎁 The playoff sponsorship: Work drops to its hours as the playoffs
   // start (an overtime plan is left alone), and back up when they end.
   if (!sponsoredBefore && playoffSponsored() && state.allocation.work > BAL.playoffWorkHours && state.allocation.work <= BAL.workHoursRequired) state.allocation.work = BAL.playoffWorkHours;

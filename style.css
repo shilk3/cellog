@@ -1,4 +1,5 @@
 :root {
+  --support: #ff7ab6;
   --bg: #0b1220;
   --bg-elev: #131c2e;
   --bg-elev-2: #1a2438;
@@ -1033,3 +1034,8 @@ details.match-more[open] { padding-bottom: 8px; }
 .res-vs { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
 .res-vs small { font-size: 10.5px; color: var(--accent); white-space: nowrap; }
 .res-tbd { color: var(--text-dim); font-style: italic; }
+
+/* 👪 Support: the bar is good (green) over bad (red); pink slider */
+.activity[data-act="support"] input[type="range"]::-webkit-slider-thumb { background: var(--support); box-shadow: 0 0 0 1px var(--support); }
+.bar-fill.support { background: var(--skill); }
+.activity[data-act="support"] .combo-bar { background: rgba(255, 93, 93, 0.55); }
