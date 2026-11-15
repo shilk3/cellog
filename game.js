@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.17.0";
+const APP_VERSION = "5.17.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -8620,7 +8620,7 @@ const EDU_EVENT_ACC = 0.7;
 const EDU_SKILL_NAMES = { lambda: "LAMBDA Craft", single: "Single-Cell Solutions", speed: "Speed & Shortcuts" };
 
 function eduParseArgs(spec) {
-  return (spec ? spec.split("|") : []).map((label) => ({ label, rep: label === "...", opt: label === "..." || label.startsWith("["), n: label.replace(/[[\]]/g, "") }));
+  return (spec ? spec.split("|").map((x) => x.trim()).filter(Boolean) : []).map((label) => ({ label, rep: label === "...", opt: label === "..." || label.startsWith("["), n: label.replace(/[[\]]/g, "") }));
 }
 const EDU_LIST = (typeof EDU_FUNCS === "undefined" ? [] : EDU_FUNCS).map(([name, skill, titan, tier, desc, args, cat, extra]) => ({ name, skill, titan, tier, desc, cat, extra: !!extra, args: eduParseArgs(args) }));
 // The esports set: everything but the 📚 Completionist extras.
@@ -8992,7 +8992,7 @@ function eduPickWrong(right, candidates, norm = (x) => x.toLowerCase()) {
   }
   return out;
 }
-const eduArgNorm = (x) => x.replace(/[[\]]/g, "").toLowerCase();
+const eduArgNorm = (x) => x.replace(/[[\]]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
 const EDU_REPEAT = "… (repeats)";
 function eduCountOptions(right, max) {
   const near = [];

@@ -6,6 +6,10 @@
 import json, re, sys
 def parse_vba_args(s):
     s = s.replace("…", "...")
+    # An either-or argument ("string | varname", "{ envstring | number }") is
+    # one argument: keep its first name.
+    s = re.sub(r"\{\s*([^|{}]+?)\s*\|[^{}]*\}", r"\1", s)
+    s = re.sub(r"([\w.]+)\s*\|\s*[\w.]+", r"\1", s)
     args, depth, cur = [], 0, ""
     def flush(tok, opt):
         tok = tok.strip().strip(",").strip()
