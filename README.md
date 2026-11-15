@@ -336,7 +336,10 @@ with the stakes — 10% regular season, 20% playoffs, 30% a Final, and 20 / 30
 and carries through the series). On match day it's rolled: good adds +30 to
 your match-day rating, bad takes 30 off, shown under Luck in Head to Head.
 The win chance shown everywhere already blends the two. It resets after
-each league or playoff match.
+each league or playoff match. A hired 🧠 Sports Psychologist (Staff, $15 /
+$24 / $38 a week) starts the bar at 55 / 60 / 65% good instead of 50%, and
+🎟️ Family Tickets (Items, $150) add +10% good for one match (each
+invitational game too); neither goes past the pressure floor.
 
 **🏆 Playoffs page**: while you're in the playoffs the 🏅 button (normally the
 league tables) opens your playoffs round by round — played matches as "beat",

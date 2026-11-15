@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.18.1";
+const APP_VERSION = "5.19.0";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -936,7 +936,7 @@ const LEAGUE_RATING_BANDS = {
   5: [350, 600],
 };
 
-// Staff: 7 skill coaches (5 levels) and 6 support roles (3 levels). Each
+// Staff: 7 skill coaches (5 levels) and 7 support roles (3 levels). Each
 // level's fields are that level's total (not additive) effect, and
 // state.upgrades[key] is the highest level unlocked. Staff are hired a week
 // at a time (see hireStaff). Each level is a one-off fee to unlock — only
@@ -960,6 +960,7 @@ const SUPPORT_WAGES = {
   sleepApp: [15, 24, 38],
   meditation: [15, 24, 38],
   recovery: [15, 24, 38],
+  psych: [15, 24, 38],
 };
 const UPGRADES = {};
 SKILLS.forEach((sk) => {
@@ -1019,6 +1020,16 @@ Object.assign(UPGRADES, {
       { injuryDaysReduce: 1, detrainMult: 0.7, desc: "-1 day injury duration (even mid-injury), -30% detraining" },
       { injuryDaysReduce: 2, detrainMult: 0.45, desc: "-2 days injury duration (even mid-injury), -55% detraining" },
       { injuryDaysReduce: 3, detrainMult: 0.2, desc: "-3 days injury duration (even mid-injury), -80% detraining" },
+    ],
+  },
+  // 👪 Support's bar starts higher (it's a head start, added while hired).
+  psych: {
+    name: "Sports Psychologist",
+    icon: "🧠",
+    levels: [
+      { supportStart: 55, desc: "👪 Support bar starts match weeks at 55% good (not 50%)" },
+      { supportStart: 60, desc: "👪 Support bar starts match weeks at 60% good" },
+      { supportStart: 65, desc: "👪 Support bar starts match weeks at 65% good" },
     ],
   },
   manager: {
@@ -1127,7 +1138,28 @@ function applyRecoveryToInjury() {
     logEvent(`🧊 Recovery Program: injury shortened by ${before - inj.daysLeft} ${before - inj.daysLeft === 1 ? "day" : "days"} — Gym back in ${inj.daysLeft} ${inj.daysLeft === 1 ? "day" : "days"}.`, "event-good");
   }
 }
-const SUPPORT_KEYS = ["physio", "nutritionist", "manager", "sleepApp", "meditation", "recovery"];
+const SUPPORT_KEYS = ["physio", "nutritionist", "manager", "sleepApp", "meditation", "recovery", "psych"];
+
+// 🎟️ Family Tickets: family & friends in the crowd — +10% good on this
+// match's 👪 Support bar. Once per match (each invitational game too).
+const FAMILY_TICKETS = { icon: "🎟️", name: "Family Tickets", price: 150, good: 10 };
+function ticketsBooked() {
+  return !!(state.support && state.support.tickets);
+}
+function buyFamilyTickets() {
+  if (!supportActive() || ticketsBooked() || state.cash < FAMILY_TICKETS.price) return false;
+  state.cash -= FAMILY_TICKETS.price;
+  state.yearCashFlow.expenses += FAMILY_TICKETS.price;
+  if (!state.support) state.support = { good: 50 };
+  state.support.tickets = true;
+  logEvent(`${FAMILY_TICKETS.icon} ${FAMILY_TICKETS.name} (−$${FAMILY_TICKETS.price}): 👪 Support +${FAMILY_TICKETS.good}% good for this match.`, "event-good");
+  return true;
+}
+// What's added on top of the hours: the psychologist's head start and tickets.
+function supportBonus() {
+  const psych = upgradeEffect("psych");
+  return (psych ? psych.supportStart - 50 : 0) + (ticketsBooked() ? FAMILY_TICKETS.good : 0);
+}
 
 // Energy items: an instant top-up, each usable once a week. The cheap ones
 // crash the next day.
@@ -2887,6 +2919,7 @@ function resolveMatch(opponent, { exhibition = false } = {}) {
   // A league or playoff match ends the week: the bar starts again at 50/50.
   // (An invitational's bar carries through its games.)
   if (support && !exhibition) state.support = { good: 50 };
+  else if (support && state.support) state.support.tickets = false;
   const yourFinal = matchRating + yourLuck + (support ? support.delta : 0);
   const oppFinal = opponentMatchRating + oppLuck;
   // Both finish times (your XP is what you had going in).
@@ -4888,7 +4921,7 @@ function renderPlannerRows() {
   // pressure floor this match can't get below.
   if (supportActive()) {
     const floor = supportFloor(), max = 100 - floor;
-    const good = supportGood(), after = Math.min(max, ((state.support && state.support.good) || 50) + (a.support || 0) * BAL.supportPerHour);
+    const good = supportGood(), after = Math.min(max, ((state.support && state.support.good) || 50) + supportBonus() + (a.support || 0) * BAL.supportPerHour);
     rows.push(
       comboRowHtml("support", {
         icon: "👪",
@@ -5533,7 +5566,7 @@ function shopHtml(tab = shopTab) {
     .map((k) => staffCardHtml(coachKey(k), { focus: focusKeys.includes(k), statNote: `${skillMeta(k).icon} ${skillMeta(k).name}${isSpecialisation(k) ? " ⭐" : ""} now ${fmt(state.stats.skills[k])} · league cap ${leagueSkillCap(k)}` }))
     .join("");
   const supportCards = SUPPORT_KEYS
-    .map((k) => staffCardHtml(k, { statNote: k === "physio" ? `🏃 Health now ${fmt(state.stats.phys)} · ceiling ${BAL.statCapBase} without a physio` : "" }))
+    .map((k) => staffCardHtml(k, { statNote: k === "physio" ? `🏃 Health now ${fmt(state.stats.phys)} · ceiling ${BAL.statCapBase} without a physio` : k === "psych" ? (supportActive() ? `👪 Support ${fmt(supportGood())}% good now` : "👪 Support only counts in weeks with a match") : "" }))
     .join("");
   const weeklyTotal = Object.entries(state.staff.hired).reduce((a, [k, l]) => a + staffWage(k, l), 0);
   const itemCards = ENERGY_ITEMS.map((it) => {
@@ -5555,6 +5588,21 @@ function shopHtml(tab = shopTab) {
       </div>
     </div>`;
   }).join("");
+  const T = FAMILY_TICKETS;
+  const ticketCard = `
+    <div class="shop-item staff-card item-card${ticketsBooked() ? " staff-card-hired" : ""}">
+      <div class="shop-item-icon">${T.icon}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${T.name}</div>
+        <div class="staff-line staff-stat">+${T.good}% good on 👪 Support for your next match</div>
+        <div class="staff-line">${supportActive() ? `Support ${fmt(supportGood())}% now (never past the pressure floor)` : "Only in a week with a match"}</div>
+        <div class="staff-actions">${
+          ticketsBooked()
+            ? `<span class="staff-hired">✓ Booked for this match</span>`
+            : `<button class="staff-chip" data-tickets="1" ${state.cash < T.price || !supportActive() ? "disabled" : ""}>Buy · $${T.price}</button>`
+        }</div>
+      </div>
+    </div>`;
   const gearCards = EQUIPMENT.map((e) => `
     <div class="shop-item staff-card item-card${ownsEquipment(e.key) ? " staff-card-hired" : ""}">
       <div class="shop-item-icon">${e.icon}</div>
@@ -5577,6 +5625,11 @@ function shopHtml(tab = shopTab) {
       <h3>Energy Items</h3>
       <p class="modal-sub">An instant top-up, each once a week. Rest ${fmt(state.stats.rest)} · Calm ${fmt(Math.min(100, state.stats.composure))} now (items don't go past 100).</p>
       ${itemCards}
+    </div>
+    <div class="modal-section">
+      <h3>Match Day</h3>
+      <p class="modal-sub">Family &amp; friends in the crowd, once per match (each invitational game too).</p>
+      ${ticketCard}
     </div>
     <div class="modal-section">
       <h3>Equipment</h3>
@@ -5643,6 +5696,11 @@ function openShop(opts) {
   document.querySelectorAll("[data-gear]").forEach((btn) =>
     btn.addEventListener("click", () => {
       if (buyEquipment(btn.dataset.gear)) refresh();
+    })
+  );
+  document.querySelectorAll("[data-tickets]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      if (buyFamilyTickets()) refresh();
     })
   );
   document.querySelectorAll("[data-item]").forEach((btn) =>
@@ -6893,7 +6951,7 @@ function supportFloor() {
 // This match's chance of a good day (%), floor applied.
 function supportGood() {
   const g = (state.support && state.support.good) || 50;
-  return Math.min(g, 100 - supportFloor());
+  return Math.min(g + supportBonus(), 100 - supportFloor());
 }
 function playoffsLive() {
   return state.seasonPhase === "playoffs" && state.playoff && !state.playoff.eliminated && !state.playoff.champion;
@@ -7674,6 +7732,8 @@ function openHowTo() {
     `Family & friends back you whatever happens — but their support is pressure too. In weeks with a match of yours (the regular season, your playoffs, and the week leading into an invitational) the <b>👪 Support</b> bar starts <b>50% good</b> (pink), <b>50% bad</b> (grey) — the number on the row is the good part.`,
     `Each hour (up to ${B.supportMaxHours} a day, no minimum) turns <b>${B.supportPerHour}%</b> of it good, down to a <b>pressure floor</b> of bad (the hatched end) that grows with the stakes: <b>${B.supportFloors.regular}%</b> in the regular season, <b>${B.supportFloors.playoffs}%</b> in the playoffs, <b>${B.supportFloors.final}%</b> in a Final, and <b>${B.supportFloors.event.join("% / ")}%</b> in an invitational's games 1 / 2 / 3 (the bar builds over the week before and carries through all three).`,
     `On match day it's rolled: a <b>good day</b> adds <b>+${B.supportEffect}</b> to your match-day rating, a <b>bad day</b> takes ${B.supportEffect} off. Head to Head shows which, under Luck. The bar starts again at 50/50 after each league or playoff match.`,
+    `<b>🧠 Sports Psychologist</b> (Staff): while hired, the bar starts match weeks at <b>${UPGRADES.psych.levels.map((l) => l.supportStart).join(" / ")}%</b> good (Lv1 / 2 / 3) instead of 50%.`,
+    `<b>${FAMILY_TICKETS.icon} ${FAMILY_TICKETS.name}</b> (Items, $${FAMILY_TICKETS.price}): <b>+${FAMILY_TICKETS.good}%</b> good for your next match — once per match, each invitational game too. Neither goes past the pressure floor.`,
   ]))
 
   sec("nutrition", "🥗", "Nutrition & day length", ul([
@@ -7817,7 +7877,7 @@ function openHowTo() {
   sec("staff", "🧑‍🏫", "Staff", `
     ${ul([
       `Skills train to <b>${B.skillShopCapBase}</b> on your own. A hired <b>Coach</b> raises that skill's ceiling (Lv1 60 … Lv5 100), trains it faster and stops it rusting — never past your <b>league cap</b> (see ⭐ Specialisations).`,
-      "<b>Support staff</b> (Physio, Nutritionist, Manager, Sleep App, Meditation, Recovery) help only while hired.",
+      "<b>Support staff</b> (Physio, Nutritionist, Manager, Sleep App, Meditation, Recovery, Psychologist) help only while hired.",
       `<b>🏖️ Preseason:</b> every skill coach is <b>half price</b>.`,
       "Staff are hired <b>a week at a time</b>, paid up front (pro-rated mid-week). A week ends after each match. Unlock a higher level mid-week and you can upgrade whoever's hired for just the extra wages.",
       "<b>🔁 Auto-rehire</b> keeps someone on at the same level each new week — it switches itself off if you can't pay.",
@@ -7829,7 +7889,8 @@ function openHowTo() {
     ${ul(["<b>Energy items</b> — an instant top-up, each once a week, never past 100:"])}
     ${tbl(["Item", "Now", "Next day"], ENERGY_ITEMS.map((it) => [`${it.icon} ${it.name} $${it.price}`, itemNow(it), itemCrash(it)]))}
     ${ul(["<b>Equipment</b> — works until the current year ends, full price whenever you buy:"])}
-    ${tbl(["Item", "Effect"], EQUIPMENT.map((e) => [`${e.icon} ${e.name} $${fmt(e.price)}`, e.desc]))}`);
+    ${tbl(["Item", "Effect"], EQUIPMENT.map((e) => [`${e.icon} ${e.name} $${fmt(e.price)}`, e.desc]))}
+    ${ul([`<b>${FAMILY_TICKETS.icon} ${FAMILY_TICKETS.name}</b> $${FAMILY_TICKETS.price} — +${FAMILY_TICKETS.good}% good on 👪 Support for one match (see Support).`])}`);
 
   sec("pro", "📘", "Pro techniques", ul([
     `About every ${B.techniqueIntervalDays} days a new technique appears (one you haven't mastered — ${EXCEL_TECHNIQUES.length} in all), needing ${B.techniqueMinHours}–${B.techniqueMaxHours}h. Pro Duties hours beyond ${B.proDutyHoursRequired}h go towards it. Once you've mastered all ${EXCEL_TECHNIQUES.length}, no more arrive.`,
@@ -9132,9 +9193,23 @@ function eduBuildQuiz(f, m) {
     const wrong = hard ? eduPickWrongOrdered(right, cands) : eduPickWrong(right, cands, eduArgNorm);
     qs.push({ k: "arg", i, a: right, o: eduShuffle([right, ...wrong]) });
   });
-  const descs = pool.map((g) => g.desc);
-  qs.push({ k: "desc", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrong(f.desc, descs)]) });
+  const alike = !hard ? [] : eduLookalikes(f).map((n) => source.find((g) => g.name === n)).filter(Boolean).map((g) => g.desc);
+  const descs = [...eduShuffle(alike), ...eduShuffle(pool.map((g) => g.desc))];
+  qs.push({ k: "desc", a: f.desc, o: eduShuffle([f.desc, ...eduPickWrongOrdered(f.desc, descs)]) });
   return eduAddGeneral({ key: m.key, fn: eduRecKey(f), event: m.event, qs, i: 0, picks: [] }, m);
+}
+// Look-alikes (by bank; "excel" = the core list): never in the same check,
+// and when one is asked what it does, the others' descriptions are the
+// first wrong answers, so the question tests the difference.
+const EDU_LOOKALIKES = {
+  excel: [["CHISQ.DIST", "CHISQ.DIST.RT", "CHISQ.INV", "CHISQ.INV.RT"], ["F.DIST", "F.DIST.RT"], ["F.INV", "F.INV.RT"], ["T.DIST", "T.DIST.2T", "T.DIST.RT"], ["T.INV", "T.INV.2T"], ["RANK.AVG", "RANK.EQ"], ["GAMMALN", "GAMMALN.PRECISE"], ["ERF", "ERF.PRECISE"], ["ERFC", "ERFC.PRECISE"], ["LEFT", "RIGHT", "MID"], ["TRIM", "CLEAN"]],
+  vba: [["LTrim", "RTrim", "Trim"], ["Int", "Fix"], ["Spc", "Tab"], ["Left", "Right", "Mid"], ["InStr", "InStrRev"], ["UBound", "LBound"]],
+  robot: [["Save Answers To Left", "Save Game Answers To Left"]],
+};
+function eduLookalikes(f) {
+  if (!f) return [];
+  const fam = (EDU_LOOKALIKES[f.bank || "excel"] || []).find((g) => g.includes(f.name));
+  return fam ? fam.filter((n) => n !== f.name) : [];
 }
 // Like eduPickWrong, but keeps the candidates' order (best look-alikes first).
 function eduPickWrongOrdered(right, candidates) {
@@ -9339,7 +9414,11 @@ function openEduQuiz(m, onDone) {
     // A training check's functions are all different.
     if (m.event === "mob" && EDU_SETS.phone.length) cur = eduBuildPhoneQuiz(m);
     else {
-      const pool = eduPool(m), fresh = m.exclude ? pool.filter((g) => !m.exclude.includes(eduRecKey(g))) : pool;
+      // …and no two look-alikes (LTrim, RTrim) in one check.
+      const pool = eduPool(m);
+      const asked = m.exclude ? pool.filter((g) => m.exclude.includes(eduRecKey(g))) : [];
+      const alike = new Set(asked.flatMap((g) => eduLookalikes(g)));
+      const fresh = m.exclude ? pool.filter((g) => !m.exclude.includes(eduRecKey(g)) && !alike.has(g.name)) : pool;
       cur = eduBuildQuiz(eduPickFunction(fresh.length ? fresh : pool), m);
     }
     state.edu.current = cur;

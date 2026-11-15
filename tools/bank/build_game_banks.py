@@ -32,6 +32,17 @@ def short(d):
     for a, b in FILLER: d = re.sub(a, b, d)
     return d.strip().rstrip(".")
 
+# Look-alikes Microsoft describes word for word the same: each its own.
+VBA_DESC = {
+    "LTrim": "Returns a Variant (String) containing a copy of a specified string without leading spaces",
+    "RTrim": "Returns a Variant (String) containing a copy of a specified string without trailing spaces",
+    "Trim": "Returns a Variant (String) containing a copy of a specified string without leading or trailing spaces",
+    "Int": "Returns the integer portion of a number; a negative number goes down (Int(-8.4) is -9)",
+    "Fix": "Returns the integer portion of a number; a negative number goes towards zero (Fix(-8.4) is -8)",
+    "Spc": "Used with the Print # statement or the Print method to insert a number of spaces in the output",
+    "Tab": "Used with the Print # statement or the Print method to move the output to a column",
+}
+
 def spec(labels):
     return "|".join("..." if a in ("…", "...") else a for a in labels)
 
@@ -42,7 +53,7 @@ rows = {
     "pq": [[x["name"], x["level"], x["cat"].replace("-", " "), short(x["desc"]),
             spec([("[" + a["n"] + "]") if a["opt"] else a["n"] for a in x["args"]]), 1 if x["name"] in extra["pq"] else 0]
            for x in sorted(pq, key=lambda x: x["name"].lower())],
-    "vba": [[v["name"], 1 if v["level"] == 1 else 2, v["cat"].replace(" functions", ""), short(v["desc"]),
+    "vba": [[v["name"], 1 if v["level"] == 1 else 2, v["cat"].replace(" functions", ""), VBA_DESC.get(v["name"]) or short(v["desc"]),
              spec(parse_vba_args(v["syntax"])), 1 if v["name"] in extra["vba"] else 0]
             for v in sorted(vba, key=lambda v: v["name"].lower())],
     "robot": [[c["name"], 1 if c["hard"] else 0, c["group"], c["src"].split(" + ")[0], short(c["desc"]), 1 if c["name"] in extra["cmds"] else 0]

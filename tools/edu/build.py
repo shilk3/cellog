@@ -5,6 +5,22 @@ C = json.load(open("classified.json"))
 
 # Shorter (phone-sized) or corrected descriptions.
 DESC = {
+    "COT": "Returns the cotangent of an angle",
+    "COTH": "Returns the hyperbolic cotangent of a number",
+    "ERF": "Returns the error function integrated between lower_limit and upper_limit",
+    "ERF.PRECISE": "Returns the error function integrated between 0 and x",
+    "ERFC": "Returns the complementary error function integrated between x and infinity",
+    "CHISQ.DIST": "Returns the left-tailed probability of the chi-squared distribution",
+    "CHISQ.INV": "Returns the inverse of the left-tailed probability of the chi-squared distribution",
+    "F.DIST": "Returns the (left-tailed) F probability distribution",
+    "F.DIST.RT": "Returns the right-tailed F probability distribution",
+    "F.INV": "Returns the inverse of the (left-tailed) F probability distribution",
+    "F.INV.RT": "Returns the inverse of the right-tailed F probability distribution",
+    "T.DIST": "Returns the left-tailed Student's t-distribution",
+    "T.DIST.2T": "Returns the two-tailed Student's t-distribution",
+    "RANK.AVG": "Returns the rank of a number in a list; tied values share their average rank",
+    "RANK.EQ": "Returns the rank of a number in a list; tied values share the top rank",
+    "GAMMALN.PRECISE": "Returns the natural logarithm of the gamma function, Γ(x) — the newer name for GAMMALN",
     "ASC": "Changes full-width (double-byte) letters or katakana in text to half-width (single-byte)",
     "DBCS": "Changes half-width (single-byte) letters or katakana in text to full-width (double-byte)",
     "BINOM.INV": "Returns the smallest value whose cumulative binomial distribution reaches a criterion value",
