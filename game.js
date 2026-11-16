@@ -3,7 +3,7 @@
  * matches, shop, UI rendering.
  */
 
-const APP_VERSION = "5.23.0";
+const APP_VERSION = "5.23.1";
 // One save slot per game length. The Full game keeps the original key, so
 // a career from before game lengths carries on as the Full game.
 const SAVE_KEY = "cellgrind_save_v1";
@@ -5824,6 +5824,29 @@ function knowledgeCards() {
 function knowledgeFav(key) {
   return !!(state.edu.favs && state.edu.favs[key]);
 }
+// The Knowledge cards an item has: a function's one, a Power Query group's
+// one per function, a question's one.
+function knowledgeKeysFor(f) {
+  return f.grp ? f.members.map((m) => `f:pq:${m.name}`) : [`f:${eduRecKey(f)}`];
+}
+// A ☆ Favourite button for the review page (all of keys at once).
+function knowledgeFavBtn(keys, label = "Favourite") {
+  const on = keys.every(knowledgeFav);
+  return `<button class="edu-fav${on ? " on" : ""}" data-favs="${escapeHtml(keys.join("||"))}" data-label="${escapeHtml(label)}" aria-label="Favourite" aria-pressed="${on}">${on ? "★" : "☆"} ${escapeHtml(label)}</button>`;
+}
+function wireKnowledgeFavBtns(root = document) {
+  root.querySelectorAll("[data-favs]").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const keys = b.dataset.favs.split("||");
+    const favs = (state.edu.favs = state.edu.favs || {});
+    const on = !keys.every((k) => favs[k]);
+    keys.forEach((k) => (on ? (favs[k] = true) : delete favs[k]));
+    saveState();
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", String(on));
+    b.textContent = `${on ? "★" : "☆"} ${b.dataset.label}`;
+  }));
+}
 function knowledgeSyntax(f) {
   return `${escapeHtml(f.name)}(${f.args.map((a) => escapeHtml(a.rep ? "…" : a.label)).join(", ")})`;
 }
@@ -7991,7 +8014,7 @@ function openHowTo() {
     `On for new games — change it any time in ☰ → ⚙️ Settings → 📘 Knowledge mode. It's <b>${eduModeLabel()}</b> for this game.`,
     `It asks about the ${EDU_CORE.length} functions that matter in Excel esports. Switch on <b>📚 Completionist</b> to add Excel's other ${EDU_LIST.length - EDU_CORE.length} (finance, deep statistics, cube and web functions…) — they don't count towards Completion, but mastering everything earns a trophy of its own. Switch the questions off for pure management.`,
     "Before every match there's a <b>Knowledge check</b> on one real Excel function (from Microsoft's reference): how many <b>mandatory</b> and <b>optional</b> arguments it has, <b>each argument in order</b>, then <b>what it does</b>. Four choices each, no timer.",
-    `<b>📘 Knowledge</b> (in the Menu, once you've mastered something): every function and question you've mastered, with its answers — one card each. Filter by type, search, sort A–Z or newest, and tap ☆ to keep favourites (saved with this game).`,
+    `<b>📘 Knowledge</b> (in the Menu, once you've mastered something): every function and question you've mastered, with its answers — one card each. Filter by type, search, sort A–Z or newest, and tap ☆ to keep favourites (saved with this game) — or tap <b>☆ Favourite</b> on a check's review the moment you master something.`,
     `Every check ends with one 💡 <b>general question</b> — Windows keyboard shortcuts, PivotTables, tables, charts, formats, references, errors and more (${EDU_GEN.length} in all; a shortcut is asked either way round — which keys, or what they do). It's a quarter of Knowledge's share of the match, and is mastered on its own: answer it right once. New ones come before repeats: the week's focus skills, then any skill at your level, then the next league's. Getting it wrong never stops the function being mastered.`,
     `<b>⚖️ Share of match performance:</b> a slider from 0% to ${Math.round(EDU.maxShare * 100)}% (${Math.round(EDU.defaultShare * 100)}% to start; this game: ${Math.round(eduShare() * 100)}%), taken from Skill, Health, Calm and Rest in proportion — three quarters for the function questions, one for the general one. Rivals answer too — about ${Math.round(EDU_RIVAL_ACC[5] * 100)}% right in League 5, up to ${Math.round(EDU_RIVAL_ACC[TOP_TIER] * 100)}% at the top — so turning it up pays when you get more right than your league's rivals, and costs you when you get fewer. At 0% it's practice only: questions are still asked and mastered, but your answers don't affect matches.`,
     "Functions follow the week's focus skills, and your league sets the hardest you can be asked — simple ones like SUM and TODAY in League 5, rarer ones as you climb. The wrong answers get closer to the right one as you climb too.",
@@ -9895,16 +9918,18 @@ function eduReview(m, cur, f, onDone) {
   const line = (q, i) => {
     const ok = picks[i] === q.a;
     const label = q.k === "gen" ? "💡 General" : q.k === "ph" ? `📱 ${escapeHtml(q.t)}` : q.k === "gw" ? escapeHtml(q.t) : q.k === "gp" ? "Do" : q.k === "ga" ? "Take" : q.k === "cat" ? "Category" : q.k === "src" ? "Add-in" : q.k === "group" ? "Group" : q.k === "mand" ? "Mandatory" : q.k === "opt" ? "Optional" : q.k === "desc" ? "Does" : `Argument ${q.i + 1}`;
-    return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}</span></div>`;
+    // An Excel on mobile question right is mastered: it can be a favourite.
+    const star = q.k === "ph" && ok ? ` ${knowledgeFavBtn([`g:${q.gid}`], "")}` : "";
+    return `<div class="kv-row edu-line"><span>${ok ? "✅" : "❌"} ${label}</span><span class="${q.k === "arg" ? "edu-mono" : ""}">${escapeHtml(q.a)}${ok ? "" : ` <span class="kv-dim">(you: ${escapeHtml(picks[i])})</span>`}${star}</span></div>`;
   };
   openModal(`
     <div class="edu-quiz">
       <div class="edu-head"><span>${f ? `${f.grp ? "⚡" : "📘"} ${escapeHtml(f.name)}` : "📱 Excel on mobile"}</span><span>${res.right} / ${res.total}</span></div>
       ${f ? `<div class="edu-syntax edu-full">${eduSyntaxHtml(f, picks, qs)}</div>
       <p class="edu-desc">${escapeHtml(f.desc)}${f.grp ? `. <span class="kv-dim">Takes: ${escapeHtml(f.takes)}</span>` : ""}</p>` : qs.map((q, i) => (q.k === "ph" ? line(q, i) : "")).join("")}
-      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.${eduProgressHtml(eduFnProgress(f))}</div>` : ""}
+      ${res.newly ? `<div class="callout edu-mastered">🏅 Mastered! ${f ? `${escapeHtml(f.name)} won't` : "Questions you've got right won't"} come up again until you've mastered the rest.${eduProgressHtml(eduFnProgress(f))}${f ? `<div class="edu-fav-row">${knowledgeFavBtn(knowledgeKeysFor(f), f.grp ? "Favourite all of them" : "Favourite")} <span class="kv-dim">in ☰ → 📘 Knowledge</span></div>` : ""}</div>` : ""}
       ${genLine}
-      ${gi >= 0 && res.genNewly ? `<div class="callout edu-mastered">🏅 Mastered! This question won't come up again until you've mastered the rest.${eduProgressHtml(eduGenProgress(qs[gi]))}</div>` : ""}
+      ${gi >= 0 && res.genNewly ? `<div class="callout edu-mastered">🏅 Mastered! This question won't come up again until you've mastered the rest.${eduProgressHtml(eduGenProgress(qs[gi]))}<div class="edu-fav-row">${knowledgeFavBtn([`g:${qs[gi].gid}`])} <span class="kv-dim">in ☰ → 📘 Knowledge</span></div></div>` : ""}
       ${f ? `<details class="match-more"><summary>Every answer</summary>${qs.map(line).join("")}</details>` : ""}
       ${!counts ? "" : `<div class="kv-row"><span>📘 Knowledge check for this match</span><span>${fmt(value)}/100 <span class="kv-dim">(${edge >= 0 ? "+" : "−"}${fmt1(Math.abs(edge))} performance vs guessing)</span></span></div>`}
       ${!counts || gi < 0 ? "" : `<div class="kv-row"><span>${qs[gi].set ? `${eduSetIcon(qs[gi].set)} ${EDU_SET_INFO[qs[gi].set].name}` : "💡 General question"}</span><span>${res.gen ? "right" : "wrong"} <span class="kv-dim">(${genEdge >= 0 ? "+" : "−"}${fmt1(Math.abs(genEdge))} performance vs guessing)</span></span></div>`}
@@ -9918,6 +9943,7 @@ function eduReview(m, cur, f, onDone) {
     },
   });
   $("eduPlay").addEventListener("click", closeModal);
+  wireKnowledgeFavBtns($("modalBody"));
 }
 
 /* ---------------------------------------------------------------------- */

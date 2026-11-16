@@ -48,7 +48,8 @@ each — a function's full syntax ([optional] arguments in brackets), how many
 mandatory and optional arguments it takes and what it does; a question and
 its right answer. Only mastered ones (they never come up again, so nothing
 is spoiled). Filter by type, search, sort A–Z or newest, and tap ☆ to make a
-favourite, then ★ Favourites shows just those. Favourites are saved with
+favourite (or ☆ Favourite on a check's review, right as you master it),
+then ★ Favourites shows just those. Favourites are saved with
 each game (so they travel with Export / Import).
 
 **📤 Share my career** (Career & Season): draws a 1080×1350 card of the

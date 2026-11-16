@@ -1080,3 +1080,9 @@ details.match-more[open] { padding-bottom: 8px; }
 .know-line { margin-top: 3px; overflow-wrap: anywhere; }
 .know-tag { margin-top: 5px; font-size: 12px; color: var(--text-dim); }
 .know-empty { margin-top: 16px; text-align: center; }
+
+/* ☆ Favourite on the Knowledge check's review */
+.edu-fav-row { margin-top: 8px; font-size: 12px; }
+.edu-fav { font: inherit; font-size: 13px; font-weight: 700; color: var(--text); background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.edu-fav.on { color: #ffd166; border-color: rgba(255, 209, 102, 0.6); }
+.edu-line .edu-fav { padding: 1px 8px; margin-left: 4px; }
